@@ -13,11 +13,13 @@ USE `viennastaterp`;
 -- users
 CREATE TABLE IF NOT EXISTS `users` (
   `id`              BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
-  `discord_id`      VARCHAR(20)      NOT NULL,
+  `discord_id`      VARCHAR(20)          NULL,                          -- NULL wenn nur Passwort-Login
   `username`        VARCHAR(64)      NOT NULL,
   `global_name`     VARCHAR(64)      NOT NULL DEFAULT '',
   `avatar`          VARCHAR(64)          NULL,
   `email`           VARCHAR(255)         NULL,
+  `password_hash`   VARCHAR(255)         NULL,                          -- NULL wenn nur Discord-Login
+  `is_verified`     TINYINT(1)       NOT NULL DEFAULT 1,
   `role`            ENUM('player','supporter','moderator','admin') NOT NULL DEFAULT 'player',
   `is_whitelisted`  TINYINT(1)       NOT NULL DEFAULT 0,
   `is_banned`       TINYINT(1)       NOT NULL DEFAULT 0,
@@ -26,9 +28,10 @@ CREATE TABLE IF NOT EXISTS `users` (
   `created_at`      DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`      DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_discord_id` (`discord_id`)
+  UNIQUE KEY `uq_discord_id` (`discord_id`),
+  UNIQUE KEY `uq_username`   (`username`),
+  UNIQUE KEY `uq_email`      (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-d
 -- whitelist_applications
 CREATE TABLE IF NOT EXISTS `whitelist_applications` (
   `id`            INT UNSIGNED     NOT NULL AUTO_INCREMENT,

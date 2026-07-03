@@ -67,27 +67,55 @@ if (empty($discordUser['id'])) {
     exit;
 }
 
-// ── DB: User speichern (optional – kein Crash wenn DB fehlt) ─────────────────
+// ── DB: User speichern / verknüpfen (optional – kein Crash wenn DB fehlt) ─────
 $dbRow = null;
 if (isset($pdo)) {
     try {
-        $pdo->prepare(
-            'INSERT INTO users (discord_id, username, global_name, avatar, email, last_login)
-             VALUES (:did, :u, :g, :a, :e, NOW())
-             ON DUPLICATE KEY UPDATE
-               username=VALUES(username), global_name=VALUES(global_name),
-               avatar=VALUES(avatar), email=VALUES(email), last_login=NOW()'
-        )->execute([
-            ':did' => $discordUser['id'],
-            ':u'   => $discordUser['username'],
-            ':g'   => $discordUser['global_name'] ?? $discordUser['username'],
-            ':a'   => $discordUser['avatar'],
-            ':e'   => $discordUser['email'] ?? null,
-        ]);
+        // Modus: Discord verknüpfen (eingeloggter User ohne Discord-ID)
+        if (is_logged_in() && !empty($_SESSION['discord_user']['db_id'])
+            && empty($_SESSION['discord_user']['id'])) {
+            $pdo->prepare('UPDATE users SET discord_id=?,avatar=?,global_name=?,last_login=NOW() WHERE id=?')
+                ->execute([
+                    $discordUser['id'],
+                    $discordUser['avatar'],
+                    $discordUser['global_name'] ?? $discordUser['username'],
+                    $_SESSION['discord_user']['db_id'],
+                ]);
+            $_SESSION['discord_user']['id']     = $discordUser['id'];
+            $_SESSION['discord_user']['avatar'] = $discordUser['avatar'];
+            header('Location: ' . $siteUrl . '/dashboard.php?success=' . urlencode('Discord erfolgreich verknüpft!'));
+            exit;
+        }
 
+        // Normaler Discord-Login: bestehenden Account suchen
         $s = $pdo->prepare('SELECT id, role, is_whitelisted, is_banned, ban_reason FROM users WHERE discord_id = ?');
         $s->execute([$discordUser['id']]);
         $dbRow = $s->fetch() ?: null;
+
+        if (!$dbRow) {
+            // Neuen Account via Discord erstellen
+            $pdo->prepare(
+                'INSERT INTO users (discord_id, username, global_name, avatar, email, is_verified, last_login)
+                 VALUES (?, ?, ?, ?, ?, 1, NOW())'
+            )->execute([
+                $discordUser['id'],
+                $discordUser['username'],
+                $discordUser['global_name'] ?? $discordUser['username'],
+                $discordUser['avatar'],
+                $discordUser['email'] ?? null,
+            ]);
+            $s->execute([$discordUser['id']]);
+            $dbRow = $s->fetch() ?: null;
+        } else {
+            $pdo->prepare('UPDATE users SET username=?,global_name=?,avatar=?,email=?,last_login=NOW() WHERE discord_id=?')
+                ->execute([
+                    $discordUser['username'],
+                    $discordUser['global_name'] ?? $discordUser['username'],
+                    $discordUser['avatar'],
+                    $discordUser['email'] ?? null,
+                    $discordUser['id'],
+                ]);
+        }
 
         // Gebannten User blockieren
         if ($dbRow && $dbRow['is_banned']) {
@@ -109,7 +137,7 @@ if (isset($pdo)) {
             ]);
 
         if (function_exists('log_event')) {
-            log_event('discord_login', "{$discordUser['username']} eingeloggt", (int)($dbRow['id'] ?? 0));
+            log_event('discord_login', "{$discordUser['username']} (Discord) eingeloggt", (int)($dbRow['id'] ?? 0));
         }
 
     } catch (\Throwable $e) {

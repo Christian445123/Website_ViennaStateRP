@@ -715,6 +715,79 @@ code {
 }
 
 /* ============================================================
+   AUTH PAGES (Login / Register)
+   ============================================================ */
+.auth-body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-main);
+}
+.auth-bg {
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(124,58,237,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 80% 90%, rgba(6,182,212,0.07) 0%, transparent 50%);
+}
+.auth-bg-overlay { position: absolute; inset: 0; background: rgba(7,7,15,0.6); }
+
+.auth-wrap {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 440px;
+  padding: 24px;
+  display: flex; flex-direction: column; align-items: center; gap: 24px;
+}
+.auth-logo {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.6rem; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 2px;
+  color: var(--text-light);
+}
+.auth-logo .accent      { color: var(--accent-primary); }
+.auth-logo .accent-gold { color: var(--accent-gold); }
+
+.auth-card {
+  width: 100%;
+  padding: 36px 32px;
+  border-radius: var(--r-xl);
+  background: var(--bg-card);
+  border: 1px solid var(--border-accent);
+  box-shadow: var(--neon-glow);
+}
+.auth-title { font-size: 1.6rem; letter-spacing: 2px; margin-bottom: 6px; text-align: center; }
+.auth-sub   { color: var(--text-muted); font-size: 0.9rem; text-align: center; margin-bottom: 24px; }
+.auth-msg   { margin-bottom: 16px; }
+
+.auth-form  { display: flex; flex-direction: column; gap: 16px; }
+
+.pw-wrap { position: relative; }
+.pw-wrap input { width: 100%; padding-right: 44px; }
+.pw-toggle {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; font-size: 1rem; opacity: 0.5;
+  transition: opacity var(--transition);
+}
+.pw-toggle:hover { opacity: 1; }
+
+.form-hint { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+
+.btn-block { width: 100%; justify-content: center; margin-top: 4px; }
+
+.auth-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 20px 0;
+  color: var(--text-muted); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 1px;
+}
+.auth-divider::before, .auth-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+.auth-switch { text-align: center; font-size: 0.9rem; color: var(--text-muted); margin-top: 16px; }
+.auth-switch a { color: var(--accent-primary); }
+.auth-switch a:hover { color: var(--accent-gold); }
+
+/* ============================================================
    ANIMATIONS
    ============================================================ */
 @keyframes fadeInDown {
