@@ -23,8 +23,16 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTtl) {
     exit;
 }
 
-$status = FiveMAPI::getStatus();
-$json   = json_encode($status, JSON_UNESCAPED_UNICODE);
+$status     = FiveMAPI::getStatus();
+$serverInfo = FiveMAPI::getServerInfo();
+
+$response = array_merge($status, [
+    'framework'      => $serverInfo['framework']      ?? null,
+    'resource_count' => $serverInfo['resource_count'] ?? ($status['resource_count'] ?? 0),
+    'convars'        => $serverInfo['convars']         ?? [],
+]);
+
+$json = json_encode($response, JSON_UNESCAPED_UNICODE);
 
 file_put_contents($cacheFile, $json);
 echo $json;

@@ -117,10 +117,10 @@ define('FIVEM_PORT',   env('FIVEM_PORT',  '30120'));
 define('FIVEM_LINK',   'fivem://connect/' . FIVEM_IP . ':' . FIVEM_PORT);
 define('DISCORD_INVITE', env('DISCORD_INVITE', 'https://discord.gg/za7wKkg3s8'));
 
-define('DISCORD_CLIENT_ID',     env('DISCORD_CLIENT_ID'));
-define('DISCORD_CLIENT_SECRET', env('DISCORD_CLIENT_SECRET'));
-define('DISCORD_REDIRECT_URI',  env('DISCORD_REDIRECT_URI', SITE_URL . '/callback.php'));
-define('DISCORD_GUILD_ID',      env('DISCORD_GUILD_ID'));
+define('DISCORD_CLIENT_ID',     env('DISCORD_CLIENT_ID',     '1522589753105584178'));
+define('DISCORD_CLIENT_SECRET', env('DISCORD_CLIENT_SECRET', 'XnEX7ZNGquv8eosBupraBTlY8EbYsmuO'));
+define('DISCORD_REDIRECT_URI',  env('DISCORD_REDIRECT_URI',  rtrim(SITE_URL, '/') . '/callback.php'));
+define('DISCORD_GUILD_ID',      env('DISCORD_GUILD_ID',      '1520815251376050356'));
 
 // Alias für Kompatibilität
 define('FIVEM_CONNECT_LINK', FIVEM_LINK);

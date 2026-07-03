@@ -31,13 +31,20 @@ function avatarUrl(array $user): string {
 </head>
 <body class="dashboard-body">
 
-<nav class="navbar" id="navbar">
+<nav class="navbar scrolled" id="navbar">
   <div class="nav-container">
     <a class="nav-logo" href="index.php"><span class="logo-accent">Vienna</span>StateRP</a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.php">Startseite</a></li>
+      <li><a href="players.php">Server Status</a></li>
+      <?php if (has_permission('admin')): ?>
+      <li><a href="admin.php">⚙️ Admin</a></li>
+      <?php endif; ?>
+    </ul>
     <div class="nav-actions">
-      <a href="index.php" class="btn btn-ghost">← Startseite</a>
       <a href="logout.php" class="btn btn-outline">Abmelden</a>
     </div>
+    <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
   </div>
 </nav>
 
