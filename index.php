@@ -37,8 +37,10 @@ if (!function_exists('avatarUrl')) {
     <ul class="nav-links" id="navLinks">
       <li><a href="#about">Über uns</a></li>
       <li><a href="#features">Features</a></li>
+      <li><a href="#fraktionen">Fraktionen</a></li>
       <li><a href="#rules">Regeln</a></li>
       <li><a href="#join">Beitreten</a></li>
+      <li><a href="#faq">FAQ</a></li>
       <li><a href="players.php">Server Status</a></li>
       <li><a href="<?= htmlspecialchars(DISCORD_INVITE) ?>" target="_blank" rel="noopener">Discord</a></li>
     </ul>
@@ -100,12 +102,16 @@ if (!function_exists('avatarUrl')) {
         <span class="hero-stat-lbl">Max. Slots</span>
       </div>
       <div class="hero-stat">
-        <span class="hero-stat-num">4+</span>
+        <span class="hero-stat-num">6+</span>
         <span class="hero-stat-lbl">Fraktionen</span>
       </div>
       <div class="hero-stat">
-        <span class="hero-stat-num">1</span>
-        <span class="hero-stat-lbl">Monat Online</span>
+        <span class="hero-stat-num">20+</span>
+        <span class="hero-stat-lbl">Custom Jobs</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-num">18+</span>
+        <span class="hero-stat-lbl">Altersgrenze</span>
       </div>
     </div>
   </div>
@@ -155,14 +161,18 @@ if (!function_exists('avatarUrl')) {
     <div class="features-list">
       <?php
       $features = [
-        ['🏛️', 'Fraktionssystem',   'Polizei, EMS, Feuerwehr und mehr – mit eigenen Scripts, Rängen und Strukturen.'],
-        ['💼', 'Wirtschaft & Jobs', 'Realistische Wirtschaft mit legalen und illegalen Jobs, eigenem Banking-System.'],
-        ['🚘', 'Custom Fahrzeuge',  'Add-on-Fahrzeuge mit realistischer Schadensphysik und Tuning-System.'],
-        ['🏠', 'Immobilien',        'Häuser und Wohnungen kaufen oder mieten und individuell einrichten.'],
-        ['📱', 'Smartphone-System', 'In-Game Handy mit Kontakten, Anrufen, SMS und eigenem Social-Media-Feed.'],
-        ['🗺️', 'Custom MLOs',      'Eigene Interior-Objekte für Fraktionsgebäude und immersive Locations.'],
-        ['⚖️', 'Justizsystem',     'Staatsanwaltschaft, Richter und Anwälte – Verfahren vollständig im Roleplay.'],
-        ['🛠️', 'Aktive Entwicklung','Regelmäßige Updates, Community-Feedback und ein aktives Dev-Team.'],
+        ['🏙️', 'Fraktionssystem',        'Polizei, EMS, Feuerwehr, Justiz und kriminelle Organisationen – jede Fraktion mit eigenen Scripts, Rängen und internen Strukturen.'],
+        ['💼', 'Wirtschaft & Jobs',      'Über 20 legale Jobs, eigenes Banking-System, Aktienmarkt und ein funktionierender Schwarzmarkt.'],
+        ['🚘', 'Custom Fahrzeuge',        'Hunderte Add-on-Fahrzeuge mit realistischer Schadensphysik, Tuning-System und Fahrzeugkauf/-verkauf.'],
+        ['🏠', 'Immobilien',             'Häuser und Wohnungen kaufen oder mieten, individuell einrichten und als Lager nutzen.'],
+        ['📱', 'Smartphone-System',       'In-Game Handy mit Kontakten, Anrufen, SMS, Kamera, Internet-Browser und eigenem Social-Media-Feed.'],
+        ['🗺️', 'Custom MLOs',       'Eigene Interior-Objekte für Fraktionsgebäude, Krankenhäuser, Gerichte und immersive Locations.'],
+        ['⚖️', 'Justizsystem',           'Staatsanwaltschaft, Richter und Anwälte – Verfahren werden vollständig im Roleplay verhandelt.'],
+        ['🔫', 'Überfall-System',     'Geregelte Überfälle mit Cop-Anforderungen, Verhandlungspflicht und Beutelimits nach Event-Typ.'],
+        ['🎭', 'Charakter-System',        'Mehrere Charaktere pro Spieler, eigene Backstory, Charakter-Entwicklung und New Life Regel.'],
+        ['💰', 'Wirtschaft & Schwarzmarkt','Illegale Aktivitäten, Drogenanbau, Fahrzeugschmuggel und organisiertes Verbrechen.'],
+        ['📰', 'Journalist / Reporter',   'Eigener Journalismus-Job mit Kamera, Berichten und einem In-Game Social-Media-Feed.'],
+        ['🛠️', 'Aktive Entwicklung',  'Regelmäßige Updates, Community-Feedback-Runden und ein aktives Dev-Team mit transparenter Roadmap.'],
       ];
       foreach ($features as $f): ?>
       <div class="feature-item">
@@ -177,7 +187,39 @@ if (!function_exists('avatarUrl')) {
   </div>
 </section>
 
-<!-- RULES -->
+<!-- FRAKTIONEN -->
+<section class="section" id="fraktionen">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Team</span>
+      <h2>Unsere <span class="accent">Fraktionen</span></h2>
+      <p>Wähle deine Rolle – staatlich, kriminell oder als unabhängiger Zivilist.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
+      <?php
+      $fraktionen = [
+        ['👮', 'Landespolizeidirektion Wien', 'STAATLICH · LEGAL',   '#3b82f6', 'Die LSPD ist die wichtigste Strafverfolgungsbehörde. Beamte patrouillieren, ermitteln und sorgen für Recht und Ordnung.',       'Offen'],
+        ['🚑', 'Emergency Medical Services',  'STAATLICH · LEGAL',   '#ef4444', 'Das EMS versorgt Verletzte, reanimiert Bewusstlose und betreibt das Krankenhaus im Schichtbetrieb.',                         'Offen'],
+        ['🚒', 'Feuerwehr Wien',               'STAATLICH · LEGAL',   '#f97316', 'Die Feuerwehr bekämpft Brände, rettet eingeklemmte Personen und unterstützt das EMS bei Großeinsätzen.',                     'Offen'],
+        ['⚖️', 'Staatsanwaltschaft & Justiz', 'STAATLICH · LEGAL',   '#8b5cf6', 'Staatsanwälte, Richter und Anwälte – Verfahren werden vollständig im Roleplay verhandelt.',                                   'Offen'],
+        ['🔫', 'Kriminelle Organisationen',    'KRIMINELL · ILLEGAL', '#64748b', 'Mehrere kriminelle Gruppierungen mit eigenen Territorien, Hierarchien und illegalen Einnahmequellen.',                       'Bewährungsphase'],
+        ['🧑‍💼', 'Unabhängige / Zivilisten', 'FREELANCE · NEUTRAL', '#22c55e', 'Als Zivilist betreibst du ein eigenes Unternehmen, arbeitest als Journalist, Anwalt oder Unternehmer.',                      'OFFEN'],
+      ];
+      foreach ($fraktionen as [$ico, $name, $type, $color, $desc, $slots]): ?>
+      <div style="background:var(--bg-card);border:1px solid rgba(255,255,255,.08);border-top:3px solid <?= $color ?>;border-radius:14px;padding:22px 20px;position:relative;transition:.2s">
+        <div style="font-size:1.8rem;margin-bottom:10px"><?= $ico ?></div>
+        <div style="font-size:.65rem;font-weight:700;letter-spacing:2px;color:<?= $color ?>;margin-bottom:6px"><?= $type ?></div>
+        <h3 style="font-size:.95rem;margin-bottom:8px"><?= $name ?></h3>
+        <p style="font-size:.83rem;color:#94a3b8;margin-bottom:14px;line-height:1.5"><?= $desc ?></p>
+        <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:3px 12px;font-size:.72rem;color:#e2e8f0">
+          <span style="width:6px;height:6px;border-radius:50%;background:<?= $color ?>"></span>
+          SLOTS <?= $slots ?>
+        </div>
+      </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+</section>
 <section class="section" id="rules">
   <div class="container">
     <div class="section-header">
@@ -243,12 +285,107 @@ if (!function_exists('avatarUrl')) {
         <p>Fertig! Verbinde dich und starte dein Roleplay-Abenteuer.</p>
       </div>
     </div>
+
+    <!-- Voraussetzungen -->
+    <div style="max-width:600px;margin:40px auto 0;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:28px 32px">
+      <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#64748b;margin-bottom:18px">Voraussetzungen</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <?php foreach(['Discord-Mitglied &amp; verifiziert','Lizenziertes GTA V','FiveM installiert','Funktionsfähiges Mikrofon','Regelwerk gelesen &amp; akzeptiert'] as $req): ?>
+        <div style="display:flex;align-items:center;gap:12px;color:#e2e8f0;font-size:.9rem">
+          <span style="width:20px;height:20px;border-radius:50%;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.7rem;color:#22c55e">✓</span>
+          <?= $req ?>
+        </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
     <div style="text-align:center;margin-top:48px">
       <p style="color:#4b5563;font-size:.85rem;margin-bottom:8px;font-family:'Orbitron',sans-serif;letter-spacing:1px">SERVER IP</p>
       <code style="font-size:1rem;padding:12px 24px;border-radius:8px"><?= htmlspecialchars(FIVEM_IP) ?>:<?= htmlspecialchars(FIVEM_PORT) ?></code>
       <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
         <a href="<?= htmlspecialchars(DISCORD_INVITE) ?>" target="_blank" rel="noopener" class="btn btn-discord">Discord & Whitelist</a>
         <a href="<?= htmlspecialchars(FIVEM_LINK) ?>" class="btn btn-primary">Server verbinden</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section" id="faq">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Häufige Fragen</span>
+      <h2>FAQ <span class="accent">Antworten</span></h2>
+    </div>
+    <div style="max-width:800px;margin:0 auto;display:flex;flex-direction:column;gap:8px" id="faqList">
+      <?php
+      $faqs = [
+        ['Muss ich Mitglied bei GC24/7 sein?',           'Nein. Jeder kann auf ViennaStateRP spielen – du musst nur unserem Discord beitreten und dich verifizieren.'],
+        ['Kann ich mehrere Charaktere spielen?',           'Ja. Du kannst mehrere Charaktere erstellen, jeder mit seiner eigenen Geschichte und Entwicklung.'],
+        ['Was passiert wenn mein Charakter stirbt?',       'New Life Regel: Dein Charakter vergisst alle Ereignisse die direkt zu seinem Tod geführt haben und kehrt nicht an den Tatort zurück.'],
+        ['Wie bewerbe ich mich für eine Fraktion?',        'Direkt über Discord. Jede Fraktion hat einen eigenen Bewerbungskanal mit Anforderungen und Leitfaden.'],
+        ['Ich wurde gebannt – was kann ich tun?',          'Öffne ein Support-Ticket auf unserem Discord. Das Staff-Team prüft deinen Fall und gibt dir eine Rückmeldung.'],
+        ['Ist der Server kostenlos?',                      'Ja, vollständig kostenlos. Du brauchst nur ein lizenziertes GTA V und FiveM.'],
+        ['Wird das Regelwerk aktualisiert?',               'Ja. Regeländerungen werden in Discord angekündigt. Es gilt immer das aktuellste Regelwerk.'],
+        ['Ab welchem Alter darf ich spielen?',             'Der Server ist ab 18 Jahren. Ausnahmen können in begründeten Fällen beim Staff beantragt werden.'],
+      ];
+      foreach ($faqs as $i => [$q, $a]): ?>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <button onclick="toggleFaq(<?= $i ?>)" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:none;border:none;color:#e2e8f0;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:.95rem;font-weight:600;text-align:left;gap:12px">
+          <span><?= $q ?></span>
+          <span id="faqIcon<?= $i ?>" style="font-size:1.1rem;flex-shrink:0;color:#64748b;transition:.2s">+</span>
+        </button>
+        <div id="faqBody<?= $i ?>" style="display:none;padding:0 20px 16px;color:#94a3b8;font-size:.9rem;line-height:1.6"><?= $a ?></div>
+      </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+</section>
+
+<!-- UEBERFALLS-MATRIX -->
+<section class="section section-dark" id="matrix">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Cop-Anforderungen</span>
+      <h2>Überfalls<span class="accent">-Matrix</span></h2>
+      <p>Ein Überfall darf erst gestartet werden wenn die Mindestanzahl an Polizisten im Dienst erreicht ist.</p>
+    </div>
+    <div style="max-width:900px;margin:0 auto;overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:.88rem">
+        <thead>
+          <tr style="border-bottom:2px solid rgba(232,184,109,.3)">
+            <th style="padding:12px 16px;text-align:left;color:#e8b86d;font-size:.75rem;text-transform:uppercase;letter-spacing:1.5px">Event</th>
+            <th style="padding:12px 16px;text-align:center;color:#e8b86d;font-size:.75rem;text-transform:uppercase;letter-spacing:1.5px">Min. Cops</th>
+            <th style="padding:12px 16px;text-align:center;color:#e8b86d;font-size:.75rem;text-transform:uppercase;letter-spacing:1.5px">Max. Räuber</th>
+            <th style="padding:12px 16px;text-align:left;color:#e8b86d;font-size:.75rem;text-transform:uppercase;letter-spacing:1.5px">Polizei</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php
+          $matrix = [
+            ['24/7 / Tankstelle',                     '3', '2',  'Alle verfügbaren · MAX. 4'],
+            ['Juwelier',                              '6', '4',  'Alle verfügbaren · MAX. 6 + SOKO bei krit. Lage'],
+            ['Fleeca Bank (klein)',                   '6', '5',  'Alle verfügbaren · SOKO erlaubt'],
+            ['💫 Pacific Bank / Humane Labs (Event)', '8', '10', 'Unbegrenzt · SOKO erlaubt'],
+          ];
+          foreach ($matrix as $i => [$ev, $cops, $rob, $pol]): ?>
+          <tr style="border-bottom:1px solid var(--border);<?= $i % 2 === 0 ? 'background:rgba(255,255,255,.02)' : '' ?>">
+            <td style="padding:12px 16px;color:#e2e8f0;font-weight:600"><?= $ev ?></td>
+            <td style="padding:12px 16px;text-align:center"><span style="background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);color:#60a5fa;border-radius:6px;padding:2px 10px;font-family:'Orbitron',sans-serif;font-size:.85rem"><?= $cops ?></span></td>
+            <td style="padding:12px 16px;text-align:center"><span style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#f87171;border-radius:6px;padding:2px 10px;font-family:'Orbitron',sans-serif;font-size:.85rem"><?= $rob ?></span></td>
+            <td style="padding:12px 16px;color:#94a3b8;font-size:.83rem"><?= $pol ?></td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+      <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:10px;align-items:flex-start;color:#94a3b8;font-size:.85rem">
+          <span style="color:#e8b86d;flex-shrink:0">🤝</span>
+          <span><strong style="color:#e2e8f0">Verhandlungspflicht:</strong> Vor dem Schusswechsel muss eine Verhandlung zwischen Polizei und Räubern stattfinden.</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;color:#94a3b8;font-size:.85rem">
+          <span style="color:#e8b86d;flex-shrink:0">⏱️</span>
+          <span><strong style="color:#e2e8f0">Cooldown:</strong> Nach einem Überfall gilt für die beteiligte Crime-Fraktion eine Sperre von 1 Stunde.</span>
+        </div>
       </div>
     </div>
   </div>
@@ -405,6 +542,20 @@ if (!function_exists('avatarUrl')) {
   load();
   setInterval(load, 30000);
 })();
+</script>
+<script>
+function toggleFaq(i) {
+  const body = document.getElementById('faqBody' + i);
+  const icon = document.getElementById('faqIcon' + i);
+  const open = body.style.display === 'block';
+  // Alle schließen
+  document.querySelectorAll('[id^="faqBody"]').forEach(b => b.style.display = 'none');
+  document.querySelectorAll('[id^="faqIcon"]').forEach(ic => { ic.textContent = '+'; ic.style.transform = ''; });
+  if (!open) {
+    body.style.display = 'block';
+    icon.textContent = '–';
+  }
+}
 </script>
 </body>
 </html>

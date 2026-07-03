@@ -135,6 +135,7 @@ if (!function_exists('avatarUrl')) {
         </div>
         <div style="display:flex;gap:8px">
           <button onclick="loadAdminData()" class="btn btn-outline" style="font-size:.82rem;padding:7px 16px">↻ Daten aktualisieren</button>
+          <a href="db_admin.php" class="btn btn-primary" style="font-size:.82rem;padding:7px 16px">🗄 Datenbank</a>
           <a href="admin.php" class="btn btn-outline" style="font-size:.82rem;padding:7px 16px">Vollständiges Admin-Panel →</a>
         </div>
       </div>
