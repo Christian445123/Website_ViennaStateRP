@@ -1,4 +1,6 @@
 <?php
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
 require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/session_config.php';
 require_once __DIR__ . '/includes/discord_config.php';

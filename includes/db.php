@@ -104,11 +104,8 @@ try {
     ]);
 } catch (PDOException $e) {
     error_log('[VSRP DB] Verbindung fehlgeschlagen: ' . $e->getMessage());
-    http_response_code(503);
-    // Keine DB-Details nach außen
-    die('Datenbankfehler. Bitte versuche es später erneut.');
-}
-
+        // $pdo bleibt null – Seiten müssen isset($pdo) prüfen
+        $pdo = null;
 // ── Konstanten aus .env ───────────────────────────────────────────────────────
 define('SITE_NAME',    env('SITE_NAME',   'ViennaStateRP'));
 define('SITE_URL',     env('SITE_URL',    'https://viennastaterp.at'));

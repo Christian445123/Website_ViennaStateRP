@@ -1,0 +1,70 @@
+# ============================================================
+#  ViennaStateRP – Apache .htaccess
+# ============================================================
+
+Options -Indexes
+ServerSignature Off
+
+# ── Sicherheit: Sensible Dateien sperren ────────────────────
+<FilesMatch "^(\.env|\.git|composer\.json|schema\.sql|encrypt_env\.php)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+<FilesMatch "\.(sql|log|key|lock|sh|md)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# includes/ und process/ direkt sperren
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Direkte Aufrufe auf includes/ verbieten
+    RewriteRule ^includes/ - [F,L]
+
+    # Direkte Aufrufe auf process/ nur POST erlauben (kein Browser-direktaufruf)
+    RewriteCond %{REQUEST_METHOD} !^POST$
+    RewriteRule ^process/ - [F,L]
+</IfModule>
+
+# ── PHP Einstellungen ───────────────────────────────────────
+<IfModule mod_php.c>
+    php_flag display_errors Off
+    php_flag log_errors On
+    php_value error_log /var/log/vsrp_php_errors.log
+    php_value session.cookie_httponly 1
+    php_value session.cookie_samesite Lax
+    php_value session.use_strict_mode 1
+    php_value max_execution_time 30
+    php_value upload_max_filesize 8M
+    php_value post_max_size 8M
+</IfModule>
+
+# ── Sicherheits-Header ──────────────────────────────────────
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    Header always unset X-Powered-By
+    Header always unset Server
+</IfModule>
+
+# ── Caching für Assets ──────────────────────────────────────
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css             "access plus 7 days"
+    ExpiresByType application/javascript "access plus 7 days"
+    ExpiresByType image/png            "access plus 30 days"
+    ExpiresByType image/jpg            "access plus 30 days"
+    ExpiresByType image/jpeg           "access plus 30 days"
+    ExpiresByType image/webp           "access plus 30 days"
+    ExpiresByType image/x-icon         "access plus 30 days"
+</IfModule>
+
+# ── Komprimierung ───────────────────────────────────────────
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript text/plain
+</IfModule>

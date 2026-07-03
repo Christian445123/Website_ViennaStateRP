@@ -4,11 +4,137 @@
 // ============================================================
 declare(strict_types=1);
 
+// Fehler nicht anzeigen, nur loggen
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+error_reporting(E_ALL);
+
 require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/session_config.php';
 require_once __DIR__ . '/includes/discord_config.php';
-require_once __DIR__ . '/includes/rate_limit.php';
-require_once __DIR__ . '/includes/logger.php';
+
+// Rate-Limit nur wenn DB verfügbar
+if (isset($pdo)) {
+    require_once __DIR__ . '/includes/rate_limit.php';
+    require_once __DIR__ . '/includes/logger.php';
+    if (!checkRateLimit('discord_callback', 10, 300)) {
+        rateLimitExceeded();
+    }
+}
+
+$siteUrl = defined('SITE_URL') ? SITE_URL : '';
+
+// ── State validieren (CSRF) ───────────────────────────────────────────────────
+if (empty($_GET['state']) || empty($_SESSION['oauth_state'])
+    || !hash_equals($_SESSION['oauth_state'], $_GET['state'])) {
+    error_log('[Callback] Ungültiger OAuth State');
+    header('Location: ' . $siteUrl . '/index.php?error=' . urlencode('Ungültige Anfrage'));
+    exit;
+}
+unset($_SESSION['oauth_state']);
+
+if (isset($_GET['error'])) {
+    header('Location: ' . $siteUrl . '/index.php?error=' . urlencode($_GET['error_description'] ?? 'Zugriff verweigert'));
+    exit;
+}
+
+if (empty($_GET['code'])) {
+    header('Location: ' . $siteUrl . '/index.php?error=' . urlencode('Kein Code empfangen'));
+    exit;
+}
+
+// ── Token-Austausch ───────────────────────────────────────────────────────────
+$token = _discord_post('https://discord.com/api/oauth2/token', [
+    'client_id'     => DISCORD_CLIENT_ID,
+    'client_secret' => DISCORD_CLIENT_SECRET,
+    'grant_type'    => 'authorization_code',
+    'code'          => $_GET['code'],
+    'redirect_uri'  => DISCORD_REDIRECT_URI,
+]);
+
+if (empty($token['access_token'])) {
+    error_log('[Callback] Token-Austausch fehlgeschlagen: ' . json_encode($token));
+    header('Location: ' . $siteUrl . '/index.php?error=' . urlencode('Login fehlgeschlagen – bitte nochmals versuchen'));
+    exit;
+}
+
+// ── Discord User holen ────────────────────────────────────────────────────────
+$discordUser = _discord_get('https://discord.com/api/users/@me', $token['access_token']);
+
+if (empty($discordUser['id'])) {
+    error_log('[Callback] Discord User-Abfrage fehlgeschlagen');
+    header('Location: ' . $siteUrl . '/index.php?error=' . urlencode('Benutzerdaten konnten nicht abgerufen werden'));
+    exit;
+}
+
+// ── DB: User speichern (optional – kein Crash wenn DB fehlt) ─────────────────
+$dbRow = null;
+if (isset($pdo)) {
+    try {
+        $pdo->prepare(
+            'INSERT INTO users (discord_id, username, global_name, avatar, email, last_login)
+             VALUES (:did, :u, :g, :a, :e, NOW())
+             ON DUPLICATE KEY UPDATE
+               username=VALUES(username), global_name=VALUES(global_name),
+               avatar=VALUES(avatar), email=VALUES(email), last_login=NOW()'
+        )->execute([
+            ':did' => $discordUser['id'],
+            ':u'   => $discordUser['username'],
+            ':g'   => $discordUser['global_name'] ?? $discordUser['username'],
+            ':a'   => $discordUser['avatar'],
+            ':e'   => $discordUser['email'] ?? null,
+        ]);
+
+        $s = $pdo->prepare('SELECT id, role, is_whitelisted, is_banned, ban_reason FROM users WHERE discord_id = ?');
+        $s->execute([$discordUser['id']]);
+        $dbRow = $s->fetch() ?: null;
+
+        // Gebannten User blockieren
+        if ($dbRow && $dbRow['is_banned']) {
+            if (function_exists('log_event')) {
+                log_event('login_banned', "Gebannter User {$discordUser['username']}", (int)$dbRow['id']);
+            }
+            session_unset();
+            session_destroy();
+            header('Location: ' . $siteUrl . '/index.php?error=' . urlencode('Du wurdest gebannt: ' . ($dbRow['ban_reason'] ?? 'Kein Grund')));
+            exit;
+        }
+
+        // Login-Log
+        $pdo->prepare('INSERT INTO login_log (user_id, ip_hash, user_agent) VALUES (?,?,?)')
+            ->execute([
+                $dbRow['id'] ?? 0,
+                hash('sha256', $_SERVER['REMOTE_ADDR'] ?? 'x'),
+                substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255),
+            ]);
+
+        if (function_exists('log_event')) {
+            log_event('discord_login', "{$discordUser['username']} eingeloggt", (int)($dbRow['id'] ?? 0));
+        }
+
+    } catch (\Throwable $e) {
+        error_log('[Callback] DB-Fehler: ' . $e->getMessage());
+        $dbRow = null;
+    }
+}
+
+// ── Session aufbauen ──────────────────────────────────────────────────────────
+session_regenerate_id(true);
+
+$_SESSION['discord_user'] = [
+    'id'            => $discordUser['id'],
+    'username'      => $discordUser['username'],
+    'global_name'   => $discordUser['global_name'] ?? $discordUser['username'],
+    'avatar'        => $discordUser['avatar'],
+    'email'         => $discordUser['email'] ?? '',
+    'db_id'         => (int) ($dbRow['id'] ?? 0),
+    'role'          => $dbRow['role'] ?? 'player',
+    'is_whitelisted'=> (bool) ($dbRow['is_whitelisted'] ?? false),
+];
+$_SESSION['last_activity'] = time();
+
+header('Location: ' . $siteUrl . '/dashboard.php');
+exit;
 
 // Rate-Limit: max 10 Callbacks / 5 Min pro IP
 if (!checkRateLimit('discord_callback', 10, 300)) {
@@ -120,7 +246,3 @@ if ($dbRow) {
 
 header('Location: ' . SITE_URL . '/dashboard.php');
 exit;
-    $result = curl_exec($ch);
-    curl_close($ch);
-    return json_decode($result, true) ?? [];
-}
