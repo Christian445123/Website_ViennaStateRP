@@ -158,16 +158,6 @@ async function loadServerStatus() {
     dot.className = 'status-dot online';
     const pct     = Math.round((data.players / data.max_players) * 100);
 
-    let playersHtml = '';
-    if (data.player_list && data.player_list.length > 0) {
-      playersHtml = '<div class="player-list">' +
-        data.player_list.slice(0, 20).map(p =>
-          `<span class="player-chip" title="Ping: ${p.ping}ms">${p.name}</span>`
-        ).join('') +
-        (data.players > 20 ? `<span class="player-chip muted">+${data.players - 20} weitere</span>` : '') +
-        '</div>';
-    }
-
     body.innerHTML = `
       <div class="status-stats">
         <div class="status-stat">
@@ -186,7 +176,6 @@ async function loadServerStatus() {
       <div class="status-bar-wrap">
         <div class="status-bar" style="width:${pct}%"></div>
       </div>
-      ${playersHtml}
     `;
   } catch (e) {
     dot.className  = 'status-dot offline';

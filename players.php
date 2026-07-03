@@ -6,6 +6,13 @@ require_once __DIR__ . '/includes/discord_config.php';
 require_once __DIR__ . '/includes/permissions.php';
 
 $user = current_user();
+
+function avatarUrl(?array $user): string {
+    if (empty($user['avatar']) || empty($user['id'])) {
+        return 'https://cdn.discordapp.com/embed/avatars/0.png';
+    }
+    return 'https://cdn.discordapp.com/avatars/' . $user['id'] . '/' . $user['avatar'] . '.png?size=64';
+}
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -56,47 +63,57 @@ $user = current_user();
 
 <!-- ==================== MAIN ==================== -->
 <main class="players-page">
+
+  <!-- Hero Banner -->
+  <div class="players-hero">
+    <div class="players-hero-bg"></div>
+    <div class="container players-hero-content">
+      <div class="players-live-badge">
+        <span class="plb-dot" id="psbDot"></span>
+        <span id="psbText">Verbinde…</span>
+        <span class="plb-sep">·</span>
+        <span class="plb-refresh">↻ <span id="psbCountdown">30</span>s</span>
+      </div>
+      <h1 class="players-hero-title">Server<span class="accent"> Status</span></h1>
+      <p class="players-hero-sub">Echtzeit-Übersicht · ViennaStateRP</p>
+    </div>
+  </div>
+
   <div class="container">
 
-    <div class="players-header">
-      <h1 class="players-title"><span class="logo-accent">Aktive</span> Spieler</h1>
-      <p class="players-subtitle">Echtzeit-Übersicht des ViennaStateRP Servers</p>
-    </div>
-
-    <!-- Server-Status Banner -->
-    <div class="players-status-bar" id="statusBar">
-      <div class="psb-dot" id="psbDot"></div>
-      <span id="psbText">Lade Serverstatus…</span>
-      <span class="psb-counter" id="psbCounter"></span>
-      <span class="psb-refresh" id="psbRefresh" title="Wird alle 30 Sekunden aktualisiert">⟳ <span id="psbCountdown">30</span>s</span>
-    </div>
-
-    <!-- Spieleranzahl -->
-    <div class="players-count-card card" id="countCard">
-      <div class="pcc-inner">
-        <div class="pcc-stat">
-          <span class="pcc-num" id="playerCount">–</span>
-          <span class="pcc-lbl">Aktive Spieler</span>
-        </div>
-        <div class="pcc-divider"></div>
-        <div class="pcc-stat">
-          <span class="pcc-num" id="playerMax">–</span>
-          <span class="pcc-lbl">Slots gesamt</span>
-        </div>
+    <!-- Spieler-Statistik -->
+    <div class="players-stats-row" id="countCard">
+      <div class="psr-card">
+        <span class="psr-num" id="playerCount">–</span>
+        <span class="psr-lbl">Aktive Spieler</span>
       </div>
-      <div class="pcc-bar-wrap">
-        <div class="pcc-bar" id="playerBar" style="width:0%"></div>
+      <div class="psr-divider"></div>
+      <div class="psr-card">
+        <span class="psr-num psr-num--secondary" id="playerMax">–</span>
+        <span class="psr-lbl">Max Slots</span>
+      </div>
+      <div class="psr-divider"></div>
+      <div class="psr-card">
+        <span class="psr-num psr-num--secondary" id="playerPct">–</span>
+        <span class="psr-lbl">Auslastung</span>
+      </div>
+      <div class="psr-bar-wrap">
+        <div class="psr-bar" id="playerBar" style="width:0%"></div>
       </div>
     </div>
 
-    <!-- Job-Karten -->
-    <h2 class="jobs-heading">Einsatzkräfte im Dienst</h2>
-    <div class="jobs-grid" id="jobsGrid">
-      <!-- wird per JS befüllt -->
-      <div class="job-card-skeleton"></div>
-      <div class="job-card-skeleton"></div>
-      <div class="job-card-skeleton"></div>
-      <div class="job-card-skeleton"></div>
+    <!-- Einsatzkräfte -->
+    <div class="jobs-section">
+      <div class="jobs-section-header">
+        <span class="section-tag">Live</span>
+        <h2 class="jobs-section-title">Einsatzkräfte <span class="accent">im Dienst</span></h2>
+      </div>
+      <div class="jobs-grid" id="jobsGrid">
+        <div class="job-card-skeleton"></div>
+        <div class="job-card-skeleton"></div>
+        <div class="job-card-skeleton"></div>
+        <div class="job-card-skeleton"></div>
+      </div>
     </div>
 
   </div>
@@ -166,38 +183,36 @@ async function fetchStatus() {
 function renderStatus(data) {
   const dot     = document.getElementById('psbDot');
   const text    = document.getElementById('psbText');
-  const counter = document.getElementById('psbCounter');
   const pCount  = document.getElementById('playerCount');
   const pMax    = document.getElementById('playerMax');
+  const pPct    = document.getElementById('playerPct');
   const pBar    = document.getElementById('playerBar');
   const card    = document.getElementById('countCard');
 
   if (!data.online) {
-    dot.className    = 'psb-dot offline';
-    text.textContent = 'Server ist offline';
-    counter.textContent = '';
+    dot.className    = 'plb-dot offline';
+    text.textContent = 'Server offline';
     card.classList.add('offline');
     renderJobs([]);
     return;
   }
 
-  dot.className    = 'psb-dot online';
-  text.textContent = 'Server ist online';
-  counter.textContent = data.players + ' / ' + data.max_players + ' Spieler';
+  dot.className    = 'plb-dot online';
+  text.textContent = 'Server online';
   card.classList.remove('offline');
 
   pCount.textContent = data.players;
   pMax.textContent   = data.max_players;
   const pct = data.max_players > 0 ? Math.round((data.players / data.max_players) * 100) : 0;
+  pPct.textContent   = pct + '%';
   pBar.style.width   = pct + '%';
 
   renderJobs(data.jobs || []);
 }
 
 function renderOffline() {
-  document.getElementById('psbDot').className    = 'psb-dot offline';
-  document.getElementById('psbText').textContent = 'Verbindung fehlgeschlagen';
-  document.getElementById('psbCounter').textContent = '';
+  document.getElementById('psbDot').className    = 'plb-dot offline';
+  document.getElementById('psbText').textContent = 'Nicht erreichbar';
   renderJobs([]);
 }
 
@@ -210,16 +225,19 @@ function renderJobs(jobs) {
   grid.innerHTML = jobs.map(j => {
     const color = JOB_COLORS[j.key] || '#7c3aed';
     const icon  = JOB_ICONS[j.key]  || '';
+    const pct   = Math.min(j.count * 12, 100);
     return `
       <div class="job-card" style="--job-color:${color}">
-        <div class="job-icon">${icon}</div>
-        <div class="job-info">
+        <div class="job-card-glow"></div>
+        <div class="job-card-top">
+          <div class="job-icon">${icon}</div>
           <span class="job-count">${j.count}</span>
-          <span class="job-label">${j.label}</span>
         </div>
+        <div class="job-label">${j.label}</div>
         <div class="job-bar-wrap">
-          <div class="job-bar" style="width:${Math.min(j.count * 10, 100)}%;background:${color}"></div>
+          <div class="job-bar" style="width:${pct}%"></div>
         </div>
+        <div class="job-bar-label">Im Dienst</div>
       </div>`;
   }).join('');
 }

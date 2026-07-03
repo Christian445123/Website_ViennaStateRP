@@ -39,6 +39,7 @@ function avatarUrl(?array $user): string {
       <li><a href="#about">Über uns</a></li>
       <li><a href="#features">Features</a></li>
       <li><a href="#rules">Regeln</a></li>
+      <li><a href="#status">Server Status</a></li>
       <li><a href="<?= htmlspecialchars(DISCORD_INVITE) ?>" target="_blank" rel="noopener">Discord</a></li>
     </ul>
     <div class="nav-actions">
@@ -74,11 +75,11 @@ function avatarUrl(?array $user): string {
     </h1>
     <p class="hero-sub">Wiens authentischstes GTA V Roleplay-Erlebnis.<br>Schreibe deine Geschichte in der Stadt der Träume.</p>
     <div class="hero-stats">
-      <div class="stat"><span class="stat-num" data-target="500">0</span><span class="stat-label">Aktive Spieler</span></div>
+      <div class="stat"><span class="stat-num" data-target="200">0</span><span class="stat-label">Aktive Spieler</span></div>
       <div class="stat-divider"></div>
       <div class="stat"><span class="stat-num" data-target="120">0</span><span class="stat-label">Fraktionen</span></div>
       <div class="stat-divider"></div>
-      <div class="stat"><span class="stat-num" data-target="2">0</span><span class="stat-label">Jahre Online</span></div>
+      <div class="stat"><span class="stat-num" data-target="1">0</span><span class="stat-label">Monat Online</span></div>
     </div>
     <div class="hero-actions">
       <a href="<?= htmlspecialchars(FIVEM_LINK) ?>" class="btn btn-primary btn-lg">
@@ -194,6 +195,44 @@ function avatarUrl(?array $user): string {
   </div>
 </section>
 
+<!-- ==================== SERVER STATUS ==================== -->
+<section class="section section-dark" id="status">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Live</span>
+      <h2>Server <span class="accent">Status</span></h2>
+    </div>
+    <div class="index-status-wrap glass">
+      <div class="index-status-top">
+        <div class="index-status-indicator">
+          <span class="status-dot" id="indexStatusDot"></span>
+          <span id="indexStatusText" style="font-size:.95rem;color:var(--text-muted);">Verbinde…</span>
+        </div>
+        <a href="players.php" class="btn btn-outline" style="font-size:.85rem;padding:6px 16px;">Detailansicht →</a>
+      </div>
+      <div class="index-status-stats" id="indexStatusStats">
+        <div class="index-stat">
+          <span class="index-stat-num" id="indexPlayers">–</span>
+          <span class="index-stat-lbl">Aktive Spieler</span>
+        </div>
+        <div class="index-stat-divider"></div>
+        <div class="index-stat">
+          <span class="index-stat-num" id="indexMaxPlayers">–</span>
+          <span class="index-stat-lbl">Slots gesamt</span>
+        </div>
+        <div class="index-stat-divider"></div>
+        <div class="index-stat">
+          <span class="index-stat-num" id="indexPct">–</span>
+          <span class="index-stat-lbl">Auslastung</span>
+        </div>
+      </div>
+      <div class="status-bar-wrap" style="margin-top:16px;">
+        <div class="status-bar" id="indexStatusBar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ==================== CTA ==================== -->
 <section class="cta-section">
   <div class="cta-bg"></div>
@@ -243,5 +282,45 @@ function avatarUrl(?array $user): string {
 </footer>
 
 <script src="assets/js/main.js"></script>
+<script>
+(async function indexStatus() {
+  const dot    = document.getElementById('indexStatusDot');
+  const text   = document.getElementById('indexStatusText');
+  const pNum   = document.getElementById('indexPlayers');
+  const mNum   = document.getElementById('indexMaxPlayers');
+  const pct    = document.getElementById('indexPct');
+  const bar    = document.getElementById('indexStatusBar');
+  if (!dot) return;
+
+  async function load() {
+    try {
+      const res  = await fetch('api/server_status.php');
+      const data = await res.json();
+
+      if (!data.online) {
+        dot.className    = 'status-dot offline';
+        text.textContent = 'Server offline';
+        pNum.textContent = mNum.textContent = pct.textContent = '–';
+        bar.style.width  = '0%';
+        return;
+      }
+
+      const p = Math.round((data.players / data.max_players) * 100);
+      dot.className    = 'status-dot online';
+      text.textContent = 'Server online';
+      pNum.textContent = data.players;
+      mNum.textContent = data.max_players;
+      pct.textContent  = p + '%';
+      bar.style.width  = p + '%';
+    } catch (e) {
+      dot.className    = 'status-dot offline';
+      text.textContent = 'Nicht erreichbar';
+    }
+  }
+
+  load();
+  setInterval(load, 30000);
+})();
+</script>
 </body>
 </html>
