@@ -181,15 +181,12 @@ function avatarUrl(array $user): string {
         </div>
       </div>
 
-      <!-- Server Info -->
-      <div class="dash-card glass">
-        <h3 class="dash-card-title">📡 Server Info</h3>
-        <ul class="info-list">
-          <li><span>IP</span><code><?= htmlspecialchars(FIVEM_SERVER_IP) ?></code></li>
-          <li><span>Port</span><code><?= htmlspecialchars(FIVEM_SERVER_PORT) ?></code></li>
-          <li><span>Framework</span><code>ESX / QBCore</code></li>
-          <li><span>Version</span><code>FiveM Latest</code></li>
-        </ul>
+      <!-- Server Status (Live) -->
+      <div class="dash-card glass dash-wide" id="serverStatusCard">
+        <h3 class="dash-card-title">📡 Server Status <span class="status-dot" id="statusDot"></span></h3>
+        <div id="serverStatusBody" class="server-status-grid">
+          <div class="status-loading">Lade Server-Status…</div>
+        </div>
       </div>
 
       <!-- Announcements placeholder -->
@@ -225,5 +222,63 @@ function avatarUrl(array $user): string {
 </main>
 
 <script src="assets/js/main.js"></script>
-</body>
+<script>
+// ── Live Server Status ────────────────────────────────────────────────────────
+async function loadServerStatus() {
+  const body = document.getElementById('serverStatusBody');
+  const dot  = document.getElementById('statusDot');
+  if (!body) return;
+
+  try {
+    const res  = await fetch('api/server_status.php');
+    const data = await res.json();
+
+    if (!data.online) {
+      dot.className  = 'status-dot offline';
+      body.innerHTML = '<div class="status-offline">⚫ Server ist offline</div>';
+      return;
+    }
+
+    dot.className = 'status-dot online';
+    const pct     = Math.round((data.players / data.max_players) * 100);
+
+    let playersHtml = '';
+    if (data.player_list && data.player_list.length > 0) {
+      playersHtml = '<div class="player-list">' +
+        data.player_list.slice(0, 20).map(p =>
+          `<span class="player-chip" title="Ping: ${p.ping}ms">${p.name}</span>`
+        ).join('') +
+        (data.players > 20 ? `<span class="player-chip muted">+${data.players - 20} weitere</span>` : '') +
+        '</div>';
+    }
+
+    body.innerHTML = `
+      <div class="status-stats">
+        <div class="status-stat">
+          <span class="status-num">${data.players}</span>
+          <span class="status-lbl">Online</span>
+        </div>
+        <div class="status-stat">
+          <span class="status-num">${data.max_players}</span>
+          <span class="status-lbl">Max Slots</span>
+        </div>
+        <div class="status-stat">
+          <span class="status-num">${pct}%</span>
+          <span class="status-lbl">Auslastung</span>
+        </div>
+      </div>
+      <div class="status-bar-wrap">
+        <div class="status-bar" style="width:${pct}%"></div>
+      </div>
+      ${playersHtml}
+    `;
+  } catch (e) {
+    dot.className  = 'status-dot offline';
+    body.innerHTML = '<div class="status-offline">Server nicht erreichbar</div>';
+  }
+}
+
+loadServerStatus();
+setInterval(loadServerStatus, 30000); // alle 30 Sekunden aktualisieren
+</script>
 </html>

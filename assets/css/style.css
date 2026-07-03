@@ -809,6 +809,33 @@ code {
   transform: translateY(0);
 }
 
+/* ── FiveM Server Status ── */
+.status-dot {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.status-dot.online  { background: #3ba55d; box-shadow: 0 0 8px rgba(59,165,93,0.7); animation: pulse-dot 2s infinite; }
+.status-dot.offline { background: #ef4444; }
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+.server-status-grid { display: flex; flex-direction: column; gap: 14px; }
+.status-loading, .status-offline { color: var(--text-muted); font-size: 0.9rem; padding: 8px 0; }
+.status-stats { display: flex; gap: 32px; }
+.status-stat  { text-align: center; }
+.status-num   { display: block; font-family: 'Orbitron', sans-serif; font-size: 2rem; font-weight: 900; color: var(--accent-gold); text-shadow: var(--gold-glow); }
+.status-lbl   { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+.status-bar-wrap { background: rgba(255,255,255,0.06); border-radius: var(--r-full); height: 6px; overflow: hidden; }
+.status-bar { height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-gold)); border-radius: var(--r-full); transition: width 0.8s ease; min-width: 4px; }
+.player-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.player-chip { background: rgba(124,58,237,0.1); border: 1px solid var(--border-accent); color: var(--text-main); padding: 3px 10px; border-radius: var(--r-full); font-size: 0.8rem; cursor: default; }
+.player-chip.muted { border-color: var(--border); color: var(--text-muted); }
+.player-chip:hover { border-color: var(--accent-gold); color: var(--text-light); }
+
 /* ============================================================
    RESPONSIVE
    ============================================================ */

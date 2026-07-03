@@ -52,10 +52,12 @@ function checkRateLimit(string $action, int $maxAttempts = 5, int $windowSeconds
 }
 
 /** Sendet 429-Antwort und beendet das Skript */
-function rateLimitExceeded(): never
+function rateLimitExceeded(): void
 {
     $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-    log_event('login_bruteforce', "Rate-Limit überschritten von {$ip}", 0, ['ip' => $ip]);
+    if (function_exists('log_event')) {
+        log_event('login_bruteforce', "Rate-Limit überschritten von {$ip}", 0, ['ip' => $ip]);
+    }
     http_response_code(429);
     echo json_encode(['status' => 'error', 'message' => 'Zu viele Anfragen. Bitte warte einige Minuten.']);
     exit;

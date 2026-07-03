@@ -269,7 +269,7 @@ if ($dbRow) {
             hash('sha256', $_SERVER['REMOTE_ADDR'] ?? 'unknown'),
             substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255),
         ]);
-    } catch (\Throwable) {}
+    } catch (\Throwable $e) { error_log('[Callback] login_log: ' . $e->getMessage()); }
 }
 
 header('Location: ' . SITE_URL . '/dashboard.php');

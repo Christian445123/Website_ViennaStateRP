@@ -14,7 +14,7 @@ require_once __DIR__ . '/../includes/logger.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-function json_out(string $status, string $message, string $redirect = ''): never {
+function json_out(string $status, string $message, string $redirect = ''): void {
     ob_end_clean();
     echo json_encode(compact('status', 'message', 'redirect'));
     exit;

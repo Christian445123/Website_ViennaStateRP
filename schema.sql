@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `global_name`     VARCHAR(64)      NOT NULL DEFAULT '',
   `avatar`          VARCHAR(64)          NULL,
   `email`           VARCHAR(255)         NULL,
-  `password_hash`   VARCHAR(255)         NULL,                          -- NULL wenn nur Discord-Login
+  `password_hash`   VARCHAR(255)         NULL,
   `is_verified`     TINYINT(1)       NOT NULL DEFAULT 1,
   `role`            ENUM('player','supporter','moderator','admin') NOT NULL DEFAULT 'player',
   `is_whitelisted`  TINYINT(1)       NOT NULL DEFAULT 0,

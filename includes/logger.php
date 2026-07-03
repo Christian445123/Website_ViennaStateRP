@@ -75,7 +75,7 @@ function log_event(
             $s = $pdo->prepare("SELECT username FROM users WHERE id = ? LIMIT 1");
             $s->execute([$userId]);
             $username = $s->fetchColumn() ?: null;
-        } catch (\Throwable) {}
+        } catch (\Throwable $e) { /* ignorieren */ }
     }
 
     // DB-Log

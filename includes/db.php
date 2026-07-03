@@ -17,12 +17,12 @@ define('_VSRP_DB_LOADED', true);
     foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
         $line = trim($line);
         if ($line === '' || $line[0] === '#') continue;
-        if (!str_contains($line, '=')) continue;
+        if (strpos($line, '=') === false) continue;
         [$key, $val] = explode('=', $line, 2);
         $key = trim($key);
         $val = trim($val);
         // ENC: entschlüsseln
-        if (str_starts_with($val, 'ENC:')) {
+        if (substr($val, 0, 4) === 'ENC:') {
             $val = _vsrp_env_decrypt($val);
         }
         if (!array_key_exists($key, $_ENV)) {
@@ -100,12 +100,15 @@ try {
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES   => false,
         PDO::ATTR_TIMEOUT            => 10,
-        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci, sql_mode='STRICT_ALL_TABLES'",
     ]);
+    // Charset + Strict Mode via Query (PHP 8.5 deprecated MYSQL_ATTR_INIT_COMMAND)
+    $pdo->exec("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci, sql_mode='STRICT_ALL_TABLES'");
 } catch (PDOException $e) {
     error_log('[VSRP DB] Verbindung fehlgeschlagen: ' . $e->getMessage());
-        // $pdo bleibt null – Seiten müssen isset($pdo) prüfen
-        $pdo = null;
+    // $pdo bleibt null – Seiten müssen isset($pdo) prüfen
+    $pdo = null;
+}
+
 // ── Konstanten aus .env ───────────────────────────────────────────────────────
 define('SITE_NAME',    env('SITE_NAME',   'ViennaStateRP'));
 define('SITE_URL',     env('SITE_URL',    'https://viennastaterp.at'));
@@ -118,3 +121,6 @@ define('DISCORD_CLIENT_ID',     env('DISCORD_CLIENT_ID'));
 define('DISCORD_CLIENT_SECRET', env('DISCORD_CLIENT_SECRET'));
 define('DISCORD_REDIRECT_URI',  env('DISCORD_REDIRECT_URI', SITE_URL . '/callback.php'));
 define('DISCORD_GUILD_ID',      env('DISCORD_GUILD_ID'));
+
+// Alias für Kompatibilität
+define('FIVEM_CONNECT_LINK', FIVEM_LINK);
