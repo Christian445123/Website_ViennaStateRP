@@ -1,0 +1,11 @@
+# Ignore secrets
+config.php
+
+# Logs
+*.log
+error_log
+
+# OS files
+.DS_Store
+Thumbs.db
+.env
