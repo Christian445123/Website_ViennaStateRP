@@ -86,16 +86,49 @@ function env(string $key, string $default = ''): string
 }
 
 // ── PDO-Verbindung ────────────────────────────────────────────────────────────
+// Priorität: db_config.enc (Admin-Panel) > .env > Defaults
 try {
+    // Verschlüsselte Config laden falls vorhanden
+    $dbCfgFile = __DIR__ . '/db_config.enc';
+    $dbCfg     = null;
+    if (file_exists($dbCfgFile)) {
+        // db_config.php noch nicht geladen? Dann inline entschlüsseln
+        if (function_exists('db_config_load')) {
+            $dbCfg = db_config_load();
+        } else {
+            // Minimale Inline-Entschlüsselung
+            $raw = file_get_contents($dbCfgFile);
+            if ($raw !== false && strlen($raw) > 28) {
+                $cfgKey = null;
+                $kf = getenv('VSRP_KEY_FILE') ?: (dirname($_SERVER['DOCUMENT_ROOT'] ?? __DIR__) . '/vsrp.key');
+                if (is_readable($kf)) {
+                    $cfgKey = hash('sha256', trim((string) file_get_contents($kf)), true);
+                } elseif (($ek = getenv('VSRP_SECRET_KEY') ?: ($_ENV['VSRP_SECRET_KEY'] ?? '')) !== '') {
+                    $cfgKey = hash('sha256', $ek, true);
+                }
+                if ($cfgKey) {
+                    $nonce = substr($raw, 0, 12);
+                    $tag   = substr($raw, 12, 16);
+                    $json  = openssl_decrypt(substr($raw, 28), 'aes-256-gcm', $cfgKey, OPENSSL_RAW_DATA, $nonce, $tag);
+                    if ($json !== false) $dbCfg = json_decode($json, true);
+                }
+            }
+        }
+    }
+
+    $dbHost    = $dbCfg['host']    ?? env('DB_HOST',    '127.0.0.1');
+    $dbPort    = $dbCfg['port']    ?? env('DB_PORT',    '3306');
+    $dbName    = $dbCfg['name']    ?? env('DB_NAME',    'viennastaterp');
+    $dbUser    = $dbCfg['user']    ?? env('DB_USER',    '');
+    $dbPass    = $dbCfg['pass']    ?? env('DB_PASS',    '');
+    $dbCharset = $dbCfg['charset'] ?? env('DB_CHARSET', 'utf8mb4');
+
     $dsn = sprintf(
         'mysql:host=%s;port=%s;dbname=%s;charset=%s;connect_timeout=10',
-        env('DB_HOST', '127.0.0.1'),
-        env('DB_PORT', '3306'),
-        env('DB_NAME', 'viennastaterp'),
-        env('DB_CHARSET', 'utf8mb4')
+        $dbHost, $dbPort, $dbName, $dbCharset
     );
 
-    $pdo = new PDO($dsn, env('DB_USER'), env('DB_PASS'), [
+    $pdo = new PDO($dsn, $dbUser, $dbPass, [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES   => false,
@@ -124,3 +157,6 @@ define('DISCORD_GUILD_ID',      env('DISCORD_GUILD_ID',      '152081525137605035
 
 // Alias für Kompatibilität
 define('FIVEM_CONNECT_LINK', FIVEM_LINK);
+
+// Verschluesselungs-Modul laden
+require_once __DIR__ . '/encryption.php';

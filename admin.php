@@ -6,6 +6,7 @@ require_once __DIR__ . '/includes/discord_config.php';
 require_once __DIR__ . '/includes/permissions.php';
 require_once __DIR__ . '/includes/fivem_api.php';
 require_once __DIR__ . '/includes/site_settings.php';
+require_once __DIR__ . '/includes/db_config.php';
 
 require_login();
 if (!has_permission('admin')) {
@@ -203,6 +204,114 @@ if (!function_exists('avatarUrl')) {
       </div>
 
     </div><!-- /.admin-grid -->
+
+    <!-- ═══════════════════════════════════════════════════
+         DATENBANKVERBINDUNG (Admin only)
+    ═══════════════════════════════════════════════════ -->
+    <div style="margin-top:40px;border-top:1px solid var(--border);padding-top:36px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:900">🗄 MariaDB <span style="color:#e8b86d">Verbindung</span></div>
+          <p style="color:#64748b;font-size:.78rem;margin-top:4px">Credentials werden AES-256-GCM verschlüsselt in <code style="color:#86efac;font-size:.72rem">includes/db_config.enc</code> gespeichert</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <span id="dbStatusBadge" style="display:none;padding:4px 12px;border-radius:999px;font-size:.75rem;font-weight:700"></span>
+          <a href="db_admin.php" class="btn btn-outline" style="font-size:.82rem;padding:7px 16px">🗃 DB-Browser →</a>
+        </div>
+      </div>
+
+      <?php
+      $currentCfg = db_config_load();
+      $cfgSource  = $currentCfg ? 'db_config.enc' : '.env';
+      ?>
+      <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:24px">
+        <div style="font-size:.72rem;color:#64748b;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+          <span>Aktive Quelle:</span>
+          <span style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#86efac;border-radius:4px;padding:2px 8px;font-weight:700"><?= htmlspecialchars($cfgSource) ?></span>
+          <?php if ($currentCfg && isset($currentCfg['updated_at'])): ?>
+          <span style="color:#4b5563">· Zuletzt gespeichert: <?= htmlspecialchars($currentCfg['updated_at']) ?></span>
+          <?php endif; ?>
+        </div>
+
+        <form id="dbConfigForm">
+          <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>" />
+          <div style="display:grid;grid-template-columns:1fr 120px;gap:14px;margin-bottom:14px">
+            <div>
+              <label style="font-size:.72rem;color:#94a3b8;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Host / IP-Adresse</label>
+              <input type="text" name="host" id="dbHost"
+                value="<?= htmlspecialchars($currentCfg['host'] ?? env('DB_HOST','127.0.0.1')) ?>"
+                placeholder="127.0.0.1 oder mariadb-hostname"
+                style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:#e2e8f0;font-family:inherit;font-size:.9rem" />
+            </div>
+            <div>
+              <label style="font-size:.72rem;color:#94a3b8;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Port</label>
+              <input type="number" name="port" id="dbPort"
+                value="<?= htmlspecialchars($currentCfg['port'] ?? env('DB_PORT','3306')) ?>"
+                placeholder="3306"
+                style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:#e2e8f0;font-family:inherit;font-size:.9rem" />
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div>
+              <label style="font-size:.72rem;color:#94a3b8;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Datenbankname</label>
+              <input type="text" name="name" id="dbName"
+                value="<?= htmlspecialchars($currentCfg['name'] ?? env('DB_NAME','')) ?>"
+                placeholder="viennastaterp"
+                style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:#e2e8f0;font-family:inherit;font-size:.9rem" />
+            </div>
+            <div>
+              <label style="font-size:.72rem;color:#94a3b8;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Zeichensatz</label>
+              <select name="charset" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:#e2e8f0;font-family:inherit;font-size:.9rem">
+                <option value="utf8mb4" <?= ($currentCfg['charset'] ?? 'utf8mb4') === 'utf8mb4' ? 'selected' : '' ?>>utf8mb4 (empfohlen)</option>
+                <option value="utf8" <?= ($currentCfg['charset'] ?? '') === 'utf8' ? 'selected' : '' ?>>utf8</option>
+                <option value="latin1" <?= ($currentCfg['charset'] ?? '') === 'latin1' ? 'selected' : '' ?>>latin1</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+            <div>
+              <label style="font-size:.72rem;color:#94a3b8;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Benutzername</label>
+              <input type="text" name="user" id="dbUser"
+                value="<?= htmlspecialchars($currentCfg['user'] ?? env('DB_USER','')) ?>"
+                placeholder="db_user" autocomplete="off"
+                style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:#e2e8f0;font-family:inherit;font-size:.9rem" />
+            </div>
+            <div>
+              <label style="font-size:.72rem;color:#94a3b8;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">
+                Passwort <span style="color:#4b5563;font-weight:400">(leer lassen = unverändert)</span>
+              </label>
+              <div style="position:relative">
+                <input type="password" name="pass" id="dbPass"
+                  placeholder="••••••••" autocomplete="new-password"
+                  style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 36px 9px 12px;color:#e2e8f0;font-family:inherit;font-size:.9rem" />
+                <button type="button" onclick="toggleDbPw()"
+                  style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#64748b;cursor:pointer">👁</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center">
+            <button type="button" onclick="testDbConnection()" class="btn btn-outline" style="padding:9px 20px">
+              🔌 Verbindung testen
+            </button>
+            <button type="submit" class="btn btn-primary" style="padding:9px 20px">
+              💾 Verschlüsselt speichern
+            </button>
+            <span id="dbMsg" style="font-size:.82rem;display:none"></span>
+          </div>
+        </form>
+
+        <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+          <div style="font-size:.7rem;color:#4b5563;display:flex;flex-wrap:wrap;gap:16px">
+            <span>🔐 Verschlüsselung: AES-256-GCM</span>
+            <span>🗝 Key: VSRP_SECRET_KEY (.env) oder vsrp.key</span>
+            <span>📁 Speicherort: includes/db_config.enc</span>
+            <span>🚫 Öffentlich gesperrt via .htaccess</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </main>
 
@@ -214,6 +323,68 @@ if (!function_exists('avatarUrl')) {
 
 <script src="assets/js/main.js"></script>
 <script>
+// ── DB-Konfiguration ──────────────────────────────────────────────────────────
+function toggleDbPw() {
+  const i = document.getElementById('dbPass');
+  i.type = i.type === 'password' ? 'text' : 'password';
+}
+
+async function testDbConnection() {
+  const msg = document.getElementById('dbMsg');
+  msg.style.display = 'block';
+  msg.style.color = '#64748b';
+  msg.textContent = 'Teste Verbindung...';
+
+  const data = collectDbForm();
+  const r = await fetch('api/admin_db.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...data, _test_only: true }),
+  });
+  const res = await r.json();
+  if (res.ok) {
+    msg.style.color = '#22c55e';
+    msg.textContent = '✓ Verbunden – MariaDB ' + (res.db?.version || '');
+  } else {
+    msg.style.color = '#ef4444';
+    msg.textContent = '✗ ' + (res.error || 'Fehler');
+  }
+}
+
+function collectDbForm() {
+  const f = document.getElementById('dbConfigForm');
+  return {
+    csrf_token: f.querySelector('[name=csrf_token]').value,
+    host:    f.querySelector('[name=host]').value.trim(),
+    port:    parseInt(f.querySelector('[name=port]').value) || 3306,
+    name:    f.querySelector('[name=name]').value.trim(),
+    user:    f.querySelector('[name=user]').value.trim(),
+    pass:    f.querySelector('[name=pass]').value,
+    charset: f.querySelector('[name=charset]').value,
+  };
+}
+
+document.getElementById('dbConfigForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const msg = document.getElementById('dbMsg');
+  msg.style.display = 'block';
+  msg.style.color = '#64748b';
+  msg.textContent = 'Speichere und teste...';
+
+  const r = await fetch('api/admin_db.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(collectDbForm()),
+  });
+  const res = await r.json();
+  if (res.ok) {
+    msg.style.color = '#22c55e';
+    msg.textContent = '✓ ' + res.message + ' (' + (res.db?.version || '') + ')';
+  } else {
+    msg.style.color = '#ef4444';
+    msg.textContent = '✗ ' + (res.error || 'Fehler');
+  }
+});
 // ── Einstellungen speichern ───────────────────────────────────────────────────
 let changed = false;
 
