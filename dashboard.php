@@ -11,21 +11,8 @@ require_login();
 
 $user = current_user();
 
-// --- Whitelist-Bewerbung → wird jetzt via process/process_whitelist.php gehandelt ---
-// Dashboard lädt nur den aktuellen Status
-$formSuccess = htmlspecialchars($_GET['wl_success'] ?? $_GET['success'] ?? '', ENT_QUOTES);
-$formError   = htmlspecialchars($_GET['wl_error']   ?? $_GET['error']   ?? '', ENT_QUOTES);
-
 // Discord-Verknüpfungs-URL (für Passwort-User ohne Discord)
 $linkDiscordUrl = empty($user['id']) ? discord_auth_url() : null;
-
-// --- Whitelist-Status aus DB laden ---
-$wlApplication = null;
-if (!empty($user['db_id'])) {
-    $s = $pdo->prepare('SELECT status, staff_note, created_at FROM whitelist_applications WHERE user_id = ? ORDER BY created_at DESC LIMIT 1');
-    $s->execute([$user['db_id']]);
-    $wlApplication = $s->fetch() ?: null;
-}
 
 function avatarUrl(array $user): string {
     return discord_avatar($user['id'], $user['avatar'] ?? null, 256);
@@ -81,78 +68,7 @@ function avatarUrl(array $user): string {
     <!-- Dashboard Grid -->
     <div class="dashboard-grid">
 
-      <!-- Whitelist Status -->
-      <div class="dash-card glass">
-        <h3 class="dash-card-title">✅ Whitelist Status</h3>
-        <?php if ($user['is_whitelisted'] ?? false): ?>
-          <div class="wl-badge wl-approved">✓ Whitelisted – Du hast Zugang zum Server</div>
-        <?php elseif ($wlApplication): ?>
-          <?php
-            $statusMap = ['pending'=>['🕐','wl-pending','Bewerbung läuft'], 'approved'=>['✓','wl-approved','Genehmigt'], 'rejected'=>['✗','wl-rejected','Abgelehnt']];
-            [$icon, $cls, $label] = $statusMap[$wlApplication['status']] ?? ['?','wl-pending','Unbekannt'];
-          ?>
-          <div class="wl-badge <?= $cls ?>"><?= $icon ?> <?= $label ?></div>
-          <p class="wl-date">Eingereicht am <?= date('d.m.Y', strtotime($wlApplication['created_at'])) ?></p>
-          <?php if ($wlApplication['staff_note']): ?>
-            <p class="wl-note"><strong>Staff-Notiz:</strong> <?= htmlspecialchars($wlApplication['staff_note']) ?></p>
-          <?php endif; ?>
-        <?php else: ?>
-          <div class="wl-badge wl-pending">⚠ Noch nicht beworben</div>
-          <p style="color:var(--text-200);font-size:.88rem;margin-top:8px;">Fülle das Whitelist-Formular unten aus, um Zugang zu erhalten.</p>
-        <?php endif; ?>
-      </div>
 
-      <!-- Whitelist-Formular -->
-      <?php if (!($user['is_whitelisted'] ?? false) && (!$wlApplication || $wlApplication['status'] === 'rejected')): ?>
-      <div class="dash-card glass dash-wide">
-        <h3 class="dash-card-title">📋 Whitelist Bewerbung</h3>
-
-        <?php if ($formSuccess): ?>
-          <div class="alert alert-success"><?= $formSuccess ?></div>
-        <?php elseif ($formError): ?>
-          <div class="alert alert-error">⚠ <?= $formError ?></div>
-        <?php endif; ?>
-
-        <form method="POST" action="process/process_whitelist.php" class="wl-form" id="wlForm">
-          <input type="hidden" name="action" value="apply_whitelist" />
-          <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>" />
-
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="real_name">Dein echter Vorname</label>
-              <input type="text" id="real_name" name="real_name" required maxlength="100" placeholder="Max" />
-            </div>
-            <div class="form-group">
-              <label for="age">Dein Alter</label>
-              <input type="number" id="age" name="age" required min="14" max="80" placeholder="20" />
-            </div>
-            <div class="form-group">
-              <label for="char_name">Charaktername (IC)</label>
-              <input type="text" id="char_name" name="char_name" required maxlength="100" placeholder="Max Mustermann" />
-            </div>
-            <div class="form-group form-full">
-              <label for="char_story">Hintergrundgeschichte deines Charakters</label>
-              <textarea id="char_story" name="char_story" required minlength="100" maxlength="3000" rows="5"
-                placeholder="Erzähle uns, wer dein Charakter ist, woher er kommt..."></textarea>
-            </div>
-            <div class="form-group form-full">
-              <label for="motivation">Warum möchtest du bei ViennaStateRP spielen?</label>
-              <textarea id="motivation" name="motivation" required minlength="50" maxlength="1000" rows="4"
-                placeholder="Was motiviert dich, unserem Server beizutreten?"></textarea>
-            </div>
-            <div class="form-group form-full">
-              <label for="rp_experience">Deine RP-Erfahrung</label>
-              <textarea id="rp_experience" name="rp_experience" required minlength="20" maxlength="1000" rows="3"
-                placeholder="Hast du bereits auf anderen RP-Servern gespielt? Welche?"></textarea>
-            </div>
-          </div>
-
-          <button type="submit" class="btn btn-primary" style="margin-top:8px;">
-            Bewerbung einreichen
-          </button>
-        </form>
-      </div>
-      <?php endif; ?>
 
       <!-- Discord verknüpfen (nur wenn kein Discord verknüpft) -->
       <?php if ($linkDiscordUrl): ?>

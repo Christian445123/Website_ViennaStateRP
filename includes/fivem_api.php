@@ -65,7 +65,6 @@ class FiveMAPI
             'hostname'    => $dynamic['hostname'] ?? FIVEM_IP,
             'player_list' => array_map(fn($p) => [
                 'id'   => $p['id']   ?? 0,
-                'name' => htmlspecialchars($p['name'] ?? 'Unknown', ENT_QUOTES),
                 'ping' => (int) ($p['ping'] ?? 0),
             ], array_slice($players, 0, 50)), // max 50 anzeigen
         ];
@@ -148,18 +147,26 @@ class FiveMAPI
         return json_decode((string) $result, true) ?? null;
     }
 
+    private static function bridgeUrl(): string
+    {
+        // FiveM HTTP-Handler läuft auf dem Spielport (standard 30120)
+        // Endpoint: http://<ip>:<port>/vsrp_bridge/vsrp
+        return rtrim(FIVEM_API_URL, '/') . '/vsrp_bridge/vsrp';
+    }
+
     private static function bridgeRequest(string $action, array $payload): bool
     {
         if (!FIVEM_BRIDGE_SECRET) return false;
 
         $payload['action']    = $action;
         $payload['timestamp'] = time();
+        $payload['secret']    = FIVEM_BRIDGE_SECRET;
         $body = json_encode($payload, JSON_UNESCAPED_UNICODE);
 
         // HMAC-SHA256 Signatur
         $signature = hash_hmac('sha256', $body, FIVEM_BRIDGE_SECRET);
 
-        $url = rtrim(FIVEM_API_URL, '/') . ':' . (defined('FIVEM_BRIDGE_PORT') ? FIVEM_BRIDGE_PORT : '30121') . '/vsrp';
+        $url = self::bridgeUrl();
         $ch  = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_POST           => true,
@@ -181,5 +188,68 @@ class FiveMAPI
         if ($result === false || $code !== 200) return false;
         $data = json_decode((string) $result, true);
         return ($data['ok'] ?? false) === true;
+    }
+
+    /**
+     * Wie bridgeRequest, gibt aber die Antwort-Daten zurück (für Abfragen)
+     */
+    private static function bridgeQuery(string $action, array $payload = []): ?array
+    {
+        if (!FIVEM_BRIDGE_SECRET) return null;
+
+        $payload['action']    = $action;
+        $payload['timestamp'] = time();
+        $payload['secret']    = FIVEM_BRIDGE_SECRET;
+        $body = json_encode($payload, JSON_UNESCAPED_UNICODE);
+
+        $signature = hash_hmac('sha256', $body, FIVEM_BRIDGE_SECRET);
+
+        $url = self::bridgeUrl();
+        $ch  = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $body,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 5,
+            CURLOPT_CONNECTTIMEOUT => 3,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'X-VSRP-Signature: ' . $signature,
+                'X-VSRP-Timestamp: ' . $payload['timestamp'],
+            ],
+        ]);
+        $result = curl_exec($ch);
+        $code   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($result === false || $code !== 200) return null;
+        return json_decode((string) $result, true) ?? null;
+    }
+
+    /**
+     * Job-Statistiken: Anzahl aktiver Spieler pro Job
+     * Erwartet vom Bridge eine Antwort: { "ok": true, "jobs": { "police": 3, "fire": 1, ... } }
+     */
+    public static function getJobStats(): array
+    {
+        $defined = [
+            'police'    => 'Polizei',
+            'fire'      => 'Feuerwehr',
+            'ambulance' => 'Berufsrettung Wien',
+            'mechanic'  => 'Mechanik',
+        ];
+
+        $data = self::bridgeQuery('job_stats');
+
+        $jobs = [];
+        foreach ($defined as $key => $label) {
+            $jobs[] = [
+                'key'   => $key,
+                'label' => $label,
+                'count' => (int) ($data['jobs'][$key] ?? 0),
+            ];
+        }
+        return $jobs;
     }
 }

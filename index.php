@@ -234,7 +234,7 @@ function avatarUrl(?array $user): string {
     <div class="footer-links">
       <h5>Server</h5>
       <a href="<?= htmlspecialchars(FIVEM_LINK) ?>">Verbinden</a>
-      <p class="server-ip"><?= htmlspecialchars(FIVEM_SERVER_IP) ?>:<?= htmlspecialchars(FIVEM_SERVER_PORT) ?></p>
+      <p class="server-ip"><?= htmlspecialchars(FIVEM_IP) ?>:<?= htmlspecialchars(FIVEM_PORT) ?></p>
     </div>
   </div>
   <div class="footer-bottom">

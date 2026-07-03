@@ -147,6 +147,16 @@ if (isset($pdo)) {
 }
 
 // ── Session aufbauen ──────────────────────────────────────────────────────────
+
+// Wenn kein DB-Eintrag gefunden/erstellt werden konnte → Login verweigern
+if (!$dbRow || empty($dbRow['id'])) {
+    error_log('[Callback] Kein DB-Eintrag für Discord-ID ' . ($discordUser['id'] ?? '?'));
+    session_unset();
+    session_destroy();
+    header('Location: ' . $siteUrl . '/index.php?error=' . urlencode('Anmeldung fehlgeschlagen – Datenbankfehler. Bitte erneut versuchen.'));
+    exit;
+}
+
 session_regenerate_id(true);
 
 $_SESSION['discord_user'] = [
