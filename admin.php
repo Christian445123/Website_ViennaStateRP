@@ -306,10 +306,20 @@ function renderData(d) {
   // Einsatzkraefte
   let jobsHtml = '–';
   if (d.jobs && d.jobs.length) {
-    jobsHtml = d.jobs.map(j => '<span class="res-tag">' + j.label + ': <strong>' + j.count + '</strong></span>').join('');
-    jobsHtml = '<div class="res-list">' + jobsHtml + '</div>';
+    const total = d.jobs.reduce((s,j) => s + j.count, 0);
+    jobsHtml = '<table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:.85rem">'
+      + '<tr style="color:#4b5563;font-size:.7rem"><th style="text-align:left;padding:2px 6px">Job</th><th style="text-align:right;padding:2px 6px">Spieler</th><th style="text-align:right;padding:2px 6px">Anteil</th></tr>';
+    d.jobs.forEach(j => {
+      const pct = total > 0 ? Math.round(j.count/total*100) : 0;
+      jobsHtml += '<tr style="border-top:1px solid #1e1e28">'
+        + '<td style="padding:5px 6px;color:#e2e8f0">' + (j.label || j.key) + '</td>'
+        + '<td style="padding:5px 6px;text-align:right;font-family:monospace;color:#e8b86d"><b>' + j.count + '</b></td>'
+        + '<td style="padding:5px 6px;text-align:right;color:#64748b">' + pct + '%</td>'
+        + '</tr>';
+    });
+    jobsHtml += '</table>';
   }
-  rows.push(['Einsatzkraefte', jobsHtml]);
+  rows.push(['Einsatzkräfte gesamt (' + (d.jobs ? d.jobs.length : 0) + ' Jobs)', jobsHtml]);
 
   let html = '<table class="data-table"><thead><tr><th>Feld</th><th>Wert</th></tr></thead><tbody>';
   rows.forEach(([k, v]) => {

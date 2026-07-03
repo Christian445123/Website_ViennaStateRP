@@ -70,9 +70,9 @@ if (empty($du['id'])) {
     exit;
 }
 
-// ── Discord Guilds holen (zur Guild-Pruefung) ─────────────────────────────────
+// ── Discord Guilds holen ─────────────────────────────────────────────────────
 $guilds = [];
-if (str_contains($scope, 'guilds')) {
+if (strpos($scope, 'guilds') !== false) {
     $guildsRaw = _discord_get('https://discord.com/api/users/@me/guilds', $accessToken);
     if (is_array($guildsRaw)) {
         $guilds = $guildsRaw;
@@ -82,10 +82,22 @@ if (str_contains($scope, 'guilds')) {
 // ── DB: User anlegen / aktualisieren ─────────────────────────────────────────
 $dbRow = null;
 if (!isset($pdo)) {
-    error_log('[Callback] Keine Datenbankverbindung – Login nicht moeglich');
+    error_log('[Callback] Keine Datenbankverbindung');
     header('Location: ' . $siteUrl . '/login.php?error=' . urlencode('Datenbankfehler – bitte erneut versuchen'));
     exit;
 }
+
+// Welche Spalten existieren in users? (Schema-agnostisch)
+$existingCols = [];
+try {
+    $colStmt = $pdo->query("SHOW COLUMNS FROM users");
+    foreach ($colStmt->fetchAll(PDO::FETCH_ASSOC) as $col) {
+        $existingCols[] = $col['Field'];
+    }
+} catch (\Throwable $e) {
+    error_log('[Callback] SHOW COLUMNS fehlgeschlagen: ' . $e->getMessage());
+}
+$hasCol = fn(string $c) => in_array($c, $existingCols, true);
 
 try {
     // Modus: Discord an bestehenden Account knoepfen
@@ -93,29 +105,14 @@ try {
         && !empty($_SESSION['discord_user']['db_id'])
         && empty($_SESSION['discord_user']['id'])) {
 
-        $pdo->prepare(
-            'UPDATE users SET
-               discord_id=?, username=?, global_name=?, avatar=?, banner=?,
-               accent_color=?, email=?, discord_email_verified=?, discord_locale=?,
-               discord_mfa_enabled=?, discord_premium_type=?, discord_public_flags=?,
-               last_login=NOW()
-             WHERE id=?'
-        )->execute([
-            $du['id'],
-            $du['username'],
-            $du['global_name'] ?? $du['username'],
-            $du['avatar']      ?? null,
-            $du['banner']      ?? null,
-            $du['accent_color'] ?? null,
-            $du['email']       ?? null,
-            (int) ($du['verified']     ?? 0),
-            $du['locale']      ?? null,
-            (int) ($du['mfa_enabled']  ?? 0),
-            (int) ($du['premium_type'] ?? 0),
-            (int) ($du['public_flags'] ?? 0),
-            $_SESSION['discord_user']['db_id'],
-        ]);
+        $sets = ['discord_id=?', 'username=?', 'global_name=?', 'avatar=?', 'last_login=NOW()'];
+        $vals = [$du['id'], $du['username'], $du['global_name'] ?? $du['username'], $du['avatar'] ?? null];
+        if ($hasCol('email'))  { $sets[] = 'email=?';  $vals[] = $du['email'] ?? null; }
+        if ($hasCol('banner')) { $sets[] = 'banner=?'; $vals[] = $du['banner'] ?? null; }
+        if ($hasCol('discord_locale')) { $sets[] = 'discord_locale=?'; $vals[] = $du['locale'] ?? null; }
+        $vals[] = $_SESSION['discord_user']['db_id'];
 
+        $pdo->prepare('UPDATE users SET ' . implode(', ', $sets) . ' WHERE id=?')->execute($vals);
         $_SESSION['discord_user']['id']     = $du['id'];
         $_SESSION['discord_user']['avatar'] = $du['avatar'] ?? null;
 
@@ -126,64 +123,51 @@ try {
         exit;
     }
 
-    // Normaler Discord-Login
+    // Normaler Discord-Login: bestehenden Account suchen
     $stmt = $pdo->prepare('SELECT id, role, is_whitelisted, is_banned, ban_reason FROM users WHERE discord_id = ?');
     $stmt->execute([$du['id']]);
     $dbRow = $stmt->fetch() ?: null;
 
     if (!$dbRow) {
-        // Neuen Account anlegen
-        $pdo->prepare(
-            'INSERT INTO users
-               (discord_id, username, global_name, avatar, banner, accent_color,
-                email, discord_email_verified, discord_locale, discord_mfa_enabled,
-                discord_premium_type, discord_public_flags, is_verified, last_login)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1,NOW())'
-        )->execute([
-            $du['id'],
-            $du['username'],
-            $du['global_name']  ?? $du['username'],
-            $du['avatar']       ?? null,
-            $du['banner']       ?? null,
-            $du['accent_color'] ?? null,
-            $du['email']        ?? null,
-            (int) ($du['verified']     ?? 0),
-            $du['locale']       ?? null,
-            (int) ($du['mfa_enabled']  ?? 0),
-            (int) ($du['premium_type'] ?? 0),
-            (int) ($du['public_flags'] ?? 0),
-        ]);
+        // INSERT – nur garantiert existierende Spalten
+        $cols = ['discord_id', 'username', 'global_name', 'avatar', 'is_verified', 'last_login'];
+        $vals = [$du['id'], $du['username'], $du['global_name'] ?? $du['username'], $du['avatar'] ?? null, 1];
+        $plch = ['?', '?', '?', '?', '?', 'NOW()'];
+
+        if ($hasCol('email'))  { $cols[] = 'email';  $vals[] = $du['email'] ?? null; $plch[] = '?'; }
+        if ($hasCol('banner')) { $cols[] = 'banner'; $vals[] = $du['banner'] ?? null; $plch[] = '?'; }
+        if ($hasCol('discord_email_verified')) { $cols[] = 'discord_email_verified'; $vals[] = (int)($du['verified'] ?? 0); $plch[] = '?'; }
+        if ($hasCol('discord_locale'))         { $cols[] = 'discord_locale';         $vals[] = $du['locale'] ?? null; $plch[] = '?'; }
+        if ($hasCol('discord_mfa_enabled'))    { $cols[] = 'discord_mfa_enabled';    $vals[] = (int)($du['mfa_enabled'] ?? 0); $plch[] = '?'; }
+        if ($hasCol('discord_premium_type'))   { $cols[] = 'discord_premium_type';   $vals[] = (int)($du['premium_type'] ?? 0); $plch[] = '?'; }
+        if ($hasCol('discord_public_flags'))   { $cols[] = 'discord_public_flags';   $vals[] = (int)($du['public_flags'] ?? 0); $plch[] = '?'; }
+        if ($hasCol('accent_color'))           { $cols[] = 'accent_color';           $vals[] = $du['accent_color'] ?? null; $plch[] = '?'; }
+
+        $sql = 'INSERT INTO users (' . implode(', ', $cols) . ') VALUES (' . implode(', ', $plch) . ')';
+        $pdo->prepare($sql)->execute($vals);
 
         $stmt->execute([$du['id']]);
         $dbRow = $stmt->fetch() ?: null;
 
         if (function_exists('log_event')) {
-            log_event('discord_register', "Neuer Account: {$du['username']}", (int) ($dbRow['id'] ?? 0));
+            log_event('discord_register', "Neuer Account: {$du['username']}", (int)($dbRow['id'] ?? 0));
         }
-
     } else {
-        // Bestehenden Account aktualisieren
-        $pdo->prepare(
-            'UPDATE users SET
-               username=?, global_name=?, avatar=?, banner=?, accent_color=?,
-               email=?, discord_email_verified=?, discord_locale=?,
-               discord_mfa_enabled=?, discord_premium_type=?, discord_public_flags=?,
-               last_login=NOW()
-             WHERE discord_id=?'
-        )->execute([
-            $du['username'],
-            $du['global_name']  ?? $du['username'],
-            $du['avatar']       ?? null,
-            $du['banner']       ?? null,
-            $du['accent_color'] ?? null,
-            $du['email']        ?? null,
-            (int) ($du['verified']     ?? 0),
-            $du['locale']       ?? null,
-            (int) ($du['mfa_enabled']  ?? 0),
-            (int) ($du['premium_type'] ?? 0),
-            (int) ($du['public_flags'] ?? 0),
-            $du['id'],
-        ]);
+        // UPDATE – nur existierende Spalten
+        $sets = ['username=?', 'global_name=?', 'avatar=?', 'last_login=NOW()'];
+        $vals = [$du['username'], $du['global_name'] ?? $du['username'], $du['avatar'] ?? null];
+
+        if ($hasCol('email'))  { $sets[] = 'email=?';  $vals[] = $du['email'] ?? null; }
+        if ($hasCol('banner')) { $sets[] = 'banner=?'; $vals[] = $du['banner'] ?? null; }
+        if ($hasCol('discord_email_verified')) { $sets[] = 'discord_email_verified=?'; $vals[] = (int)($du['verified'] ?? 0); }
+        if ($hasCol('discord_locale'))         { $sets[] = 'discord_locale=?';         $vals[] = $du['locale'] ?? null; }
+        if ($hasCol('discord_mfa_enabled'))    { $sets[] = 'discord_mfa_enabled=?';    $vals[] = (int)($du['mfa_enabled'] ?? 0); }
+        if ($hasCol('discord_premium_type'))   { $sets[] = 'discord_premium_type=?';   $vals[] = (int)($du['premium_type'] ?? 0); }
+        if ($hasCol('discord_public_flags'))   { $sets[] = 'discord_public_flags=?';   $vals[] = (int)($du['public_flags'] ?? 0); }
+        if ($hasCol('accent_color'))           { $sets[] = 'accent_color=?';           $vals[] = $du['accent_color'] ?? null; }
+        $vals[] = $du['id'];
+
+        $pdo->prepare('UPDATE users SET ' . implode(', ', $sets) . ' WHERE discord_id=?')->execute($vals);
     }
 
     if (!$dbRow || empty($dbRow['id'])) {
@@ -202,26 +186,37 @@ try {
         exit;
     }
 
-    // Tokens, Guilds, Login-Log speichern
+    // Tokens + Guilds speichern (scheitern still wenn Tabellen fehlen)
     _save_tokens($pdo, $userId, $accessToken, $refreshToken, $expiresIn, $scope);
     _save_guilds($pdo, $userId, $guilds);
 
-    $pdo->prepare(
-        'INSERT INTO login_log (user_id, method, ip_hash, user_agent) VALUES (?,?,?,?)'
-    )->execute([
-        $userId,
-        'discord',
-        hash('sha256', $_SERVER['REMOTE_ADDR'] ?? ''),
-        substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255),
-    ]);
+    // Login-Log (method-Spalte optional)
+    try {
+        if ($hasCol('method') || in_array('method', array_column($pdo->query("SHOW COLUMNS FROM login_log")->fetchAll(), 'Field'), true)) {
+            $pdo->prepare('INSERT INTO login_log (user_id, method, ip_hash, user_agent) VALUES (?,?,?,?)')->execute([
+                $userId, 'discord',
+                hash('sha256', $_SERVER['REMOTE_ADDR'] ?? ''),
+                substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255),
+            ]);
+        } else {
+            $pdo->prepare('INSERT INTO login_log (user_id, ip_hash, user_agent) VALUES (?,?,?)')->execute([
+                $userId,
+                hash('sha256', $_SERVER['REMOTE_ADDR'] ?? ''),
+                substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255),
+            ]);
+        }
+    } catch (\Throwable $e) {
+        error_log('[Callback] login_log Fehler: ' . $e->getMessage());
+    }
 
     if (function_exists('log_event')) {
         log_event('discord_login', "{$du['username']} eingeloggt", $userId);
     }
 
 } catch (\Throwable $e) {
-    error_log('[Callback] DB-Fehler: ' . $e->getMessage());
-    header('Location: ' . $siteUrl . '/login.php?error=' . urlencode('Datenbankfehler – bitte erneut versuchen'));
+    error_log('[Callback] DB-Fehler: ' . $e->getMessage() . ' | File: ' . $e->getFile() . ':' . $e->getLine());
+    // Temporär: echte Fehlermeldung anzeigen zur Diagnose
+    header('Location: ' . $siteUrl . '/login.php?error=' . urlencode('DB-Fehler: ' . $e->getMessage()));
     exit;
 }
 
@@ -250,48 +245,49 @@ exit;
 
 // ── Hilfs-Funktionen ─────────────────────────────────────────────────────────
 
-/** OAuth-Tokens verschluesselt in DB speichern */
+/** OAuth-Tokens verschluesselt in DB speichern – scheitert still wenn Tabelle fehlt */
 function _save_tokens(PDO $pdo, int $userId, string $access, ?string $refresh, int $expiresIn, string $scope): void
 {
-    $encAccess  = function_exists('vsrp_env_encrypt') ? vsrp_env_encrypt($access)            : $access;
-    $encRefresh = ($refresh && function_exists('vsrp_env_encrypt')) ? vsrp_env_encrypt($refresh) : $refresh;
-    $expiresAt  = date('Y-m-d H:i:s', time() + $expiresIn);
+    try {
+        $encAccess  = function_exists('vsrp_env_encrypt') ? vsrp_env_encrypt($access)  : $access;
+        $encRefresh = ($refresh && function_exists('vsrp_env_encrypt')) ? vsrp_env_encrypt($refresh) : $refresh;
+        $expiresAt  = date('Y-m-d H:i:s', time() + $expiresIn);
 
-    $pdo->prepare(
-        'INSERT INTO discord_tokens (user_id, access_token, refresh_token, scope, expires_at)
-         VALUES (?,?,?,?,?)
-         ON DUPLICATE KEY UPDATE
-           access_token=VALUES(access_token),
-           refresh_token=VALUES(refresh_token),
-           scope=VALUES(scope),
-           expires_at=VALUES(expires_at),
-           updated_at=NOW()'
-    )->execute([$userId, $encAccess, $encRefresh, $scope, $expiresAt]);
+        $pdo->prepare(
+            'INSERT INTO discord_tokens (user_id, access_token, refresh_token, scope, expires_at)
+             VALUES (?,?,?,?,?)
+             ON DUPLICATE KEY UPDATE
+               access_token=VALUES(access_token), refresh_token=VALUES(refresh_token),
+               scope=VALUES(scope), expires_at=VALUES(expires_at), updated_at=NOW()'
+        )->execute([$userId, $encAccess, $encRefresh, $scope, $expiresAt]);
+    } catch (\Throwable $e) {
+        error_log('[Callback] _save_tokens: ' . $e->getMessage());
+    }
 }
 
-/** Discord-Guilds in DB cachen */
+/** Discord-Guilds cachen – scheitert still wenn Tabelle fehlt */
 function _save_guilds(PDO $pdo, int $userId, array $guilds): void
 {
     if (empty($guilds)) return;
-
-    $stmt = $pdo->prepare(
-        'INSERT INTO discord_guilds (user_id, guild_id, guild_name, is_owner, permissions)
-         VALUES (?,?,?,?,?)
-         ON DUPLICATE KEY UPDATE
-           guild_name=VALUES(guild_name),
-           is_owner=VALUES(is_owner),
-           permissions=VALUES(permissions),
-           checked_at=NOW()'
-    );
-
-    foreach ($guilds as $g) {
-        if (empty($g['id'])) continue;
-        $stmt->execute([
-            $userId,
-            $g['id'],
-            substr((string) ($g['name'] ?? ''), 0, 100),
-            (int) ($g['owner'] ?? 0),
-            (string) ($g['permissions'] ?? '0'),
-        ]);
+    try {
+        $stmt = $pdo->prepare(
+            'INSERT INTO discord_guilds (user_id, guild_id, guild_name, is_owner, permissions)
+             VALUES (?,?,?,?,?)
+             ON DUPLICATE KEY UPDATE
+               guild_name=VALUES(guild_name), is_owner=VALUES(is_owner),
+               permissions=VALUES(permissions), checked_at=NOW()'
+        );
+        foreach ($guilds as $g) {
+            if (empty($g['id'])) continue;
+            $stmt->execute([
+                $userId,
+                $g['id'],
+                substr((string)($g['name'] ?? ''), 0, 100),
+                (int)($g['owner'] ?? 0),
+                (string)($g['permissions'] ?? '0'),
+            ]);
+        }
+    } catch (\Throwable $e) {
+        error_log('[Callback] _save_guilds: ' . $e->getMessage());
     }
 }

@@ -105,10 +105,10 @@ if (!function_exists('avatarUrl')) {
     </div>
 
     <!-- Einsatzkraefte -->
-    <div class="sp-section">
+    <div class="sp-section" id="spJobsSection">
       <div class="sp-section-head">
         <span class="sp-section-tag">Live</span>
-        <h2 class="sp-section-title">Einsatzkrafte <span class="accent">im Dienst</span></h2>
+        <h2 class="sp-section-title">Einsatzkräfte <span class="accent">im Dienst</span></h2>
       </div>
       <div class="sp-jobs" id="spJobs">
         <div class="sp-skeleton"></div>
@@ -165,13 +165,33 @@ const SHOW_JOBS     = {
 };
 const ALWAYS_SHOW_DETAILS = true;
 
-const JOB_ICONS = {
-  police:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;display:block"><path d="M12 2l2 5h5l-4 3 1.5 5L12 12l-4.5 3L9 10 5 7h5z"/></svg>',
-  fire:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;display:block"><path d="M12 2c0 6-6 8-6 13a6 6 0 0012 0c0-5-6-7-6-13z"/><path d="M12 12c0 3-2 4-2 6a2 2 0 004 0c0-2-2-3-2-6z"/></svg>',
-  ambulance: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;display:block"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>',
-  mechanic:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;display:block"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>',
+// ── Job-Daten: bekannte Jobs mit Icon + Farbe ─────────────────────────────────
+const JOB_DATA = {
+  police:        { color:'#3b82f6', label:'Polizei',             icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2 5h5l-4 3 1.5 5L12 12l-4.5 3L9 10 5 7h5z"/></svg>' },
+  fire:          { color:'#f97316', label:'Feuerwehr',           icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 6-6 8-6 13a6 6 0 0012 0c0-5-6-7-6-13z"/><path d="M12 12c0 3-2 4-2 6a2 2 0 004 0c0-2-2-3-2-6z"/></svg>' },
+  ambulance:     { color:'#ef4444', label:'Berufsrettung Wien',  icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>' },
+  mechanic:      { color:'#a3a3a3', label:'Mechanik',            icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>' },
+  taxi:          { color:'#fbbf24', label:'Taxi',                icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="10" width="22" height="9" rx="2"/><path d="M5 10V7a2 2 0 012-2h4l2 5"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg>' },
+  judge:         { color:'#8b5cf6', label:'Richter',             icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>' },
+  lawyer:        { color:'#06b6d4', label:'Anwalt',              icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' },
+  reporter:      { color:'#10b981', label:'Reporter',            icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h4"/></svg>' },
+  unemployed:    { color:'#4b5563', label:'Zivilist',            icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' },
 };
-const JOB_COLORS = { police:'#3b82f6', fire:'#f97316', ambulance:'#ef4444', mechanic:'#a3a3a3' };
+
+// Farb-Palette für unbekannte Jobs (rotiert durch)
+const FALLBACK_COLORS = ['#7c3aed','#0ea5e9','#14b8a6','#f59e0b','#ec4899','#84cc16','#6366f1'];
+const FALLBACK_ICON   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>';
+
+function getJobColor(key, index) {
+  return JOB_DATA[key] ? JOB_DATA[key].color : FALLBACK_COLORS[index % FALLBACK_COLORS.length];
+}
+function getJobIcon(key) {
+  return JOB_DATA[key] ? JOB_DATA[key].icon : FALLBACK_ICON;
+}
+function getJobLabel(j) {
+  if (JOB_DATA[j.key]) return JOB_DATA[j.key].label;
+  return j.label || j.key.charAt(0).toUpperCase() + j.key.slice(1).replace(/[_-]/g,' ');
+}
 
 let cd = 30, timer;
 
@@ -214,22 +234,39 @@ function render(d) {
 }
 
 function renderJobs(jobs) {
-  const g = document.getElementById('spJobs');
-  const visible = (jobs || []).filter(j => SHOW_JOBS[j.key] !== false);
-  if (!visible.length) {
-    g.innerHTML = '<p style="color:#4b5563;grid-column:1/-1;text-align:center;padding:30px 0;font-size:.9rem">Keine Job-Daten verfugbar</p>';
+  const g    = document.getElementById('spJobs');
+  const sect = document.getElementById('spJobsSection');
+
+  // Bridge nicht verbunden oder keine Daten
+  if (!jobs || !jobs.length) {
+    if (sect) sect.style.display = 'none';
     return;
   }
-  g.innerHTML = visible.map(j => {
-    const c   = JOB_COLORS[j.key] || '#7c3aed';
-    const ico = JOB_ICONS[j.key]  || '';
-    const pct = Math.min(j.count * 12, 100);
+
+  if (sect) sect.style.display = '';
+
+  // Filter: Admin-Toggles nur für bekannte Jobs, unbekannte immer anzeigen
+  const visible = jobs.filter(j => {
+    if (j.key in SHOW_JOBS) return SHOW_JOBS[j.key] !== false;
+    return true;
+  });
+
+  if (!visible.length) {
+    if (sect) sect.style.display = 'none';
+    return;
+  }
+
+  g.innerHTML = visible.map((j, i) => {
+    const c   = getJobColor(j.key, i);
+    const ico = getJobIcon(j.key);
+    const lbl = getJobLabel(j);
+    const pct = Math.min(j.count * 10, 100);
     return '<div class="sp-job" style="--jc:' + c + '">'
       + '<div class="sp-job-head">'
-      + '<span class="sp-job-icon">' + ico + '</span>'
+      + '<span class="sp-job-icon" style="width:28px;height:28px;color:' + c + '">' + ico + '</span>'
       + '<span class="sp-job-num">' + j.count + '</span>'
       + '</div>'
-      + '<span class="sp-job-name">' + j.label + '</span>'
+      + '<span class="sp-job-name">' + lbl + '</span>'
       + '<div class="sp-job-bar-wrap"><div class="sp-job-bar" style="width:' + pct + '%"></div></div>'
       + '</div>';
   }).join('');
