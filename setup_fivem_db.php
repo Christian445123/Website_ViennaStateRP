@@ -27,9 +27,9 @@ if (!$ok) {
 $credentials = [
     'host'    => '162.55.131.14',
     'port'    => '3306',
-    'name'    => 'ViennaStateRP',
-    'user'    => 'website',
-    'pass'    => 'le81NEJiJO',
+    'name'    => _vsrp_env_decrypt('ENC:elTKLKCc+g9Ztulq9nnBnoKPyMs3uRx2z4SUddd7/4c='),
+    'user'    => _vsrp_env_decrypt('ENC:LSCm1RJfNMCm/cPVCGRKByA4r0AeTTk/8UXR1FQ4Xco='),
+    'pass'    => _vsrp_env_decrypt('ENC:k/sSoWIS0vlj605GHF43TQ/Q29pFOtX+ASf2etGFyLU='),
     'charset' => 'utf8mb4',
 ];
 
