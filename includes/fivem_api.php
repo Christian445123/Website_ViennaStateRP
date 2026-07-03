@@ -140,32 +140,83 @@ class FiveMAPI
             return ['online' => false];
         }
 
-        $vars      = $info['vars']      ?? [];
-        $resources = $info['resources'] ?? [];
+        $vars      = is_array($info['vars'] ?? null)      ? $info['vars']      : [];
+        $resources = is_array($info['resources'] ?? null) ? $info['resources'] : [];
+
+        // Alle bekannten Vars + alle unbekannten Custom-Vars des Servers
+        $knownVarKeys = [
+            'gamename','locale','onesync_enabled','onesync','sv_enforceGameBuild',
+            'sv_lan','sv_licenseKeyToken','sv_maxClients','sv_projectDesc',
+            'sv_projectName','tags','gametype','mapname','txAdmin-version',
+            'txAdminServerMode','sv_scriptHookAllowed','sv_pureLevel',
+            'sv_replaceGameFiles',
+        ];
+        $customVars = [];
+        foreach ($vars as $k => $v) {
+            if (!in_array($k, $knownVarKeys, true)) {
+                $customVars[$k] = $v;
+            }
+        }
 
         return [
-            'online'           => ($dynamic !== null),
-            'players'          => (int) ($dynamic['clients']       ?? count($players)),
-            'max_players'      => (int) ($dynamic['sv_maxclients'] ?? (int) ($vars['sv_maxClients'] ?? 64)),
-            'hostname'         => $dynamic['hostname']             ?? ($vars['sv_projectName'] ?? ''),
-            'server_name'      => $vars['sv_projectName']          ?? ($info['server']         ?? ''),
-            'description'      => $vars['sv_projectDesc']          ?? '',
-            'map'              => $dynamic['mapname']              ?? ($vars['mapname']          ?? ''),
-            'gametype'         => $dynamic['gametype']             ?? ($vars['gametype']         ?? ''),
-            'resource_count'   => is_array($resources) ? count($resources) : 0,
-            'resources'        => is_array($resources) ? $resources : [],
-            'locale'           => $vars['locale']                  ?? '',
-            'tags'             => $vars['tags']                    ?? '',
-            'upvote_power'     => (int) ($info['upvotePower']      ?? 0),
-            'burst_power'      => (int) ($info['burstPower']       ?? 0),
-            'server_version'   => $info['server']                  ?? '',
-            'connect_endpoints'=> $info['connectEndPoints']        ?? [],
-            'license_token'    => substr((string) ($info['licenseKeyToken'] ?? ''), 0, 8) . '...',
-            'icon_url'         => !empty($info['icon'])
-                ? 'data:image/png;base64,' . $info['icon']
-                : '',
-            'enhanced_host'    => (bool) ($info['enhancedHostSupport'] ?? false),
-            'support_status'   => $info['support_status'] ?? '',
+            // Status
+            'online'              => ($dynamic !== null),
+            'players'             => (int) ($dynamic['clients']        ?? count($players)),
+            'max_players'         => (int) ($dynamic['sv_maxclients']  ?? (int) ($vars['sv_maxClients'] ?? 64)),
+
+            // Identität
+            'hostname'            => $dynamic['hostname']              ?? ($vars['sv_projectName'] ?? ''),
+            'server_name'         => $vars['sv_projectName']           ?? ($info['server']         ?? ''),
+            'description'         => $vars['sv_projectDesc']           ?? '',
+            'tags'                => $vars['tags']                     ?? '',
+            'locale'              => $vars['locale']                   ?? '',
+
+            // Welt
+            'map'                 => $dynamic['mapname']               ?? ($vars['mapname']   ?? ''),
+            'gametype'            => $dynamic['gametype']              ?? ($vars['gametype']  ?? ''),
+            'gamename'            => $vars['gamename']                 ?? 'gta5',
+            'game_build'          => $vars['sv_enforceGameBuild']      ?? '',
+
+            // Technik
+            'server_version'      => $info['server']                   ?? '',
+            'server_version_num'  => (int) ($info['version']           ?? 0),
+            'onesync'             => $vars['onesync_enabled']          ?? ($vars['onesync'] ?? ''),
+            'pure_level'          => $vars['sv_pureLevel']             ?? '',
+            'script_hook'         => ($vars['sv_scriptHookAllowed']    ?? '0') === '1',
+            'lan_mode'            => ($vars['sv_lan']                  ?? '') !== '',
+            'enhanced_host'       => (bool) ($info['enhancedHostSupport'] ?? false),
+            'support_status'      => $info['support_status']          ?? '',
+
+            // Ressourcen
+            'resource_count'      => count($resources),
+            'resources'           => $resources,
+
+            // Netzwerk
+            'connect_endpoints'   => $info['connectEndPoints']         ?? [],
+            'license_token'       => substr((string) ($info['licenseKeyToken'] ?? ''), 0, 12) . '...',
+
+            // Server-Owner (Cfx.re Profil)
+            'owner_name'          => $info['ownerName']                ?? '',
+            'owner_profile'       => $info['ownerProfile']             ?? '',
+            'owner_avatar'        => $info['ownerAvatar']              ?? '',
+
+            // Medien
+            'banner_connecting'   => $info['bannerConnecting']         ?? '',
+            'banner_detail'       => $info['bannerDetail']             ?? '',
+            'icon_url'            => !empty($info['icon'])
+                                        ? 'data:image/png;base64,' . $info['icon']
+                                        : '',
+
+            // Cfx.re Listing
+            'upvote_power'        => (int) ($info['upvotePower']       ?? 0),
+            'burst_power'         => (int) ($info['burstPower']        ?? 0),
+            'request_steam'       => $info['requestSteamTicket']       ?? 'off',
+
+            // Alle Server-eigenen Custom-Vars
+            'custom_vars'         => $customVars,
+
+            // Rohdaten für Debug (nur im Admin sichtbar)
+            '_raw_vars'           => $vars,
         ];
     }
 

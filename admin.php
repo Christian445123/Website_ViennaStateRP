@@ -271,22 +271,36 @@ function renderData(d) {
   const pct = d.max_players > 0 ? Math.round(d.players / d.max_players * 100) : 0;
 
   const rows = [
-    ['Status',           '<span class="data-badge badge-online">ONLINE</span>'],
-    ['Spieler / Slots',  '<span class="data-val-large">' + d.players + '</span> / ' + d.max_players + ' <span style="color:var(--text-3);font-size:.8rem">(' + pct + '%)</span>'],
-    ['Hostname',         d.hostname || '–'],
-    ['Server-Name',      det.server_name  || '–'],
-    ['Beschreibung',     det.description  || '–'],
-    ['Map',              det.map          || '–'],
-    ['Gametype',         det.gametype     || '–'],
-    ['Locale',           det.locale       || '–'],
-    ['Tags',             det.tags         || '–'],
-    ['Ressourcen',       det.resource_count > 0 ? '<span class="data-val-large">' + det.resource_count + '</span> geladen' : '–'],
-    ['Upvote Power',     det.upvote_power  > 0 ? det.upvote_power  : '–'],
-    ['Burst Power',      det.burst_power   > 0 ? det.burst_power   : '–'],
-    ['Server Version',   det.server_version || '–'],
-    ['Enhanced Host',    det.enhanced_host ? '✓ Ja' : '✗ Nein'],
-    ['Support Status',   det.support_status || '–'],
-    ['Connect IPs',      (det.connect_endpoints || []).join(', ') || '–'],
+    ['Status',              '<span class="data-badge badge-' + (d.online ? 'online' : 'offline') + '">' + (d.online ? 'ONLINE' : 'OFFLINE') + '</span>'],
+    ['Spieler / Slots',     '<span class="data-val-large">' + d.players + '</span> / ' + d.max_players + ' <span style="color:var(--text-3);font-size:.8rem">(' + pct + '%)</span>'],
+    ['Hostname',            d.hostname || '–'],
+    ['Server-Name',         det.server_name       || '–'],
+    ['Beschreibung',        det.description       || '–'],
+    ['Map',                 det.map               || '–'],
+    ['Gametype',            det.gametype          || '–'],
+    ['Game',                det.gamename          || '–'],
+    ['Game Build',          det.game_build        || '–'],
+    ['Locale',              det.locale            || '–'],
+    ['Tags',                det.tags              || '–'],
+    ['OneSync',             det.onesync           || '–'],
+    ['Pure Level',          det.pure_level !== '' ? det.pure_level : '–'],
+    ['ScriptHook',          det.script_hook === true ? '✓ Erlaubt' : '✗ Gesperrt'],
+    ['LAN-Modus',           det.lan_mode === true ? '✓ An' : '✗ Aus'],
+    ['Enhanced Host',       det.enhanced_host ? '✓ Ja' : '✗ Nein'],
+    ['Support Status',      det.support_status    || '–'],
+    ['Ressourcen',          det.resource_count > 0 ? '<span class="data-val-large">' + det.resource_count + '</span> geladen' : '–'],
+    ['Server Version',      det.server_version    || '–'],
+    ['Build Nummer',        det.server_version_num > 0 ? det.server_version_num : '–'],
+    ['Upvote Power',        det.upvote_power  > 0 ? det.upvote_power  : '–'],
+    ['Burst Power',         det.burst_power   > 0 ? det.burst_power   : '–'],
+    ['Steam Ticket',        det.request_steam     || '–'],
+    ['Connect IPs',         (det.connect_endpoints || []).join(', ') || '–'],
+    ['Lizenz-Token',        det.license_token     || '–'],
+    ['Owner',               det.owner_name        || '–'],
+    ['Owner Profil',        det.owner_profile ? '<a href="' + det.owner_profile + '" target="_blank" style="color:var(--gold)">' + det.owner_profile + '</a>' : '–'],
+    ['Banner (Connecting)', det.banner_connecting ? '<a href="' + det.banner_connecting + '" target="_blank" style="color:var(--gold)">Link</a>' : '–'],
+    ['Banner (Detail)',     det.banner_detail     ? '<a href="' + det.banner_detail     + '" target="_blank" style="color:var(--gold)">Link</a>' : '–'],
+    ['Server-Icon',         det.icon_url ? '<img src="' + det.icon_url + '" style="width:48px;height:48px;border-radius:6px;margin-top:4px">' : '–'],
   ];
 
   // Einsatzkraefte
@@ -311,6 +325,16 @@ function renderData(d) {
     html += '<div class="res-list">';
     det.resources.forEach(r => { html += '<span class="res-tag">' + r + '</span>'; });
     html += '</div></div>';
+  }
+
+  // Custom Vars
+  if (det.custom_vars && Object.keys(det.custom_vars).length) {
+    html += '<div style="margin-top:20px"><div class="admin-card-title" style="margin-bottom:10px">🔧 Custom Server-Vars (' + Object.keys(det.custom_vars).length + ')</div>';
+    html += '<table class="data-table"><thead><tr><th>Convar</th><th>Wert</th></tr></thead><tbody>';
+    Object.entries(det.custom_vars).forEach(([k,v]) => {
+      html += '<tr><td>' + k + '</td><td>' + (v || '–') + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
   }
 
   el.innerHTML = html;
