@@ -62,7 +62,8 @@ function current_user(): ?array
 /** Gibt true zurück wenn jemand eingeloggt ist */
 function is_logged_in(): bool
 {
-    return isset($_SESSION['discord_user']['id']);
+    // db_id ist bei allen Login-Methoden (Discord + Passwort) gesetzt
+    return isset($_SESSION['discord_user']) && !empty($_SESSION['discord_user']['db_id']);
 }
 
 /** Leitet nicht eingeloggte User zu login.php um */
