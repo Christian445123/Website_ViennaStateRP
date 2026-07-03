@@ -16,10 +16,9 @@ require_once __DIR__ . '/../includes/session_config.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
-$loggedIn  = is_logged_in();
-$cacheKey  = $loggedIn ? 'vsrp_status_full' : 'vsrp_status_pub';
-$cacheFile = sys_get_temp_dir() . '/' . $cacheKey . '.json';
-$cacheTtl  = $loggedIn ? 15 : 30;
+// Einheitlicher Cache – alle Besucher bekommen dieselben Daten
+$cacheFile = sys_get_temp_dir() . '/vsrp_status_full.json';
+$cacheTtl  = 30;
 
 if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTtl) {
     echo file_get_contents($cacheFile);
@@ -37,14 +36,8 @@ $response = [
     'jobs'        => $jobStats,
 ];
 
-if ($loggedIn && $status['online']) {
-    $full    = FiveMAPI::getFullInfo();
-    $bridgePlayers = FiveMAPI::getBridgePlayers();
-
-    $response['details'] = $full;   // alle verfügbaren Felder, ohne Hardcodierung
-
-    // Spielerliste mit Jobs (nur für eingeloggte Nutzer)
-    $response['player_list'] = $bridgePlayers;
+if ($status['online']) {
+    $response['details'] = FiveMAPI::getFullInfo();
 }
 
 $json = json_encode($response, JSON_UNESCAPED_UNICODE);

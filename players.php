@@ -95,8 +95,7 @@ if (!function_exists('avatarUrl')) {
       <div class="sp-bar-wrap"><div class="sp-bar" id="spBar" style="width:0%"></div></div>
     </div>
 
-    <!-- Server Details (nur eingeloggt) -->
-    <?php if ($loggedIn): ?>
+    <!-- Server Details (öffentlich) -->
     <div class="sp-section" id="spDetailsSection" style="display:none">
       <div class="sp-section-head">
         <span class="sp-section-tag">Server Info</span>
@@ -104,12 +103,6 @@ if (!function_exists('avatarUrl')) {
       </div>
       <div class="sp-details" id="spDetailsGrid"></div>
     </div>
-    <?php else: ?>
-    <div class="sp-login-prompt">
-      <p>🔒 Melde dich an um weitere Server-Details zu sehen: Ressourcen, Map, Gametype und mehr.</p>
-      <a href="login.php" class="btn btn-discord">Discord Login</a>
-    </div>
-    <?php endif; ?>
 
     <!-- Einsatzkraefte -->
     <div class="sp-section">
@@ -170,6 +163,7 @@ const SHOW_JOBS     = {
   ambulance: <?= $cfg['show_jobs_ambulance'] ? 'true' : 'false' ?>,
   mechanic:  <?= $cfg['show_jobs_mechanic']  ? 'true' : 'false' ?>,
 };
+const ALWAYS_SHOW_DETAILS = true;
 
 const JOB_ICONS = {
   police:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;display:block"><path d="M12 2l2 5h5l-4 3 1.5 5L12 12l-4.5 3L9 10 5 7h5z"/></svg>',
@@ -216,7 +210,7 @@ function render(d) {
   document.getElementById('spPct').textContent     = pct + '%';
   document.getElementById('spBar').style.width     = pct + '%';
   renderJobs(d.jobs || []);
-  if (IS_LOGGED_IN && d.details) renderDetails(d.details);
+  if (d.details) renderDetails(d.details);
 }
 
 function renderJobs(jobs) {
