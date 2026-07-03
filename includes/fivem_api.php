@@ -384,12 +384,13 @@ class FiveMAPI
         $ch  = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT        => 5,
-            CURLOPT_CONNECTTIMEOUT => 3,
+            CURLOPT_TIMEOUT        => 10,
+            CURLOPT_CONNECTTIMEOUT => 6,
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_USERAGENT      => 'ViennaStateRP-Website/2.0',
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS      => 2,
+            CURLOPT_IPRESOLVE      => CURL_IPRESOLVE_V4, // IPv4 erzwingen
         ]);
         $result = curl_exec($ch);
         $code   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
