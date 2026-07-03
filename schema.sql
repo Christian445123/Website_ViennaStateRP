@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_discord_id` (`discord_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
+d
 -- whitelist_applications
 CREATE TABLE IF NOT EXISTS `whitelist_applications` (
   `id`            INT UNSIGNED     NOT NULL AUTO_INCREMENT,
