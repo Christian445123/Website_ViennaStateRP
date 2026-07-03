@@ -1,10 +1,10 @@
 <?php
+declare(strict_types=1);
 // ============================================================
 //  ViennaStateRP – Server-Status AJAX Endpoint
 //  Aufruf: /api/server_status.php
 //  Gibt JSON zurück – wird vom Dashboard per JS abgefragt
 // ============================================================
-declare(strict_types=1);
 
 ini_set('display_errors', '0');
 

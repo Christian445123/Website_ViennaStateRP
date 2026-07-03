@@ -1,9 +1,9 @@
 <?php
+declare(strict_types=1);
 // ============================================================
 //  ViennaStateRP - Discord OAuth2 Callback  v2.0
 //  Speichert alle Discord-Felder, OAuth-Tokens, Guilds
 // ============================================================
-declare(strict_types=1);
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 error_reporting(E_ALL);
@@ -70,14 +70,13 @@ if (empty($du['id'])) {
     exit;
 }
 
-// ── Discord Guilds holen ─────────────────────────────────────────────────────
+// ── Discord Guilds holen (optional, nicht kritisch fuer Login) ──────────────
 $guilds = [];
-if (strpos($scope, 'guilds') !== false) {
-    $guildsRaw = _discord_get('https://discord.com/api/users/@me/guilds', $accessToken);
-    if (is_array($guildsRaw)) {
-        $guilds = $guildsRaw;
-    }
-}
+// Guild-Fetch uebersprungen: verlangsamt Login. Nur bei Bedarf aktivieren:
+// if (strpos($scope, 'guilds') !== false) {
+//     $guildsRaw = _discord_get('https://discord.com/api/users/@me/guilds', $accessToken);
+//     if (is_array($guildsRaw)) $guilds = $guildsRaw;
+// }
 
 // ── DB: User anlegen / aktualisieren ─────────────────────────────────────────
 $dbRow = null;
@@ -87,15 +86,21 @@ if (!isset($pdo)) {
     exit;
 }
 
-// Welche Spalten existieren in users? (Schema-agnostisch)
+// Spalten-Cache (1 Stunde) damit SHOW COLUMNS nicht bei jedem Login laeuft
+$colCacheFile = sys_get_temp_dir() . '/vsrp_cols_users.json';
 $existingCols = [];
-try {
-    $colStmt = $pdo->query("SHOW COLUMNS FROM users");
-    foreach ($colStmt->fetchAll(PDO::FETCH_ASSOC) as $col) {
-        $existingCols[] = $col['Field'];
+if (file_exists($colCacheFile) && (time() - filemtime($colCacheFile)) < 3600) {
+    $existingCols = json_decode(file_get_contents($colCacheFile), true) ?? [];
+} else {
+    try {
+        $colStmt = $pdo->query('SHOW COLUMNS FROM users');
+        foreach ($colStmt->fetchAll(PDO::FETCH_ASSOC) as $col) {
+            $existingCols[] = $col['Field'];
+        }
+        file_put_contents($colCacheFile, json_encode($existingCols));
+    } catch (\Throwable $e) {
+        error_log('[Callback] SHOW COLUMNS fehlgeschlagen: ' . $e->getMessage());
     }
-} catch (\Throwable $e) {
-    error_log('[Callback] SHOW COLUMNS fehlgeschlagen: ' . $e->getMessage());
 }
 $hasCol = fn(string $c) => in_array($c, $existingCols, true);
 
@@ -129,19 +134,20 @@ try {
     $dbRow = $stmt->fetch() ?: null;
 
     if (!$dbRow) {
-        // INSERT – nur garantiert existierende Spalten
-        $cols = ['discord_id', 'username', 'global_name', 'avatar', 'is_verified', 'last_login'];
-        $vals = [$du['id'], $du['username'], $du['global_name'] ?? $du['username'], $du['avatar'] ?? null, 1];
-        $plch = ['?', '?', '?', '?', '?', 'NOW()'];
+        // INSERT – nur Spalten die tatsaechlich existieren
+        $cols = ['discord_id', 'username', 'global_name', 'avatar', 'last_login'];
+        $vals = [$du['id'], $du['username'], $du['global_name'] ?? $du['username'], $du['avatar'] ?? null];
+        $plch = ['?', '?', '?', '?', 'NOW()'];
 
-        if ($hasCol('email'))  { $cols[] = 'email';  $vals[] = $du['email'] ?? null; $plch[] = '?'; }
-        if ($hasCol('banner')) { $cols[] = 'banner'; $vals[] = $du['banner'] ?? null; $plch[] = '?'; }
-        if ($hasCol('discord_email_verified')) { $cols[] = 'discord_email_verified'; $vals[] = (int)($du['verified'] ?? 0); $plch[] = '?'; }
-        if ($hasCol('discord_locale'))         { $cols[] = 'discord_locale';         $vals[] = $du['locale'] ?? null; $plch[] = '?'; }
+        if ($hasCol('is_verified'))            { $cols[] = 'is_verified';            $vals[] = 1;                            $plch[] = '?'; }
+        if ($hasCol('email'))                  { $cols[] = 'email';                  $vals[] = $du['email'] ?? null;         $plch[] = '?'; }
+        if ($hasCol('banner'))                 { $cols[] = 'banner';                 $vals[] = $du['banner'] ?? null;        $plch[] = '?'; }
+        if ($hasCol('accent_color'))           { $cols[] = 'accent_color';           $vals[] = $du['accent_color'] ?? null;  $plch[] = '?'; }
+        if ($hasCol('discord_email_verified')) { $cols[] = 'discord_email_verified'; $vals[] = (int)($du['verified'] ?? 0);  $plch[] = '?'; }
+        if ($hasCol('discord_locale'))         { $cols[] = 'discord_locale';         $vals[] = $du['locale'] ?? null;        $plch[] = '?'; }
         if ($hasCol('discord_mfa_enabled'))    { $cols[] = 'discord_mfa_enabled';    $vals[] = (int)($du['mfa_enabled'] ?? 0); $plch[] = '?'; }
         if ($hasCol('discord_premium_type'))   { $cols[] = 'discord_premium_type';   $vals[] = (int)($du['premium_type'] ?? 0); $plch[] = '?'; }
         if ($hasCol('discord_public_flags'))   { $cols[] = 'discord_public_flags';   $vals[] = (int)($du['public_flags'] ?? 0); $plch[] = '?'; }
-        if ($hasCol('accent_color'))           { $cols[] = 'accent_color';           $vals[] = $du['accent_color'] ?? null; $plch[] = '?'; }
 
         $sql = 'INSERT INTO users (' . implode(', ', $cols) . ') VALUES (' . implode(', ', $plch) . ')';
         $pdo->prepare($sql)->execute($vals);

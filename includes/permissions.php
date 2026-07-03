@@ -1,8 +1,8 @@
 <?php
+declare(strict_types=1);
 // ============================================================
 //  ViennaStateRP – Berechtigungen & Rollen
 // ============================================================
-declare(strict_types=1);
 
 if (defined('_VSRP_PERMS_LOADED')) return;
 define('_VSRP_PERMS_LOADED', true);

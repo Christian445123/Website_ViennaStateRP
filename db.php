@@ -1,11 +1,11 @@
 <?php
+declare(strict_types=1);
 // ============================================================
 //  ViennaStateRP – Datenbankverbindung (PDO Singleton)
 //  Läuft auf localhost → Unix-Socket, kein Netzwerkverkehr
 //  Schutz durch: Prepared Statements, stricte Error-Modi
 // ============================================================
 
-declare(strict_types=1);
 
 class DB {
     private static ?PDO $instance = null;

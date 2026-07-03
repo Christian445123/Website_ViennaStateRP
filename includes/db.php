@@ -1,10 +1,10 @@
 <?php
+declare(strict_types=1);
 // ============================================================
 //  ViennaStateRP – Datenbankverbindung
 //  Liest Konfiguration aus .env (mit AES-256-CBC Entschlüsselung)
 //  Muster übernommen von GamingCommunity24/7
 // ============================================================
-declare(strict_types=1);
 
 if (defined('_VSRP_DB_LOADED')) return;
 define('_VSRP_DB_LOADED', true);

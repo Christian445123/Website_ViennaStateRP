@@ -1,8 +1,8 @@
 <?php
+declare(strict_types=1);
 // ============================================================
 //  ViennaStateRP – Session-Konfiguration & Auth-Middleware
 // ============================================================
-declare(strict_types=1);
 
 if (defined('_VSRP_SESSION_LOADED')) return;
 define('_VSRP_SESSION_LOADED', true);

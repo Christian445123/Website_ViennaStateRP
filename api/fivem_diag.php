@@ -1,6 +1,6 @@
 <?php
-// TEMPORAERES Diagnose-Script – nach dem Test loeschen!
 declare(strict_types=1);
+// TEMPORAERES Diagnose-Script – nach dem Test loeschen!
 require_once __DIR__ . '/../includes/db.php';
 
 header('Content-Type: text/plain; charset=utf-8');

@@ -1,8 +1,8 @@
 <?php
+declare(strict_types=1);
 // ============================================================
 //  ViennaStateRP – Passwort-Login verarbeiten
 // ============================================================
-declare(strict_types=1);
 
 ob_start();
 ini_set('display_errors', '0');

@@ -1,8 +1,8 @@
 <?php
+declare(strict_types=1);
 // ============================================================
 //  ViennaStateRP – Discord OAuth2 & Webhook Konfiguration
 // ============================================================
-declare(strict_types=1);
 
 if (defined('_VSRP_DISCORD_LOADED')) return;
 define('_VSRP_DISCORD_LOADED', true);

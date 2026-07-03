@@ -1,10 +1,10 @@
 <?php
+declare(strict_types=1);
 // ============================================================
 //  ViennaStateRP – Logging-System
 //  Doppeltes Logging: MariaDB (activity_logs) + Discord Webhook
 //  Muster übernommen von GamingCommunity24/7
 // ============================================================
-declare(strict_types=1);
 
 if (defined('_VSRP_LOGGER_LOADED')) return;
 define('_VSRP_LOGGER_LOADED', true);

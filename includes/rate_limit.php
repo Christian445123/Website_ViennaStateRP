@@ -1,8 +1,8 @@
 <?php
+declare(strict_types=1);
 // ============================================================
 //  ViennaStateRP – Rate Limiting
 // ============================================================
-declare(strict_types=1);
 
 if (defined('_VSRP_RATELIMIT_LOADED')) return;
 define('_VSRP_RATELIMIT_LOADED', true);

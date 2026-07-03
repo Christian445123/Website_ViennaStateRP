@@ -1,8 +1,8 @@
 <?php
+declare(strict_types=1);
 // ============================================================
 //  ViennaStateRP – Registrierung verarbeiten
 // ============================================================
-declare(strict_types=1);
 
 ob_start();
 ini_set('display_errors', '0');
@@ -64,10 +64,27 @@ if ($check->fetch()) {
 // Account anlegen
 $hash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
 
-$pdo->prepare(
-    'INSERT INTO users (username, global_name, email, password_hash, discord_id, is_verified, created_at)
-     VALUES (?, ?, ?, ?, NULL, 1, NOW())'
-)->execute([$username, $username, $email, $hash]);
+// Spalten prüfen die evtl. noch nicht existieren
+$colCache = sys_get_temp_dir() . '/vsrp_cols_users.json';
+$cols = file_exists($colCache) ? (json_decode(file_get_contents($colCache), true) ?? []) : [];
+if (empty($cols)) {
+    try {
+        foreach ($pdo->query('SHOW COLUMNS FROM users')->fetchAll(PDO::FETCH_ASSOC) as $c) {
+            $cols[] = $c['Field'];
+        }
+        file_put_contents($colCache, json_encode($cols));
+    } catch (\Throwable $e) { /* ignore */ }
+}
+$hasCol = fn($c) => in_array($c, $cols, true);
+
+$insertCols = ['username', 'global_name', 'email', 'password_hash', 'discord_id', 'last_login'];
+$insertVals = [$username, $username, $email, $hash, null, date('Y-m-d H:i:s')];
+$insertPlch = ['?', '?', '?', '?', 'NULL', '?'];
+
+if ($hasCol('is_verified')) { $insertCols[] = 'is_verified'; $insertVals[] = 1; $insertPlch[] = '?'; }
+
+$sql = 'INSERT INTO users (' . implode(', ', $insertCols) . ') VALUES (' . implode(', ', $insertPlch) . ')';
+$pdo->prepare($sql)->execute($insertVals);
 
 $newId = (int) $pdo->lastInsertId();
 

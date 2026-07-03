@@ -1,6 +1,6 @@
 <?php
-// Cache-Leeren – einmalig aufrufen wenn Status falsch gecacht ist
 declare(strict_types=1);
+// Cache-Leeren – einmalig aufrufen wenn Status falsch gecacht ist
 require_once __DIR__ . '/../includes/db.php';
 
 if (!has_permission('admin') && !isset($_GET['force'])) {

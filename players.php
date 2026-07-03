@@ -5,9 +5,11 @@ require_once __DIR__ . '/includes/session_config.php';
 require_once __DIR__ . '/includes/discord_config.php';
 require_once __DIR__ . '/includes/permissions.php';
 require_once __DIR__ . '/includes/site_settings.php';
+require_once __DIR__ . '/includes/fivem_api.php';
 
 $user     = current_user();
 $loggedIn = is_logged_in();
+$isAdmin  = has_permission('admin');
 $cfg      = settings_load();
 
 if (!function_exists('avatarUrl')) {
@@ -117,6 +119,116 @@ if (!function_exists('avatarUrl')) {
         <div class="sp-skeleton"></div>
       </div>
     </div>
+
+    <?php if ($isAdmin): ?>
+    <!-- ═══════════════════════════════════════════════════════
+         ADMIN-BEREICH  (nur sichtbar für Admins)
+    ═══════════════════════════════════════════════════════ -->
+    <div style="border-top:2px solid rgba(232,184,109,.2);margin:48px 0 32px;padding-top:40px">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:28px">
+        <div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:900">
+            ⚙️ Admin <span class="accent">Dashboard</span>
+          </div>
+          <p style="color:#64748b;font-size:.82rem;margin-top:4px">Nur für Admins sichtbar · Einstellungen werden sofort übernommen</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="loadAdminData()" class="btn btn-outline" style="font-size:.82rem;padding:7px 16px">↻ Daten aktualisieren</button>
+          <a href="admin.php" class="btn btn-outline" style="font-size:.82rem;padding:7px 16px">Vollständiges Admin-Panel →</a>
+        </div>
+      </div>
+
+      <!-- Live FiveM Daten -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;margin-bottom:20px;overflow:hidden">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+          <span style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#64748b">📡 Live Server-Daten</span>
+          <span style="margin-left:auto;font-size:.75rem;color:#64748b" id="adminDataTs"></span>
+        </div>
+        <div id="adminDataContent" style="padding:20px;color:#94a3b8;font-size:.9rem">Lade...</div>
+      </div>
+
+      <!-- Toggle-Grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px">
+          <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#64748b;margin-bottom:16px">👁 Öffentliche Anzeige</div>
+          <?php
+          $toggles = [
+            ['show_player_count',   'Spieleranzahl',         'Aktive Spieler anzeigen'],
+            ['show_max_slots',      'Max Slots',             'Maximale Kapazität anzeigen'],
+            ['show_load_percent',   'Auslastung %',          'Prozentuale Auslastung'],
+            ['show_jobs_police',    'Polizei-Karte',         'Polizisten im Dienst'],
+            ['show_jobs_fire',      'Feuerwehr-Karte',       'Feuerwehr im Dienst'],
+            ['show_jobs_ambulance', 'Berufsrettung-Karte',   'Berufsrettung im Dienst'],
+            ['show_jobs_mechanic',  'Mechaniker-Karte',      'Mechaniker im Dienst'],
+            ['show_hero_status',    'Online-Badge (Startseite)', 'Server-Status im Hero'],
+            ['show_hero_players',   'Spieler (Startseite)',  'Spielerzahl auf Startseite'],
+          ];
+          foreach ($toggles as [$key, $label, $sub]): ?>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+            <div>
+              <div style="font-size:.88rem;color:#e2e8f0"><?= $label ?></div>
+              <div style="font-size:.72rem;color:#64748b"><?= $sub ?></div>
+            </div>
+            <label style="position:relative;display:inline-block;width:42px;height:22px;flex-shrink:0">
+              <input type="checkbox" data-key="<?= $key ?>"
+                     <?= $cfg[$key] ? 'checked' : '' ?>
+                     style="opacity:0;width:0;height:0"
+                     onchange="saveToggle(this)" />
+              <span class="adm-toggle-slider"></span>
+            </label>
+          </div>
+          <?php endforeach; ?>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px">
+          <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#64748b;margin-bottom:16px">⚠️ Wartungsmodus</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+            <div>
+              <div style="font-size:.88rem;color:#ef4444">Wartungsmodus aktivieren</div>
+              <div style="font-size:.72rem;color:#64748b">Zeigt Hinweis für alle Besucher</div>
+            </div>
+            <label style="position:relative;display:inline-block;width:42px;height:22px;flex-shrink:0">
+              <input type="checkbox" data-key="maintenance_mode"
+                     <?= $cfg['maintenance_mode'] ? 'checked' : '' ?>
+                     style="opacity:0;width:0;height:0"
+                     onchange="saveToggle(this)" />
+              <span class="adm-toggle-slider"></span>
+            </label>
+          </div>
+          <div style="margin-top:14px">
+            <div style="font-size:.78rem;color:#94a3b8;margin-bottom:6px">Wartungsnachricht:</div>
+            <textarea data-key="maintenance_message" rows="3"
+              style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:#e2e8f0;font-family:inherit;font-size:.85rem;resize:vertical"
+              oninput="scheduleSave()"><?= htmlspecialchars($cfg['maintenance_message']) ?></textarea>
+          </div>
+
+          <!-- Schnellinfos -->
+          <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px">
+            <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#64748b;margin-bottom:12px">📊 Schnellübersicht</div>
+            <div id="adminQuickStats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="adminSaveMsg" style="margin-top:14px;font-size:.82rem;display:none"></div>
+    </div>
+
+    <style>
+    .adm-toggle-slider {
+      position:absolute;inset:0;background:rgba(255,255,255,.1);
+      border-radius:22px;cursor:pointer;transition:.2s;
+    }
+    .adm-toggle-slider::before {
+      content:'';position:absolute;height:16px;width:16px;
+      left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;
+    }
+    input:checked + .adm-toggle-slider { background:#22c55e; }
+    input:checked + .adm-toggle-slider::before { transform:translateX(20px); }
+    </style>
+    <?php endif; ?>
 
   </div>
 </main>
@@ -307,6 +419,160 @@ function tick() {
 }
 
 load(); tick();
+
+<?php if ($isAdmin): ?>
+// ── Admin-Dashboard JS ────────────────────────────────────────────────────────
+const IS_ADMIN = true;
+
+async function loadAdminData() {
+  const el = document.getElementById('adminDataContent');
+  const ts = document.getElementById('adminDataTs');
+  if (!el) return;
+  el.innerHTML = '<span style="color:#64748b">Lade...</span>';
+  try {
+    const r = await fetch('api/players_status.php');
+    const d = await r.json();
+    ts.textContent = 'Abgerufen: ' + new Date().toLocaleTimeString('de-AT');
+    renderAdminData(d);
+  } catch(e) {
+    el.innerHTML = '<span style="color:#ef4444">Fehler: ' + e.message + '</span>';
+  }
+}
+
+function renderAdminData(d) {
+  const el = document.getElementById('adminDataContent');
+  const qs = document.getElementById('adminQuickStats');
+  const det = d.details || {};
+
+  // Schnellübersicht
+  if (qs) {
+    const qi = [
+      ['🎮', 'Spieler', d.players + ' / ' + d.max_players],
+      ['🗺️', 'Map',     det.map || '–'],
+      ['🎯', 'Gametype', det.gametype || '–'],
+      ['📦', 'Ressourcen', det.resource_count || '–'],
+      ['⬆️', 'Upvote',  det.upvote_power || '–'],
+      ['⚡', 'Burst',   det.burst_power || '–'],
+    ];
+    qs.innerHTML = qi.map(([ico,lbl,val]) =>
+      '<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:8px 10px">'
+      + '<div style="font-size:.68rem;color:#64748b;text-transform:uppercase;letter-spacing:1px">' + ico + ' ' + lbl + '</div>'
+      + '<div style="font-family:\'Orbitron\',sans-serif;font-size:.95rem;color:#e8b86d;margin-top:2px">' + val + '</div>'
+      + '</div>'
+    ).join('');
+  }
+
+  // Alle Felder in Tabelle
+  const rows = [
+    ['Status',           d.online ? '<span style="color:#22c55e">● ONLINE</span>' : '<span style="color:#ef4444">● OFFLINE</span>'],
+    ['Spieler / Slots',  '<b style="color:#e8b86d;font-size:1.2rem">' + d.players + '</b> / ' + d.max_players],
+    ['Hostname',         d.hostname || '–'],
+    ['Server-Name',      det.server_name || '–'],
+    ['Beschreibung',     det.description || '–'],
+    ['Map',              det.map || '–'],
+    ['Gametype',         det.gametype || '–'],
+    ['Game',             det.gamename || '–'],
+    ['Game Build',       det.game_build || '–'],
+    ['Locale',           det.locale || '–'],
+    ['Tags',             det.tags || '–'],
+    ['OneSync',          det.onesync || '–'],
+    ['Ressourcen',       det.resource_count > 0 ? det.resource_count + ' geladen' : '–'],
+    ['Server Version',   det.server_version || '–'],
+    ['Build Nr.',        det.server_version_num > 0 ? det.server_version_num : '–'],
+    ['Upvote Power',     det.upvote_power > 0 ? det.upvote_power : '–'],
+    ['Burst Power',      det.burst_power > 0 ? det.burst_power : '–'],
+    ['Pure Level',       det.pure_level !== '' && det.pure_level !== undefined ? det.pure_level : '–'],
+    ['ScriptHook',       det.script_hook === true ? '✓ Erlaubt' : '✗ Gesperrt'],
+    ['LAN-Modus',        det.lan_mode === true ? '✓ An' : '✗ Aus'],
+    ['Enhanced Host',    det.enhanced_host ? '✓ Ja' : '✗ Nein'],
+    ['Support Status',   det.support_status || '–'],
+    ['Connect IPs',      (det.connect_endpoints || []).join(', ') || '–'],
+    ['Owner',            det.owner_name || '–'],
+  ];
+
+  // Jobs-Tabelle
+  let jobsHtml = '–';
+  if (d.jobs && d.jobs.length) {
+    const total = d.jobs.reduce((s,j) => s + j.count, 0);
+    jobsHtml = '<table style="width:100%;border-collapse:collapse;font-size:.82rem">'
+      + '<tr style="color:#64748b;font-size:.7rem"><th style="text-align:left;padding:2px 6px">Job</th>'
+      + '<th style="text-align:right;padding:2px 6px">Spieler</th>'
+      + '<th style="text-align:right;padding:2px 6px">Anteil</th></tr>';
+    d.jobs.forEach(j => {
+      const pct = total > 0 ? Math.round(j.count/total*100) : 0;
+      jobsHtml += '<tr style="border-top:1px solid rgba(255,255,255,.06)">'
+        + '<td style="padding:4px 6px;color:#e2e8f0">' + (j.label || j.key) + '</td>'
+        + '<td style="padding:4px 6px;text-align:right;color:#e8b86d"><b>' + j.count + '</b></td>'
+        + '<td style="padding:4px 6px;text-align:right;color:#64748b">' + pct + '%</td></tr>';
+    });
+    jobsHtml += '</table>';
+  }
+  rows.push(['Einsatzkräfte (' + (d.jobs ? d.jobs.length : 0) + ' Jobs)', jobsHtml]);
+
+  // Custom Vars
+  if (det.custom_vars && Object.keys(det.custom_vars).length) {
+    const cvHtml = Object.entries(det.custom_vars).map(([k,v]) =>
+      '<tr style="border-top:1px solid rgba(255,255,255,.06)">'
+      + '<td style="padding:3px 6px;color:#94a3b8;font-family:monospace;font-size:.78rem">' + k + '</td>'
+      + '<td style="padding:3px 6px;color:#86efac;font-family:monospace;font-size:.78rem">' + (v||'–') + '</td></tr>'
+    ).join('');
+    rows.push(['Custom Vars (' + Object.keys(det.custom_vars).length + ')',
+      '<table style="width:100%;border-collapse:collapse">' + cvHtml + '</table>']);
+  }
+
+  // Ressourcen-Liste
+  if (det.resources && det.resources.length) {
+    rows.push(['Ressourcen-Liste',
+      '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">'
+      + det.resources.map(r => '<span style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:2px 7px;font-size:.72rem;color:#94a3b8">' + r + '</span>').join('')
+      + '</div>']);
+  }
+
+  el.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:.85rem">'
+    + '<thead><tr><th style="text-align:left;color:#64748b;padding:4px 8px 10px;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;width:35%">Feld</th>'
+    + '<th style="text-align:left;color:#64748b;padding:4px 8px 10px;font-size:.7rem;text-transform:uppercase;letter-spacing:1px">Wert</th></tr></thead><tbody>'
+    + rows.filter(([,v]) => v && v !== '–').map(([k,v]) =>
+        '<tr style="border-top:1px solid rgba(255,255,255,.05)">'
+        + '<td style="padding:7px 8px;color:#94a3b8;vertical-align:top">' + k + '</td>'
+        + '<td style="padding:7px 8px;color:#e2e8f0;word-break:break-all">' + v + '</td></tr>'
+    ).join('')
+    + '</tbody></table>';
+}
+
+// Toggle speichern
+let saveTimer = null;
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 600);
+}
+async function saveToggle(el) { await doSave(); }
+async function doSave() {
+  const data = {};
+  document.querySelectorAll('[data-key]').forEach(el => {
+    data[el.dataset.key] = el.type === 'checkbox' ? el.checked : el.value;
+  });
+  const msg = document.getElementById('adminSaveMsg');
+  try {
+    const r   = await fetch('api/admin_settings.php', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+    const res = await r.json();
+    if (msg) {
+      msg.textContent = res.ok ? '✓ Einstellungen gespeichert' : '✗ Fehler beim Speichern';
+      msg.style.color   = res.ok ? '#22c55e' : '#ef4444';
+      msg.style.display = 'block';
+      setTimeout(() => { if (msg) msg.style.display = 'none'; }, 2500);
+    }
+  } catch(e) {
+    if (msg) { msg.textContent = '✗ ' + e.message; msg.style.display = 'block'; }
+  }
+}
+
+// Textarea-Inputs auch beobachten
+document.querySelectorAll('textarea[data-key]').forEach(el => {
+  el.addEventListener('input', scheduleSave);
+});
+
+loadAdminData();
+<?php endif; ?>
 </script>
 </body>
 </html>
