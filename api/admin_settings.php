@@ -4,7 +4,6 @@
 //  POST /api/admin_settings.php  – Einstellungen speichern
 //  GET  /api/admin_settings.php  – Einstellungen laden
 // ============================================================
-declare(strict_types=1);
 ini_set('display_errors', '0');
 
 require_once __DIR__ . '/../includes/db.php';

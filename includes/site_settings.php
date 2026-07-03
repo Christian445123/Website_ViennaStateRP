@@ -3,7 +3,6 @@
 //  ViennaStateRP – Site-Einstellungen (Admin-Toggle)
 //  Gespeichert in: includes/settings.json
 // ============================================================
-declare(strict_types=1);
 
 if (defined('_VSRP_SETTINGS_LOADED')) return;
 define('_VSRP_SETTINGS_LOADED', true);

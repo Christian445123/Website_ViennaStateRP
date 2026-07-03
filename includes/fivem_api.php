@@ -1,6 +1,5 @@
-﻿<?php
-// ============================================================
-//  ViennaStateRP – FiveM Server API  v4.0
+<?php
+// ViennaStateRP - FiveM Server API  v4.0
 //
 //  PUBLIC ENDPOINTS (kein Auth):
 //    /info.json     – Server-Name, Ressourcen, Vars, Icon
@@ -16,7 +15,6 @@
 //    get_player_detail – einzelner Spieler (discord_id|server_id)
 //    get_server_info   – Convars, Ressourcen, Framework
 // ============================================================
-declare(strict_types=1);
 
 if (defined('_VSRP_FIVEM_LOADED')) return;
 define('_VSRP_FIVEM_LOADED', true);

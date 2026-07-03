@@ -4,7 +4,6 @@
 //  Wird per Cronjob aufgerufen: */5 * * * * curl .../api/log_status.php
 //  Optional: Bearer-Token via CRON_SECRET in .env absichern
 // ============================================================
-declare(strict_types=1);
 ini_set('display_errors', '0');
 
 require_once __DIR__ . '/../includes/db.php';

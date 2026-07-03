@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // ============================================================
 //  ViennaStateRP – Server-Status API Endpoint
 //  GET /api/players_status.php
@@ -6,7 +6,6 @@
 //  Öffentlich:  online, players, max_players, jobs
 //  Eingeloggt:  + details (map, gametype, resources, etc.)
 // ============================================================
-declare(strict_types=1);
 ini_set('display_errors', '0');
 
 require_once __DIR__ . '/../includes/db.php';
