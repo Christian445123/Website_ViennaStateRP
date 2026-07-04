@@ -51,6 +51,11 @@ function _vsrp_get_secret_key(): ?string
 
 function _vsrp_env_decrypt(string $value): string
 {
+    if (!function_exists('openssl_decrypt')) {
+        error_log('[VSRP] OpenSSL nicht verfügbar – ENC:-Wert kann nicht entschlüsselt werden. PHP-Extension "openssl" aktivieren.');
+        return $value;
+    }
+
     $raw = base64_decode(substr($value, 4), true);
     if ($raw === false || strlen($raw) <= 16) return $value;
 
