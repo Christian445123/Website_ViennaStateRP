@@ -6,7 +6,7 @@ Options -Indexes
 ServerSignature Off
 
 # ── Sicherheit: Sensible Dateien sperren ────────────────────
-<FilesMatch "^(\.env|\.git|composer\.json|schema\.sql|encrypt_env\.php|migrate\.php|diagnose\.php)$">
+<FilesMatch "^(\.env|\.git|composer\.json|schema\.sql|encrypt_env\.php|migrate\.php)$">
     Order Allow,Deny
     Deny from all
 </FilesMatch>

@@ -76,7 +76,9 @@ function _vsrp_env_decrypt(string $value): string
 function vsrp_env_encrypt(string $value): string
 {
     $key = _vsrp_get_secret_key();
-    if ($key === null) die('[VSRP] Kein Verschlüsselungs-Key gefunden.');
+    if ($key === null) {
+        throw new \RuntimeException('[VSRP] Kein Verschlüsselungs-Key gefunden (VSRP_SECRET_KEY oder vsrp.key).');
+    }
 
     $iv         = random_bytes(16);
     $ciphertext = openssl_encrypt($value, 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);

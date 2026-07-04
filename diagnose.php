@@ -1,124 +1,184 @@
 <?php
+// ============================================================
+//  ViennaStateRP – Diagnose-Tool
+//  Aufruf: https://deine-domain.at/diagnose.php?token=DEIN_TOKEN
+//  Token setzen: DIAG_TOKEN=... in .env eintragen
+// ============================================================
 ini_set('display_errors', '1');
 error_reporting(E_ALL);
 
-echo '<pre style="font-family:monospace;font-size:13px;background:#111;color:#0f0;padding:20px">';
-echo "=== ViennaStateRP Diagnose v2 ===\n\n";
-
-echo "PHP Version: " . PHP_VERSION . "\n\n";
-
-// Jeden Include einzeln laden und Fehler abfangen
-$includes = [
-    'includes/db.php',
-    'includes/session_config.php',
-    'includes/discord_config.php',
-    'includes/permissions.php',
-    'includes/logger.php',
-    'includes/rate_limit.php',
-];
-
-foreach ($includes as $file) {
-    $path = __DIR__ . '/' . $file;
-    echo "Lade $file ... ";
-    ob_start();
-    set_error_handler(function($errno, $errstr, $errfile, $errline) use ($file) {
-        echo "\n  ✗ ERROR $errno in $file Zeile $errline: $errstr\n";
-        return true;
-    });
-    try {
-        require_once $path;
-        restore_error_handler();
-        $buf = ob_get_clean();
-        echo "✓" . ($buf ? "\n  Output: $buf" : "") . "\n";
-    } catch (Throwable $e) {
-        restore_error_handler();
-        ob_get_clean();
-        echo "\n  ✗ FATAL: " . $e->getMessage() . " (Zeile " . $e->getLine() . ")\n";
-    }
-}
-
-// Konstanten prüfen
-echo "\nKonstanten:\n";
-$consts = ['SITE_URL','FIVEM_IP','FIVEM_LINK','DISCORD_CLIENT_ID','DISCORD_REDIRECT_URI','DISCORD_INVITE'];
-foreach ($consts as $c) {
-    echo "  $c: " . (defined($c) ? "✓ = " . constant($c) : "✗ NICHT DEFINIERT") . "\n";
-}
-
-// Funktionen prüfen
-echo "\nFunktionen:\n";
-$funcs = ['csrf_token','verify_csrf','is_logged_in','require_login','current_user','has_permission','discord_auth_url','discord_avatar','log_event','checkRateLimit'];
-foreach ($funcs as $f) {
-    echo "  $f(): " . (function_exists($f) ? "✓" : "✗ FEHLT") . "\n";
-}
-
-echo "\n=== Ende ===\n";
-echo '</pre>';
-echo '<p style="color:red"><strong>⚠ SOFORT DANACH LÖSCHEN!</strong></p>';
-
-// Sicherheit: Nur von bekannten IPs abrufbar
-// Trage deine eigene IP ein oder lösche die Prüfung für einmaligen Aufruf
-// $allowedIp = '1.2.3.4';
-// if (($_SERVER['REMOTE_ADDR'] ?? '') !== $allowedIp) { http_response_code(403); die('Forbidden'); }
-
-echo '<pre style="font-family:monospace;font-size:13px;background:#111;color:#0f0;padding:20px">';
-echo "=== ViennaStateRP Diagnose ===\n\n";
-
-// PHP Version
-echo "PHP Version: " . PHP_VERSION . "\n";
-echo "PHP >= 8.0: " . (version_compare(PHP_VERSION, '8.0.0') >= 0 ? "✓ OK" : "✗ ZU ALT – braucht 8.0+") . "\n\n";
-
-// Extensions
-$needed = ['pdo', 'pdo_mysql', 'curl', 'mbstring', 'json', 'openssl'];
-echo "Extensions:\n";
-foreach ($needed as $ext) {
-    echo "  $ext: " . (extension_loaded($ext) ? "✓" : "✗ FEHLT") . "\n";
-}
-
-// .env
-echo "\n.env Datei:\n";
+// ── Zugangsschutz ────────────────────────────────────────────
 $envPath = __DIR__ . '/.env';
-echo "  Pfad: $envPath\n";
-echo "  Existiert: " . (file_exists($envPath) ? "✓" : "✗ FEHLT!") . "\n";
-echo "  Lesbar: "    . (is_readable($envPath) ? "✓" : "✗ NICHT LESBAR") . "\n";
-
-// includes/
-echo "\nincludes/ Dateien:\n";
-$files = ['db.php','session_config.php','discord_config.php','logger.php','rate_limit.php','permissions.php'];
-foreach ($files as $f) {
-    $p = __DIR__ . "/includes/$f";
-    echo "  includes/$f: " . (file_exists($p) ? "✓" : "✗ FEHLT") . "\n";
-}
-
-// DB-Verbindung testen
-echo "\nDatenbank:\n";
-$envPath = __DIR__ . '/.env';
+$diagToken = '';
 if (is_readable($envPath)) {
-    $env = [];
     foreach (file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
         $line = trim($line);
-        if ($line === '' || $line[0] === '#' || strpos($line,'=') === false) continue;
-        [$k,$v] = explode('=', $line, 2);
-        $env[trim($k)] = trim($v);
+        if (str_starts_with($line, 'DIAG_TOKEN=')) {
+            $diagToken = trim(substr($line, 11));
+            break;
+        }
     }
-    $host = $env['DB_HOST'] ?? '127.0.0.1';
-    $name = $env['DB_NAME'] ?? '';
-    $user = $env['DB_USER'] ?? '';
-    $pass = $env['DB_PASS'] ?? '';
-    echo "  Host: $host\n";
-    echo "  Datenbank: $name\n";
-    echo "  User: $user\n";
-    try {
-        $pdo = new PDO("mysql:host=$host;dbname=$name;charset=utf8mb4", $user, $pass, [PDO::ATTR_TIMEOUT => 5]);
-        echo "  Verbindung: ✓ OK\n";
-        $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
-        echo "  Tabellen: " . (count($tables) ? implode(', ', $tables) : "KEINE – schema.sql noch nicht importiert!") . "\n";
-    } catch (PDOException $e) {
-        echo "  Verbindung: ✗ FEHLER: " . $e->getMessage() . "\n";
+}
+// Fallback: IP-Schutz wenn kein Token konfiguriert
+if ($diagToken === '') {
+    $allowedIps = ['127.0.0.1', '::1'];
+    $remoteIp = $_SERVER['REMOTE_ADDR'] ?? '';
+    if (!in_array($remoteIp, $allowedIps, true)) {
+        http_response_code(403);
+        die('Kein DIAG_TOKEN in .env – Zugriff nur von localhost erlaubt. Token in .env setzen: DIAG_TOKEN=geheimes_passwort');
     }
 } else {
-    echo "  .env nicht lesbar – kann DB nicht testen\n";
+    $provided = $_GET['token'] ?? '';
+    if (!hash_equals($diagToken, $provided)) {
+        http_response_code(403);
+        die('Ungültiger Token. Aufruf: ?token=DEIN_DIAG_TOKEN');
+    }
 }
 
-echo "\n=== Ende ===\n";
-echo '</pre>';
-echo '<p style="color:red;font-family:sans-serif"><strong>⚠ Diese Datei nach dem Lesen sofort löschen!</strong></p>';
+echo '<style>body{font-family:monospace;background:#111;color:#0f0;padding:20px}
+.ok{color:#0f0}.err{color:#f44}.warn{color:#fa0}
+h2{color:#0af;border-bottom:1px solid #0af;padding-bottom:4px}</style>';
+
+echo '<h2>ViennaStateRP – Diagnose</h2>';
+
+// ── PHP ───────────────────────────────────────────────────────
+echo '<h2>PHP</h2>';
+$phpOk = version_compare(PHP_VERSION, '8.0.0') >= 0;
+echo 'PHP Version: ' . PHP_VERSION . ' ' . ($phpOk ? '<span class="ok">✓</span>' : '<span class="err">✗ BRAUCHT 8.0+</span>') . '<br>';
+
+$exts = ['pdo', 'pdo_mysql', 'curl', 'mbstring', 'json', 'openssl'];
+foreach ($exts as $ext) {
+    $ok = extension_loaded($ext);
+    echo "Extension $ext: " . ($ok ? '<span class="ok">✓</span>' : '<span class="err">✗ FEHLT</span>') . '<br>';
+}
+
+// ── .env ──────────────────────────────────────────────────────
+echo '<h2>.env Datei</h2>';
+echo '.env Pfad: ' . $envPath . '<br>';
+echo '.env existiert: ' . (file_exists($envPath) ? '<span class="ok">✓</span>' : '<span class="err">✗ FEHLT – DB-Zugangsdaten nicht konfiguriert!</span>') . '<br>';
+
+$env = [];
+if (is_readable($envPath)) {
+    echo '.env lesbar: <span class="ok">✓</span><br>';
+    foreach (file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        $line = trim($line);
+        if ($line === '' || $line[0] === '#' || strpos($line, '=') === false) continue;
+        [$k, $v] = explode('=', $line, 2);
+        $env[trim($k)] = trim($v);
+    }
+    $keys = ['DB_HOST','DB_PORT','DB_NAME','DB_USER','SITE_URL','DISCORD_CLIENT_ID','DISCORD_REDIRECT_URI'];
+    foreach ($keys as $k) {
+        $val = $env[$k] ?? null;
+        $safe = in_array($k, ['DB_USER','DB_HOST','DB_PORT','DB_NAME','SITE_URL','DISCORD_CLIENT_ID','DISCORD_REDIRECT_URI'], true)
+              ? htmlspecialchars((string)$val) : '(versteckt)';
+        echo "$k: " . ($val !== null ? '<span class="ok">✓ = ' . $safe . '</span>' : '<span class="err">✗ FEHLT</span>') . '<br>';
+    }
+    // DB_PASS nur Vorhandensein prüfen
+    echo 'DB_PASS: ' . (isset($env['DB_PASS']) && $env['DB_PASS'] !== '' ? '<span class="ok">✓ (gesetzt)</span>' : '<span class="err">✗ FEHLT oder leer</span>') . '<br>';
+} else {
+    echo '.env lesbar: <span class="err">✗ NICHT LESBAR</span><br>';
+}
+
+// ── db_config.enc ─────────────────────────────────────────────
+$encFile = __DIR__ . '/includes/db_config.enc';
+echo '<h2>Verschlüsselte DB-Config (db_config.enc)</h2>';
+echo 'Existiert: ' . (file_exists($encFile) ? '<span class="ok">✓</span>' : '<span class="warn">– nicht vorhanden (wird .env verwendet)</span>') . '<br>';
+
+// ── Datenbankverbindung ───────────────────────────────────────
+echo '<h2>Datenbankverbindung</h2>';
+
+// Priorität: db_config.enc > .env > Defaults
+$dbHost = $env['DB_HOST'] ?? '127.0.0.1';
+$dbPort = $env['DB_PORT'] ?? '3306';
+$dbName = $env['DB_NAME'] ?? 'viennastaterp';
+$dbUser = $env['DB_USER'] ?? '';
+$dbPass = $env['DB_PASS'] ?? '';
+
+// Falls db_config.enc vorhanden, versuchen zu entschlüsseln
+if (file_exists($encFile)) {
+    try {
+        require_once __DIR__ . '/includes/db_config.php';
+        $cfg = db_config_load();
+        if ($cfg) {
+            $dbHost = $cfg['host'] ?? $dbHost;
+            $dbPort = $cfg['port'] ?? $dbPort;
+            $dbName = $cfg['name'] ?? $dbName;
+            $dbUser = $cfg['user'] ?? $dbUser;
+            $dbPass = $cfg['pass'] ?? $dbPass;
+            echo 'db_config.enc: <span class="ok">✓ entschlüsselt</span><br>';
+        } else {
+            echo 'db_config.enc: <span class="warn">⚠ Entschlüsselung fehlgeschlagen – kein Key?</span><br>';
+        }
+    } catch (\Throwable $e) {
+        echo 'db_config.enc: <span class="err">✗ Fehler: ' . htmlspecialchars($e->getMessage()) . '</span><br>';
+    }
+}
+
+echo 'Verbindungsversuch: host=' . htmlspecialchars($dbHost) . ' db=' . htmlspecialchars($dbName) . ' user=' . htmlspecialchars($dbUser) . '<br>';
+
+$testPdo = null;
+try {
+    $testPdo = new PDO(
+        "mysql:host={$dbHost};port={$dbPort};dbname={$dbName};charset=utf8mb4;connect_timeout=5",
+        $dbUser, $dbPass,
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_TIMEOUT => 5]
+    );
+    echo 'Verbindung: <span class="ok">✓ ERFOLGREICH</span><br>';
+} catch (\PDOException $e) {
+    echo 'Verbindung: <span class="err">✗ FEHLER: ' . htmlspecialchars($e->getMessage()) . '</span><br>';
+    echo '<br><span class="warn">→ DB-Zugangsdaten in .env oder Admin-Panel prüfen!</span><br>';
+}
+
+// ── Tabellen ──────────────────────────────────────────────────
+echo '<h2>Datenbank-Tabellen</h2>';
+$required = ['users','discord_tokens','login_log','rate_limits','activity_logs'];
+if ($testPdo) {
+    try {
+        $existing = $testPdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
+        foreach ($required as $t) {
+            $ok = in_array($t, $existing, true);
+            echo "$t: " . ($ok ? '<span class="ok">✓</span>' : '<span class="err">✗ FEHLT – schema.sql importieren!</span>') . '<br>';
+        }
+        $missing = array_diff($required, $existing);
+        if ($missing) {
+            echo '<br><span class="err">✗ Fehlende Tabellen! schema.sql in der Datenbank ausführen.</span><br>';
+        }
+    } catch (\Throwable $e) {
+        echo '<span class="err">Tabellen-Check fehlgeschlagen: ' . htmlspecialchars($e->getMessage()) . '</span><br>';
+    }
+} else {
+    echo '<span class="warn">Kein DB-Zugriff – Tabellen können nicht geprüft werden.</span><br>';
+}
+
+// ── Includes laden ────────────────────────────────────────────
+echo '<h2>Includes laden</h2>';
+$files = ['includes/db.php','includes/session_config.php','includes/discord_config.php',
+          'includes/permissions.php','includes/logger.php','includes/rate_limit.php'];
+foreach ($files as $f) {
+    $path = __DIR__ . '/' . $f;
+    ob_start();
+    set_error_handler(fn($no,$str) => true);
+    $ok = true; $msg = '';
+    try {
+        require_once $path;
+    } catch (\Throwable $e) {
+        $ok = false; $msg = $e->getMessage();
+    }
+    restore_error_handler();
+    ob_end_clean();
+    echo "$f: " . ($ok ? '<span class="ok">✓</span>' : '<span class="err">✗ ' . htmlspecialchars($msg) . '</span>') . '<br>';
+}
+
+// ── Konstanten ────────────────────────────────────────────────
+echo '<h2>Konstanten</h2>';
+foreach (['SITE_URL','DISCORD_CLIENT_ID','DISCORD_REDIRECT_URI','DISCORD_GUILD_ID'] as $c) {
+    echo "$c: " . (defined($c) ? '<span class="ok">✓ = ' . htmlspecialchars(constant($c)) . '</span>' : '<span class="err">✗ NICHT DEFINIERT</span>') . '<br>';
+}
+
+// ── Session ───────────────────────────────────────────────────
+echo '<h2>Session</h2>';
+echo 'session_status: ' . session_status() . ' (' . (session_status() === PHP_SESSION_ACTIVE ? '<span class="ok">aktiv</span>' : '<span class="warn">inaktiv</span>') . ')<br>';
+echo 'Session ID: ' . (session_id() ?: '<span class="warn">keine</span>') . '<br>';
+echo 'discord_user in Session: ' . (isset($_SESSION['discord_user']) ? '<span class="ok">✓ eingeloggt als ' . htmlspecialchars($_SESSION['discord_user']['username'] ?? '?') . '</span>' : '<span class="warn">nicht eingeloggt</span>') . '<br>';
+
+echo '<br><p style="color:#f44;font-size:14px">⚠ Diese Seite enthält sensible Systeminformationen. Nach dem Lesen DIAG_TOKEN aus .env entfernen oder diese Datei löschen!</p>';

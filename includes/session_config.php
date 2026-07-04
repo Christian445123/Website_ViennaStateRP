@@ -26,7 +26,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // ── Session-Timeout prüfen ────────────────────────────────────────────────────
-if (isset($_SESSION['user_id'])) {
+if (isset($_SESSION['discord_user'])) {
     if (time() - ($_SESSION['last_activity'] ?? 0) > SESSION_TIMEOUT) {
         session_unset();
         session_destroy();

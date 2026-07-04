@@ -8,6 +8,16 @@ ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 error_reporting(E_ALL);
 
+// Globaler Fallback – verhindert HTTP 500 bei unkontrollierten Fehlern
+set_exception_handler(function (\Throwable $e): void {
+    $siteUrl = defined('SITE_URL') ? rtrim(SITE_URL, '/') : '';
+    error_log('[Callback] Unkontrollierter Fehler: ' . $e->getMessage() . ' | ' . $e->getFile() . ':' . $e->getLine());
+    if (!headers_sent()) {
+        header('Location: ' . $siteUrl . '/login.php?error=' . urlencode('Interner Fehler – bitte erneut versuchen'));
+    }
+    exit;
+});
+
 require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/session_config.php';
 require_once __DIR__ . '/includes/discord_config.php';
@@ -15,8 +25,12 @@ require_once __DIR__ . '/includes/discord_config.php';
 if (isset($pdo)) {
     require_once __DIR__ . '/includes/rate_limit.php';
     require_once __DIR__ . '/includes/logger.php';
-    if (!checkRateLimit('discord_callback', 10, 300)) {
-        rateLimitExceeded();
+    try {
+        if (!checkRateLimit('discord_callback', 10, 300)) {
+            rateLimitExceeded();
+        }
+    } catch (\Throwable $e) {
+        error_log('[Callback] Rate-Limit-Fehler (ignoriert): ' . $e->getMessage());
     }
 }
 
