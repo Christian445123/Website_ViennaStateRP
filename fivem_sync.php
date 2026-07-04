@@ -54,6 +54,7 @@ $hasCfg = $cfg !== null;
     <ul class="nav-links" id="navLinks">
       <li><a href="admin.php">Admin</a></li>
       <li><a href="db_admin.php">DB Browser</a></li>
+      <li><a href="db_live_browser.php">🗄️ DBLIVE Browser</a></li>
       <li><a href="fivem_sync.php" class="active">DB Sync</a></li>
     </ul>
     <div class="nav-actions">
@@ -81,6 +82,7 @@ $hasCfg = $cfg !== null;
         ▶ Sync starten
       </button>
       <a href="db_admin.php" class="btn btn-outline">DB Browser</a>
+      <a href="db_live_browser.php" class="btn btn-primary" style="font-size:.82rem">🗄️ DBLIVE Browser</a>
       <a href="admin.php" class="btn btn-ghost">← Admin</a>
     </div>
   </div>

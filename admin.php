@@ -84,6 +84,7 @@ if (!function_exists('avatarUrl')) {
       <li><a href="db_admin.php">DB Browser</a></li>
       <li><a href="fivem_sync.php">🔄 DB Sync</a></li>
       <li><a href="admin_live_db.php">🗄️ DB_LIVE</a></li>
+      <li><a href="db_live_browser.php">🔍 DBLIVE Browser</a></li>
     </ul>
     <div class="nav-actions">
       <a href="dashboard.php" class="btn btn-ghost">
