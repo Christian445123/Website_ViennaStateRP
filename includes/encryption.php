@@ -47,10 +47,10 @@ final class VsrpCrypt
             }
         }
 
-        // 2. Umgebungsvariable
-        $envKey = getenv('VSRP_SECRET_KEY');
-        if ($envKey !== false && $envKey !== '') {
-            $cached = hash('sha256', $envKey, true);
+        // 2. Umgebungsvariable ($_ENV zuerst, dann getenv – putenv() kann auf Hosts deaktiviert sein)
+        $envKey = $_ENV['VSRP_SECRET_KEY'] ?? getenv('VSRP_SECRET_KEY');
+        if ($envKey !== false && $envKey !== null && $envKey !== '') {
+            $cached = hash('sha256', (string) $envKey, true);
             return $cached;
         }
 

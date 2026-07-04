@@ -41,10 +41,11 @@ function _vsrp_get_secret_key(): ?string
     if ($keyFile !== '' && is_readable($keyFile)) {
         return hash('sha256', trim((string) file_get_contents($keyFile)), true);
     }
-    // Priorität 2: Umgebungsvariable (PHP-FPM pool.d oder .env)
-    $envKey = getenv('VSRP_SECRET_KEY');
-    if ($envKey !== false && $envKey !== '') {
-        return hash('sha256', $envKey, true);
+    // Priorität 2: $_ENV zuerst (gesetzt vom .env-Loader), dann getenv() (PHP-FPM pool.d)
+    // Wichtig: putenv() ist auf manchen Hosts deaktiviert – $_ENV ist immer verfügbar
+    $envKey = $_ENV['VSRP_SECRET_KEY'] ?? getenv('VSRP_SECRET_KEY');
+    if ($envKey !== false && $envKey !== null && $envKey !== '') {
+        return hash('sha256', (string) $envKey, true);
     }
     return null;
 }
