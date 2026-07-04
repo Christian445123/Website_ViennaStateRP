@@ -79,7 +79,7 @@ $hasCol = fn($c) => in_array($c, $cols, true);
 
 $insertCols = ['username', 'global_name', 'email', 'password_hash', 'discord_id', 'last_login'];
 $insertVals = [$username, $username, $email, $hash, null, date('Y-m-d H:i:s')];
-$insertPlch = ['?', '?', '?', '?', 'NULL', '?'];
+$insertPlch = ['?', '?', '?', '?', '?', '?']; // NULL via bound parameter (PDO handles null correctly)
 
 if ($hasCol('is_verified')) { $insertCols[] = 'is_verified'; $insertVals[] = 1; $insertPlch[] = '?'; }
 
