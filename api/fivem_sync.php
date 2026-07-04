@@ -88,8 +88,8 @@ if ($action === 'status') {
         'ok'         => true,
         'configured' => $cfg !== null,
         'host'       => $cfg ? ($cfg['host'] . ':' . ($cfg['port'] ?? '3306')) : null,
-        'db_name'    => $cfg['name'] ?? null,
-        'log'        => sync_log_read(),
+        'db_name'    => $cfg['name'] ?? null,        'target_db'  => env('DB_LIVE_NAME', 'DBLIVE'),
+        'target_user'=> env('DB_LIVE_USER', ''),        'log'        => sync_log_read(),
     ]);
     exit;
 }
@@ -185,6 +185,7 @@ if ($action === 'sync') {
             'rows'       => $results['rows_total'],
             'duration_s' => $duration,
             'errors'     => $results['errors'],
+            'target_db'  => env('DB_LIVE_NAME', 'DBLIVE'),
         ];
         sync_log_write($entry);
 

@@ -162,14 +162,15 @@ $hasCfg = $cfg !== null;
           </div>
         </div>
 
-        <div style="font-size:.78rem;color:#64748b;margin-bottom:8px">Zieldatenbank:</div>
-        <code style="font-size:.85rem;color:#86efac">DBLIVE</code>
+        <div style="font-size:.78rem;color:#64748b;margin-bottom:8px">Zieldatenbank (lokal):</div>
+        <code style="font-size:.85rem;color:#86efac" id="targetDbLabel">DBLIVE</code>
+        <span style="font-size:.72rem;color:#4b5563;margin-left:8px" id="targetUserLabel"></span>
 
         <div style="margin-top:16px;padding:12px;background:rgba(232,184,109,.05);border:1px solid rgba(232,184,109,.15);border-radius:8px;font-size:.78rem;color:#94a3b8;line-height:1.6">
           <strong style="color:#e8b86d">Wie funktioniert der Sync?</strong><br>
-          1. Verbindet sich mit der Remote MariaDB<br>
-          2. Liest alle Tabellen + Struktur<br>
-          3. Erstellt <code>DBLIVE</code> lokal neu<br>
+          1. Verbindet sich mit der Remote MariaDB (FiveM)<br>
+          2. Liest alle Tabellen + Struktur (nur SELECT)<br>
+          3. Schreibt in lokale <code id="targetDbDesc">DBLIVE</code> Datenbank<br>
           4. Kopiert Daten in 500-Zeilen-Batches<br>
           5. Protokolliert Ergebnis mit Zeitstempel
         </div>
@@ -330,12 +331,25 @@ async function loadStatus() {
   const res = await api('status');
   if (!res.ok) return;
 
+  // Zieldatenbank aus API-Antwort anzeigen
+  if (res.target_db) {
+    document.getElementById('targetDbLabel').textContent = res.target_db;
+    document.getElementById('targetDbDesc').textContent  = res.target_db;
+  }
+  if (res.target_user) {
+    document.getElementById('targetUserLabel').textContent = '(User: ' + res.target_user + ')';
+  }
+
   const log = res.log;
   if (log?.last) {
     const l = log.last;
     document.getElementById('statRows').textContent     = l.rows ? l.rows.toLocaleString('de') : '–';
     document.getElementById('statLast').textContent     = l.at || '–';
     document.getElementById('statDuration').textContent = l.duration_s ? l.duration_s + 's' : '–';
+    if (l.target_db) {
+      document.getElementById('targetDbLabel').textContent = l.target_db;
+      document.getElementById('targetDbDesc').textContent  = l.target_db;
+    }
   }
 
   const logEl = document.getElementById('syncLog');
@@ -346,6 +360,7 @@ async function loadStatus() {
       <span style="color:#4b5563;white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:.78rem">${r.at}</span>
       <span class="badge ${r.ok?'badge-ok':'badge-err'}">${r.ok?'OK':'FEHLER'}</span>
       <span style="color:#e2e8f0">${r.tables || 0} Tabellen · ${(r.rows||0).toLocaleString('de')} Zeilen · ${r.duration_s||'–'}s</span>
+      ${r.target_db ? `<span style="color:#86efac;font-size:.72rem">→ ${r.target_db}</span>` : ''}
       ${r.errors&&r.errors.length?`<span style="color:#fca5a5;font-size:.75rem">${r.errors.join(' | ')}</span>`:''}
     </div>`
   ).join('');
