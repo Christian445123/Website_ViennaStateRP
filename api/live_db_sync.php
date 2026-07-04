@@ -3,7 +3,12 @@ declare(strict_types=1);
 // ============================================================
 //  ViennaStateRP – DB_LIVE Sync API
 //  POST /api/live_db_sync.php  { action: 'sync'|'status'|'tables'|'browse' }
-//  Synct: FiveM Remote-DB  →  Lokale db_live Datenbank
+//
+//  Quellen:
+//    • FiveM Remote-DB  → fivem_db_connect()  (read-only)
+//    • DB_LIVE lokal    → live_db_connect()    (read/write)
+//      Credentials: DB_LIVE_* in .env
+//
 //  Nur für Admins
 // ============================================================
 ini_set('display_errors', '0');
@@ -22,9 +27,7 @@ if (!is_logged_in() || !has_permission('admin')) {
     exit;
 }
 
-// ── Lokale DB_LIVE Datenbankname ──────────────────────────────────────────────
-$liveDbName = env('DB_LIVE_NAME', 'db_live');
-$liveDbName = preg_replace('/[^a-zA-Z0-9_]/', '', $liveDbName); // Sicherheit
+$liveDbName = preg_replace('/[^a-zA-Z0-9_]/', '', env('DB_LIVE_NAME', 'DBLIVE'));
 
 // ── Log-Datei ─────────────────────────────────────────────────────────────────
 $logFile = sys_get_temp_dir() . '/vsrp_live_sync.json';
@@ -59,186 +62,142 @@ if (!in_array($action, ['status', 'tables', 'browse'], true)) {
 
 // ── STATUS ────────────────────────────────────────────────────────────────────
 if ($action === 'status') {
-    $fivemCfg  = fivem_db_load();
-    $log       = live_log_read($logFile);
-    $liveReady = false;
+    $fivemCfg   = fivem_db_load();
+    $log        = live_log_read($logFile);
+    $liveReady  = false;
     $liveTables = 0;
     $liveSize   = '–';
 
-    if (isset($pdo)) {
+    $liveDb = live_db_connect();
+    if ($liveDb) {
         try {
-            $exists = $pdo->query(
-                "SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = " .
-                $pdo->quote($liveDbName)
-            )->fetchColumn();
-            if ($exists) {
-                $liveReady  = true;
-                $liveTables = (int) $pdo->query("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = " . $pdo->quote($liveDbName))->fetchColumn();
-                $sizeRow    = $pdo->query(
-                    "SELECT ROUND(SUM(data_length + index_length)/1024/1024, 2) AS mb
-                     FROM information_schema.TABLES WHERE TABLE_SCHEMA = " . $pdo->quote($liveDbName)
-                )->fetchColumn();
-                $liveSize = $sizeRow ? $sizeRow . ' MB' : '< 1 MB';
-            }
+            $liveTables = (int) $liveDb->query("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()")->fetchColumn();
+            $sizeRow    = $liveDb->query("SELECT ROUND(SUM(data_length+index_length)/1024/1024,2) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE()")->fetchColumn();
+            $liveSize   = $sizeRow ? $sizeRow . ' MB' : '< 1 MB';
+            $liveReady  = true;
         } catch (\Throwable $e) {}
+        $liveDb = null;
     }
 
     echo json_encode([
-        'ok'              => true,
-        'live_db'         => $liveDbName,
-        'live_ready'      => $liveReady,
-        'live_tables'     => $liveTables,
-        'live_size'       => $liveSize,
-        'fivem_configured'=> $fivemCfg !== null,
-        'fivem_host'      => $fivemCfg ? ($fivemCfg['host'] . ':' . ($fivemCfg['port'] ?? '3306')) : null,
-        'fivem_db'        => $fivemCfg['name'] ?? null,
-        'log'             => $log,
+        'ok'               => true,
+        'live_db'          => $liveDbName,
+        'live_ready'       => $liveReady,
+        'live_tables'      => $liveTables,
+        'live_size'        => $liveSize,
+        'live_user'        => env('DB_LIVE_USER', ''),
+        'fivem_configured' => $fivemCfg !== null,
+        'fivem_host'       => $fivemCfg ? ($fivemCfg['host'] . ':' . ($fivemCfg['port'] ?? '3306')) : null,
+        'fivem_db'         => $fivemCfg['name'] ?? null,
+        'log'              => $log,
     ]);
     exit;
 }
 
-// ── TABELLEN LISTE (aus db_live) ─────────────────────────────────────────────
+// ── TABELLENLISTE aus DB_LIVE ─────────────────────────────────────────────────
 if ($action === 'tables') {
-    if (!isset($pdo)) {
-        echo json_encode(['ok' => false, 'error' => 'Lokale DB nicht verfügbar']);
+    $liveDb = live_db_connect();
+    if (!$liveDb) {
+        echo json_encode(['ok' => false, 'error' => 'DB_LIVE nicht erreichbar – DB_LIVE_* in .env prüfen']);
         exit;
     }
     try {
-        $rows = $pdo->query(
-            "SELECT
-               t.TABLE_NAME        AS name,
-               t.TABLE_ROWS        AS est_rows,
-               ROUND((t.data_length + t.index_length)/1024, 1) AS size_kb,
-               t.CREATE_TIME       AS created,
-               t.UPDATE_TIME       AS updated
-             FROM information_schema.TABLES t
-             WHERE t.TABLE_SCHEMA = " . $pdo->quote($liveDbName) . "
-             ORDER BY t.TABLE_NAME"
-        )->fetchAll(PDO::FETCH_ASSOC);
+        $rows = $liveDb->query(
+            "SELECT TABLE_NAME AS name, TABLE_ROWS AS est_rows,
+               ROUND((data_length+index_length)/1024,1) AS size_kb,
+               CREATE_TIME AS created, UPDATE_TIME AS updated
+             FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA = DATABASE()
+             ORDER BY TABLE_NAME"
+        )->fetchAll();
         echo json_encode(['ok' => true, 'tables' => $rows]);
     } catch (\Throwable $e) {
         echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
     }
+    $liveDb = null;
     exit;
 }
 
 // ── TABELLE DURCHSUCHEN ───────────────────────────────────────────────────────
 if ($action === 'browse') {
     $table  = preg_replace('/[^a-zA-Z0-9_]/', '', (string)($body['table'] ?? ''));
-    $page   = max(1, (int)($body['page'] ?? 1));
+    $page   = max(1, (int)($body['page']  ?? 1));
     $limit  = min(100, max(10, (int)($body['limit'] ?? 50)));
     $offset = ($page - 1) * $limit;
-
-    if (!$table || !isset($pdo)) {
-        echo json_encode(['ok' => false, 'error' => 'Tabelle oder DB fehlt']);
-        exit;
-    }
+    if (!$table) { echo json_encode(['ok' => false, 'error' => 'Tabellenname fehlt']); exit; }
+    $liveDb = live_db_connect();
+    if (!$liveDb) { echo json_encode(['ok' => false, 'error' => 'DB_LIVE nicht erreichbar']); exit; }
     try {
-        $total  = (int) $pdo->query("SELECT COUNT(*) FROM `{$liveDbName}`.`{$table}`")->fetchColumn();
-        $rows   = $pdo->query("SELECT * FROM `{$liveDbName}`.`{$table}` LIMIT {$limit} OFFSET {$offset}")->fetchAll();
-        $cols   = $rows ? array_keys($rows[0]) : [];
+        $total = (int) $liveDb->query("SELECT COUNT(*) FROM `{$table}`")->fetchColumn();
+        $rows  = $liveDb->query("SELECT * FROM `{$table}` LIMIT {$limit} OFFSET {$offset}")->fetchAll();
+        $cols  = $rows ? array_keys($rows[0]) : [];
         echo json_encode(['ok' => true, 'total' => $total, 'cols' => $cols, 'rows' => $rows, 'page' => $page, 'limit' => $limit]);
     } catch (\Throwable $e) {
         echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
     }
+    $liveDb = null;
     exit;
 }
 
-// ── VOLLSTÄNDIGER SYNC ────────────────────────────────────────────────────────
+// ── VOLLSTÄNDIGER SYNC: FiveM Remote → DB_LIVE ───────────────────────────────
 if ($action === 'sync') {
-    // Verbindungen prüfen
     $remote = fivem_db_connect();
     if (!$remote) {
-        echo json_encode(['ok' => false, 'error' => 'Remote FiveM-DB: Verbindung fehlgeschlagen – Credentials in FiveM DB Sync konfigurieren']);
+        echo json_encode(['ok' => false, 'error' => 'FiveM Remote-DB: Verbindung fehlgeschlagen – Credentials unter FiveM DB Sync konfigurieren']);
         exit;
     }
-    if (!isset($pdo)) {
-        echo json_encode(['ok' => false, 'error' => 'Lokale DB nicht verfügbar']);
+    $liveDb = live_db_connect();
+    if (!$liveDb) {
+        echo json_encode(['ok' => false, 'error' => 'DB_LIVE (' . $liveDbName . '): Verbindung fehlgeschlagen – DB_LIVE_* in .env prüfen']);
         exit;
     }
 
-    $start     = microtime(true);
-    $results   = ['tables' => [], 'errors' => [], 'rows_total' => 0];
-    $onlyTables = is_array($body['tables'] ?? null) && !empty($body['tables']) ? $body['tables'] : null;
+    $start      = microtime(true);
+    $results    = ['tables' => [], 'errors' => [], 'rows_total' => 0];
+    $onlyTables = (is_array($body['tables'] ?? null) && !empty($body['tables'])) ? $body['tables'] : null;
 
     try {
-        // DB_LIVE anlegen falls nicht vorhanden
-        $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$liveDbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-
-        // Alle Tabellen der Remote-DB lesen
         $remoteTables = $remote->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
         if ($onlyTables !== null) {
             $remoteTables = array_values(array_intersect($remoteTables, $onlyTables));
         }
-
-        $total = count($remoteTables);
-        $done  = 0;
 
         foreach ($remoteTables as $table) {
             $tSafe = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
             if ($tSafe !== $table) continue;
 
             try {
-                // Struktur von Remote lesen (nur SELECT/SHOW)
                 $createRow  = $remote->query("SHOW CREATE TABLE `{$tSafe}`")->fetch();
                 $createStmt = $createRow['Create Table'] ?? null;
-                if (!$createStmt) {
-                    $results['errors'][] = "{$tSafe}: Struktur nicht lesbar";
-                    continue;
-                }
+                if (!$createStmt) { $results['errors'][] = "{$tSafe}: Struktur nicht lesbar"; continue; }
 
-                // Ziel-Tabelle neu erstellen (vollständiger Ersat-Sync)
-                $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
-                $pdo->exec("DROP TABLE IF EXISTS `{$liveDbName}`.`{$tSafe}`");
-                // CREATE-Statement für Ziel-DB anpassen
-                $pdo->exec($createStmt);
-                // Tabelle in DB_LIVE verschieben (wurde in aktueller DB angelegt)
-                try {
-                    $pdo->exec("ALTER TABLE `{$tSafe}` RENAME TO `{$liveDbName}`.`{$tSafe}`");
-                } catch (\Throwable $ren) {
-                    // Fallback: direkt in db_live anlegen
-                    $pdo->exec("DROP TABLE IF EXISTS `{$liveDbName}`.`{$tSafe}`");
-                    $pdo->exec("CREATE TABLE IF NOT EXISTS `{$liveDbName}`.`{$tSafe}` LIKE `{$tSafe}`");
-                    try { $pdo->exec("DROP TABLE IF EXISTS `{$tSafe}`"); } catch (\Throwable $e2) {}
-                }
-                $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
+                $liveDb->exec("SET FOREIGN_KEY_CHECKS = 0");
+                $liveDb->exec("DROP TABLE IF EXISTS `{$tSafe}`");
+                $liveDb->exec($createStmt);
+                $liveDb->exec("SET FOREIGN_KEY_CHECKS = 1");
 
-                // Daten in 500er-Batches kopieren
-                $rowCount  = 0;
-                $batchSize = 500;
-                $offset    = 0;
-
+                $rowCount = 0; $batchSize = 500; $offset = 0;
                 while (true) {
                     $rows = $remote->query("SELECT * FROM `{$tSafe}` LIMIT {$batchSize} OFFSET {$offset}")->fetchAll();
                     if (empty($rows)) break;
-
                     $cols   = array_keys($rows[0]);
                     $colsSq = implode(', ', array_map(fn($c) => "`{$c}`", $cols));
                     $rowPh  = '(' . implode(',', array_fill(0, count($cols), '?')) . ')';
                     $allPh  = implode(',', array_fill(0, count($rows), $rowPh));
                     $vals   = [];
-                    foreach ($rows as $row) {
-                        foreach ($row as $v) $vals[] = $v;
-                    }
-
-                    $pdo->prepare(
-                        "INSERT INTO `{$liveDbName}`.`{$tSafe}` ({$colsSq}) VALUES {$allPh}"
-                    )->execute($vals);
-
-                    $rowCount += count($rows);
-                    $offset   += $batchSize;
+                    foreach ($rows as $row) foreach ($row as $v) $vals[] = $v;
+                    $liveDb->prepare("INSERT INTO `{$tSafe}` ({$colsSq}) VALUES {$allPh}")->execute($vals);
+                    $rowCount += count($rows); $offset += $batchSize;
                     if (count($rows) < $batchSize) break;
                 }
-
                 $results['tables'][]    = ['name' => $tSafe, 'rows' => $rowCount, 'ok' => true];
                 $results['rows_total'] += $rowCount;
 
             } catch (\Throwable $e) {
                 $results['tables'][]  = ['name' => $tSafe, 'ok' => false, 'error' => $e->getMessage()];
                 $results['errors'][]  = "{$tSafe}: " . $e->getMessage();
-                try { $pdo->exec("SET FOREIGN_KEY_CHECKS = 1"); } catch (\Throwable $e2) {}
+                try { $liveDb->exec("SET FOREIGN_KEY_CHECKS = 1"); } catch (\Throwable $e2) {}
             }
-            $done++;
         }
 
         $duration = round(microtime(true) - $start, 2);
@@ -253,22 +212,19 @@ if ($action === 'sync') {
         ];
         live_log_write($entry, $logFile);
 
-        // Spalten-Cache invalidieren (Migration-Check in db.php)
-        @unlink(sys_get_temp_dir() . '/vsrp_migrated_role.flag');
-
         echo json_encode([
             'ok'      => true,
-            'message' => sprintf('%d Tabellen, %s Zeilen in %.1fs → %s', count($results['tables']), number_format($results['rows_total']), $duration, $liveDbName),
+            'message' => sprintf('%d Tabellen · %s Zeilen → %s (%.1fs)', count($results['tables']), number_format($results['rows_total']), $liveDbName, $duration),
             'details' => $results,
             'log'     => $entry,
         ], JSON_UNESCAPED_UNICODE);
 
     } catch (\Throwable $e) {
-        $duration = round(microtime(true) - $start, 2);
-        $entry = ['at' => date('Y-m-d H:i:s'), 'ok' => false, 'error' => $e->getMessage(), 'duration_s' => $duration];
+        $entry = ['at' => date('Y-m-d H:i:s'), 'ok' => false, 'error' => $e->getMessage(), 'duration_s' => round(microtime(true) - $start, 2)];
         live_log_write($entry, $logFile);
         echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
     }
+    $remote = null; $liveDb = null;
     exit;
 }
 

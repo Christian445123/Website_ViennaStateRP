@@ -70,3 +70,53 @@ function fivem_db_connect(): ?PDO
         return null;
     }
 }
+
+/**
+ * Verbindung zur lokalen DB_LIVE Datenbank herstellen.
+ * Credentials werden aus .env gelesen (DB_LIVE_* Variablen).
+ */
+function live_db_connect(): ?PDO
+{
+    // .env muss bereits geladen sein (via includes/db.php)
+    $host    = env('DB_LIVE_HOST',    '127.0.0.1');
+    $port    = env('DB_LIVE_PORT',    '3306');
+    $name    = env('DB_LIVE_NAME',    'DBLIVE');
+    $user    = env('DB_LIVE_USER',    '');
+    $pass    = env('DB_LIVE_PASS',    '');
+    $charset = env('DB_LIVE_CHARSET', 'utf8mb4');
+
+    if ($user === '') {
+        error_log('[DB_LIVE] Kein DB_LIVE_USER in .env konfiguriert');
+        return null;
+    }
+
+    try {
+        $dsn = sprintf(
+            'mysql:host=%s;port=%s;dbname=%s;charset=%s;connect_timeout=10',
+            $host, $port, $name, $charset
+        );
+        $pdo = new PDO($dsn, $user, $pass, [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES   => false,
+            PDO::ATTR_TIMEOUT            => 10,
+        ]);
+        $pdo->exec("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
+        return $pdo;
+    } catch (\PDOException $e) {
+        error_log('[DB_LIVE] Verbindung fehlgeschlagen: ' . $e->getMessage());
+        return null;
+    }
+}
+
+/**
+ * Maskiert Werte für die Anzeige im Frontend.
+ * Bereits in db_config.php definiert – hier als Fallback.
+ */
+if (!function_exists('db_config_mask')) {
+    function db_config_mask(string $value, int $show = 3): string
+    {
+        if (strlen($value) <= $show) return str_repeat('*', 8);
+        return substr($value, 0, $show) . str_repeat('*', 5);
+    }
+}

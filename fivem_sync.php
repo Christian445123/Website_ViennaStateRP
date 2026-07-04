@@ -73,7 +73,7 @@ $hasCfg = $cfg !== null;
         🔄 FiveM DB <span style="color:#e8b86d">Sync</span>
       </h1>
       <p style="color:#64748b;font-size:.85rem;margin-top:6px">
-        Remote FiveM-Datenbank → Lokal <code style="color:#86efac">server_fivem</code>
+        Remote FiveM-Datenbank → Lokal <code style="color:#86efac">DBLIVE</code>
       </p>
     </div>
     <div style="display:flex;gap:8px">
@@ -163,13 +163,13 @@ $hasCfg = $cfg !== null;
         </div>
 
         <div style="font-size:.78rem;color:#64748b;margin-bottom:8px">Zieldatenbank:</div>
-        <code style="font-size:.85rem;color:#86efac">server_fivem</code>
+        <code style="font-size:.85rem;color:#86efac">DBLIVE</code>
 
         <div style="margin-top:16px;padding:12px;background:rgba(232,184,109,.05);border:1px solid rgba(232,184,109,.15);border-radius:8px;font-size:.78rem;color:#94a3b8;line-height:1.6">
           <strong style="color:#e8b86d">Wie funktioniert der Sync?</strong><br>
           1. Verbindet sich mit der Remote MariaDB<br>
           2. Liest alle Tabellen + Struktur<br>
-          3. Erstellt <code>server_fivem</code> lokal neu<br>
+          3. Erstellt <code>DBLIVE</code> lokal neu<br>
           4. Kopiert Daten in 500-Zeilen-Batches<br>
           5. Protokolliert Ergebnis mit Zeitstempel
         </div>
@@ -295,7 +295,7 @@ async function runSync() {
   document.getElementById('progressCard').style.display = '';
   document.getElementById('resultCard').style.display = 'none';
   document.getElementById('progressFill').style.width = '40%';
-  document.getElementById('syncMsg').textContent = 'Kopiere Daten von Remote-DB → server_fivem...';
+  document.getElementById('syncMsg').textContent = 'Kopiere Daten von Remote-DB → DBLIVE...';
 
   const tables = selectedTables.size > 0 && selectedTables.size < availTables.length ? [...selectedTables] : null;
   const res = await api('sync', { tables });

@@ -102,21 +102,19 @@ if ($action === 'sync') {
         exit;
     }
 
-    if (!isset($pdo)) {
-        echo json_encode(['ok' => false, 'error' => 'Lokale DB nicht verfügbar']);
+    // Schreibzugriff über DB_LIVE User (fivemLIVE) – hat Rechte auf DBLIVE
+    $liveDb = live_db_connect();
+    if (!$liveDb) {
+        echo json_encode(['ok' => false, 'error' => 'DB_LIVE-Verbindung fehlgeschlagen – DB_LIVE_* in .env prüfen']);
         exit;
     }
 
     $startTime = microtime(true);
-    $targetDb  = FIVEM_DB_LOCAL_NAME;
     $results   = ['tables' => [], 'errors' => [], 'rows_total' => 0];
     $tables    = $body['tables'] ?? null; // null = alle
 
     try {
-        // Zieldatenbank anlegen falls nicht vorhanden
-        $pdo->exec("CREATE DATABASE IF NOT EXISTS `$targetDb` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-        $pdo->exec("USE `$targetDb`");
-
+        // Zieldatenbank: DBLIVE (bereits existiert, fivemLIVE hat Rechte)
         // Alle Tabellen der Remote-DB
         $remoteTables = $remote->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
         if (is_array($tables) && !empty($tables)) {
@@ -136,12 +134,11 @@ if ($action === 'sync') {
                     continue;
                 }
 
-                // Tabelle in Ziel-DB anlegen (DROP + CREATE für frischen Sync)
-                $pdo->exec("DROP TABLE IF EXISTS `$targetDb`.`$tSafe`");
-                // Fremdschlüssel-Checks temporär deaktivieren
-                $pdo->exec("SET FOREIGN_KEY_CHECKS=0");
-                $pdo->exec($createStmt);
-                $pdo->exec("SET FOREIGN_KEY_CHECKS=1");
+                // Tabelle in DBLIVE anlegen (DROP + CREATE für frischen Sync)
+                $liveDb->exec("SET FOREIGN_KEY_CHECKS=0");
+                $liveDb->exec("DROP TABLE IF EXISTS `$tSafe`");
+                $liveDb->exec($createStmt);
+                $liveDb->exec("SET FOREIGN_KEY_CHECKS=1");
 
                 // Daten in Batches kopieren
                 $rowCount   = 0;
@@ -163,7 +160,7 @@ if ($action === 'sync') {
                         foreach ($row as $v) $vals[] = $v;
                     }
 
-                    $pdo->prepare("INSERT INTO `$targetDb`.`$tSafe` ($colsSq) VALUES $allPh")->execute($vals);
+                    $liveDb->prepare("INSERT INTO `$tSafe` ($colsSq) VALUES $allPh")->execute($vals);
                     $rowCount += count($rows);
                     $offset   += $batchSize;
 
@@ -176,6 +173,7 @@ if ($action === 'sync') {
             } catch (\Throwable $e) {
                 $results['tables'][]  = ['name' => $tSafe, 'ok' => false, 'error' => $e->getMessage()];
                 $results['errors'][]  = "$tSafe: " . $e->getMessage();
+                try { $liveDb->exec("SET FOREIGN_KEY_CHECKS=1"); } catch (\Throwable $e2) {}
             }
         }
 
