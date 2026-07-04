@@ -29,14 +29,60 @@ if (!isset($pdo)) {
     exit;
 }
 
+// ── Tabelle automatisch anlegen + Standarddaten einfügen ─────────────────────
+try {
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `fraktionen` (
+          `id`           INT UNSIGNED NOT NULL AUTO_INCREMENT,
+          `emoji`        VARCHAR(10)  NOT NULL DEFAULT '🏢',
+          `name`         VARCHAR(100) NOT NULL,
+          `typ`          VARCHAR(60)  NOT NULL,
+          `farbe`        VARCHAR(20)  NOT NULL DEFAULT '#64748b',
+          `beschreibung` TEXT         NOT NULL,
+          `slots_label`  VARCHAR(50)  NOT NULL DEFAULT 'Offen',
+          `sort_order`   SMALLINT     NOT NULL DEFAULT 0,
+          `aktiv`        TINYINT(1)   NOT NULL DEFAULT 1,
+          `created_at`   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          `updated_at`   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+
+    // Standarddaten einfügen wenn Tabelle leer (selbe Einträge wie index.php Fallback)
+    $isEmpty = (int)$pdo->query("SELECT COUNT(*) FROM fraktionen")->fetchColumn() === 0;
+    if ($isEmpty) {
+        $ins = $pdo->prepare(
+            "INSERT INTO fraktionen (emoji, name, typ, farbe, beschreibung, slots_label, sort_order, aktiv)
+             VALUES (?, ?, ?, ?, ?, ?, ?, 1)"
+        );
+        foreach ([
+            ['👮',      'Landespolizeidirektion Wien', 'STAATLICH · LEGAL',   '#3b82f6', 'Die LSPD ist die wichtigste Strafverfolgungsbehörde. Beamte patrouillieren, ermitteln und sorgen für Recht und Ordnung.', 'Offen',           1],
+            ['🚑',      'Emergency Medical Services',  'STAATLICH · LEGAL',   '#ef4444', 'Das EMS versorgt Verletzte, reanimiert Bewusstlose und betreibt das Krankenhaus im Schichtbetrieb.',                        'Offen',           2],
+            ['🚒',      'Feuerwehr Wien',              'STAATLICH · LEGAL',   '#f97316', 'Die Feuerwehr bekämpft Brände, rettet eingeklemmte Personen und unterstützt das EMS bei Großeinsätzen.',                    'Offen',           3],
+            ['⚖️',      'Staatsanwaltschaft & Justiz', 'STAATLICH · LEGAL',   '#8b5cf6', 'Staatsanwälte, Richter und Anwälte – Verfahren werden vollständig im Roleplay verhandelt.',                                 'Offen',           4],
+            ['🔫',      'Kriminelle Organisationen',   'KRIMINELL · ILLEGAL', '#64748b', 'Mehrere kriminelle Gruppierungen mit eigenen Territorien, Hierarchien und illegalen Einnahmequellen.',                      'Bewährungsphase', 5],
+            ['🧑‍💼',  'Unabhängige / Zivilisten',    'FREELANCE · NEUTRAL', '#22c55e', 'Als Zivilist betreibst du ein eigenes Unternehmen, arbeitest als Journalist, Anwalt oder Unternehmer.',                     'OFFEN',           6],
+        ] as [$emoji, $name, $typ, $farbe, $beschr, $slots, $order]) {
+            $ins->execute([$emoji, $name, $typ, $farbe, $beschr, $slots, $order]);
+        }
+    }
+} catch (\Throwable $e) {
+    error_log('[Fraktionen] Migration fehlgeschlagen: ' . $e->getMessage());
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 $id     = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $action = $_GET['action'] ?? '';
 
 // ── GET: Alle Fraktionen ─────────────────────────────────────────────────────
 if ($method === 'GET') {
-    $rows = $pdo->query("SELECT * FROM fraktionen ORDER BY sort_order ASC, id ASC")->fetchAll();
-    echo json_encode(['ok' => true, 'fraktionen' => $rows]);
+    try {
+        $rows = $pdo->query("SELECT * FROM fraktionen ORDER BY sort_order ASC, id ASC")->fetchAll();
+        echo json_encode(['ok' => true, 'fraktionen' => $rows]);
+    } catch (\Throwable $e) {
+        http_response_code(500);
+        echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
+    }
     exit;
 }
 

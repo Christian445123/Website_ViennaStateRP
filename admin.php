@@ -604,11 +604,20 @@ loadFiveMData();
 let frakData = [];
 
 async function loadFraktionen() {
-  const r = await fetch('api/fraktionen.php');
-  const d = await r.json();
-  if (!d.ok) { document.getElementById('frakList').innerHTML = '<span style="color:var(--red)">Fehler: ' + d.error + '</span>'; return; }
-  frakData = d.fraktionen;
-  renderFrakList();
+  const el = document.getElementById('frakList');
+  try {
+    const r = await fetch('api/fraktionen.php');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    if (!d.ok) {
+      el.innerHTML = '<span style="color:var(--red)">Fehler: ' + escHtml(d.error) + '</span>';
+      return;
+    }
+    frakData = d.fraktionen;
+    renderFrakList();
+  } catch(e) {
+    el.innerHTML = '<span style="color:#fca5a5;font-size:.85rem">❌ Fraktionen konnten nicht geladen werden: ' + escHtml(e.message) + '</span>';
+  }
 }
 
 function renderFrakList() {
