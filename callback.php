@@ -52,7 +52,13 @@ $token = _discord_post('https://discord.com/api/oauth2/token', [
 
 if (empty($token['access_token'])) {
     error_log('[Callback] Token-Austausch fehlgeschlagen: ' . json_encode($token));
-    header('Location: ' . $siteUrl . '/login.php?error=' . urlencode('Login fehlgeschlagen – bitte erneut versuchen'));
+    $discordError = '';
+    if (!empty($token['error_description'])) {
+        $discordError = ' (' . $token['error_description'] . ')';
+    } elseif (!empty($token['error'])) {
+        $discordError = ' (' . $token['error'] . ')';
+    }
+    header('Location: ' . $siteUrl . '/login.php?error=' . urlencode('Login fehlgeschlagen – bitte erneut versuchen' . $discordError));
     exit;
 }
 

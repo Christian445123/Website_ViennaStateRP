@@ -197,14 +197,27 @@ if (!function_exists('avatarUrl')) {
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
       <?php
-      $fraktionen = [
-        ['👮', 'Landespolizeidirektion Wien', 'STAATLICH · LEGAL',   '#3b82f6', 'Die LSPD ist die wichtigste Strafverfolgungsbehörde. Beamte patrouillieren, ermitteln und sorgen für Recht und Ordnung.',       'Offen'],
-        ['🚑', 'Emergency Medical Services',  'STAATLICH · LEGAL',   '#ef4444', 'Das EMS versorgt Verletzte, reanimiert Bewusstlose und betreibt das Krankenhaus im Schichtbetrieb.',                         'Offen'],
-        ['🚒', 'Feuerwehr Wien',               'STAATLICH · LEGAL',   '#f97316', 'Die Feuerwehr bekämpft Brände, rettet eingeklemmte Personen und unterstützt das EMS bei Großeinsätzen.',                     'Offen'],
-        ['⚖️', 'Staatsanwaltschaft & Justiz', 'STAATLICH · LEGAL',   '#8b5cf6', 'Staatsanwälte, Richter und Anwälte – Verfahren werden vollständig im Roleplay verhandelt.',                                   'Offen'],
-        ['🔫', 'Kriminelle Organisationen',    'KRIMINELL · ILLEGAL', '#64748b', 'Mehrere kriminelle Gruppierungen mit eigenen Territorien, Hierarchien und illegalen Einnahmequellen.',                       'Bewährungsphase'],
-        ['🧑‍💼', 'Unabhängige / Zivilisten', 'FREELANCE · NEUTRAL', '#22c55e', 'Als Zivilist betreibst du ein eigenes Unternehmen, arbeitest als Journalist, Anwalt oder Unternehmer.',                      'OFFEN'],
-      ];
+      // Fraktionen aus DB laden; Fallback auf hartcodierte Liste
+      $fraktionen_db = [];
+      if (isset($pdo)) {
+        try {
+          $fraktionen_db = $pdo->query(
+            "SELECT emoji, name, typ, farbe, beschreibung, slots_label FROM fraktionen WHERE aktiv=1 ORDER BY sort_order ASC, id ASC"
+          )->fetchAll();
+        } catch (Exception $e) { /* Fallback greift */ }
+      }
+      if ($fraktionen_db) {
+        $fraktionen = array_map(fn($r) => [$r['emoji'], $r['name'], $r['typ'], $r['farbe'], $r['beschreibung'], $r['slots_label']], $fraktionen_db);
+      } else {
+        $fraktionen = [
+          ['👮', 'Landespolizeidirektion Wien', 'STAATLICH · LEGAL',   '#3b82f6', 'Die LSPD ist die wichtigste Strafverfolgungsbehörde. Beamte patrouillieren, ermitteln und sorgen für Recht und Ordnung.',       'Offen'],
+          ['🚑', 'Emergency Medical Services',  'STAATLICH · LEGAL',   '#ef4444', 'Das EMS versorgt Verletzte, reanimiert Bewusstlose und betreibt das Krankenhaus im Schichtbetrieb.',                         'Offen'],
+          ['🚒', 'Feuerwehr Wien',               'STAATLICH · LEGAL',   '#f97316', 'Die Feuerwehr bekämpft Brände, rettet eingeklemmte Personen und unterstützt das EMS bei Großeinsätzen.',                     'Offen'],
+          ['⚖️', 'Staatsanwaltschaft & Justiz', 'STAATLICH · LEGAL',   '#8b5cf6', 'Staatsanwälte, Richter und Anwälte – Verfahren werden vollständig im Roleplay verhandelt.',                                   'Offen'],
+          ['🔫', 'Kriminelle Organisationen',    'KRIMINELL · ILLEGAL', '#64748b', 'Mehrere kriminelle Gruppierungen mit eigenen Territorien, Hierarchien und illegalen Einnahmequellen.',                       'Bewährungsphase'],
+          ['🧑‍💼', 'Unabhängige / Zivilisten', 'FREELANCE · NEUTRAL', '#22c55e', 'Als Zivilist betreibst du ein eigenes Unternehmen, arbeitest als Journalist, Anwalt oder Unternehmer.',                      'OFFEN'],
+        ];
+      }
       foreach ($fraktionen as [$ico, $name, $type, $color, $desc, $slots]): ?>
       <div style="background:var(--bg-card);border:1px solid rgba(255,255,255,.08);border-top:3px solid <?= $color ?>;border-radius:14px;padding:22px 20px;position:relative;transition:.2s">
         <div style="font-size:1.8rem;margin-bottom:10px"><?= $ico ?></div>
