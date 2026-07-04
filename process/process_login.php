@@ -40,11 +40,17 @@ $password = $_POST['password'] ?? '';
 if (!$username || !$password) json_out('error', 'Bitte Benutzername und Passwort eingeben.');
 
 // User suchen (username ODER email)
+// role-Spalte nur selektieren wenn sie existiert (defensiv gegen fehlende Migration)
+try {
+    $loginCols = $pdo->query("SHOW COLUMNS FROM users LIKE 'role'")->fetch();
+    $loginRoleCol = $loginCols ? ', role' : '';
+} catch (\Throwable $e) { $loginRoleCol = ''; }
+
 $stmt = $pdo->prepare(
-    'SELECT id, username, global_name, password_hash, avatar, role, is_whitelisted, is_banned, ban_reason
+    "SELECT id, username, global_name, password_hash, avatar{$loginRoleCol}, is_whitelisted, is_banned, ban_reason
      FROM users
      WHERE (username = ? OR email = ?) AND password_hash IS NOT NULL
-     LIMIT 1'
+     LIMIT 1"
 );
 $stmt->execute([$username, $username]);
 $user = $stmt->fetch();

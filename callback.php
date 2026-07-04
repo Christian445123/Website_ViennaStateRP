@@ -149,7 +149,8 @@ try {
     }
 
     // Normaler Discord-Login: bestehenden Account suchen
-    $stmt = $pdo->prepare('SELECT id, role, is_whitelisted, is_banned, ban_reason FROM users WHERE discord_id = ?');
+    $roleCol = $hasCol('role') ? ', role' : '';
+    $stmt = $pdo->prepare("SELECT id{$roleCol}, is_whitelisted, is_banned, ban_reason FROM users WHERE discord_id = ?");
     $stmt->execute([$du['id']]);
     $dbRow = $stmt->fetch() ?: null;
 

@@ -156,6 +156,32 @@ try {
     $pdo = null;
 }
 
+// ── Auto-Migration: fehlende Spalten automatisch hinzufügen ──────────────────
+if ($pdo !== null) {
+    try {
+        // Spalten-Cache (wird von callback.php / process_register.php ebenfalls genutzt)
+        $migrateFlag = sys_get_temp_dir() . '/vsrp_migrated_role.flag';
+        if (!file_exists($migrateFlag)) {
+            $hasRoleCol = $pdo->query("SHOW COLUMNS FROM `users` LIKE 'role'")->fetch();
+            if (!$hasRoleCol) {
+                $pdo->exec(
+                    "ALTER TABLE `users`
+                     ADD COLUMN `role` ENUM('player','supporter','moderator','admin')
+                     NOT NULL DEFAULT 'player'
+                     AFTER `is_verified`"
+                );
+                error_log('[VSRP Migration] Spalte `role` erfolgreich zur Tabelle `users` hinzugefügt.');
+            }
+            // Flag setzen damit die Prüfung nur einmal läuft
+            @file_put_contents($migrateFlag, date('Y-m-d H:i:s'));
+            // Spalten-Cache invalidieren (falls process_register.php ihn gecacht hat)
+            @unlink(sys_get_temp_dir() . '/vsrp_cols_users.json');
+        }
+    } catch (\Throwable $e) {
+        error_log('[VSRP Migration] ' . $e->getMessage());
+    }
+}
+
 // ── Konstanten aus .env ───────────────────────────────────────────────────────
 defined('SITE_NAME')         || define('SITE_NAME',    env('SITE_NAME',   'ViennaStateRP'));
 defined('SITE_URL')          || define('SITE_URL',     env('SITE_URL',    'https://viennastaterp.at'));
