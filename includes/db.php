@@ -94,7 +94,7 @@ function env(string $key, string $default = ''): string
 }
 
 // ── PDO-Verbindung ────────────────────────────────────────────────────────────
-// Priorität: db_config.enc (Admin-Panel) > .env > Defaults
+// Priorität: db_config.enc (Admin-Panel) > .env > config.php > Defaults
 try {
     // Verschlüsselte Config laden falls vorhanden
     $dbCfgFile = __DIR__ . '/db_config.enc';
@@ -124,12 +124,18 @@ try {
         }
     }
 
-    $dbHost    = $dbCfg['host']    ?? env('DB_HOST',    '127.0.0.1');
-    $dbPort    = $dbCfg['port']    ?? env('DB_PORT',    '3306');
-    $dbName    = $dbCfg['name']    ?? env('DB_NAME',    'viennastaterp');
-    $dbUser    = $dbCfg['user']    ?? env('DB_USER',    '');
-    $dbPass    = $dbCfg['pass']    ?? env('DB_PASS',    '');
-    $dbCharset = $dbCfg['charset'] ?? env('DB_CHARSET', 'utf8mb4');
+    // Fallback 3: config.php Konstanten laden wenn weder db_config.enc noch .env verfügbar
+    if ($dbCfg === null && env('DB_USER', '') === '' && !defined('DB_HOST')) {
+        $cfgFile = __DIR__ . '/../config.php';
+        if (file_exists($cfgFile)) { @include_once $cfgFile; }
+    }
+
+    $dbHost    = $dbCfg['host']    ?? env('DB_HOST',    defined('DB_HOST') ? DB_HOST : '127.0.0.1');
+    $dbPort    = $dbCfg['port']    ?? env('DB_PORT',    defined('DB_PORT') ? DB_PORT : '3306');
+    $dbName    = $dbCfg['name']    ?? env('DB_NAME',    defined('DB_NAME') ? DB_NAME : 'viennastaterp');
+    $dbUser    = $dbCfg['user']    ?? env('DB_USER',    defined('DB_USER') ? DB_USER : '');
+    $dbPass    = $dbCfg['pass']    ?? env('DB_PASS',    defined('DB_PASS') ? DB_PASS : '');
+    $dbCharset = $dbCfg['charset'] ?? env('DB_CHARSET', defined('DB_CHARSET') ? DB_CHARSET : 'utf8mb4');
 
     $dsn = sprintf(
         'mysql:host=%s;port=%s;dbname=%s;charset=%s;connect_timeout=10',
@@ -151,20 +157,20 @@ try {
 }
 
 // ── Konstanten aus .env ───────────────────────────────────────────────────────
-define('SITE_NAME',    env('SITE_NAME',   'ViennaStateRP'));
-define('SITE_URL',     env('SITE_URL',    'https://viennastaterp.at'));
-define('FIVEM_IP',     env('FIVEM_IP',    'fivem.viennastaterpx.at'));
-define('FIVEM_PORT',   env('FIVEM_PORT',  '30120'));
-define('FIVEM_LINK',   'fivem://connect/' . FIVEM_IP . ':' . FIVEM_PORT);
-define('DISCORD_INVITE', env('DISCORD_INVITE', 'https://discord.gg/za7wKkg3s8'));
+defined('SITE_NAME')         || define('SITE_NAME',    env('SITE_NAME',   'ViennaStateRP'));
+defined('SITE_URL')          || define('SITE_URL',     env('SITE_URL',    'https://viennastaterp.at'));
+defined('FIVEM_IP')          || define('FIVEM_IP',     env('FIVEM_IP',    'fivem.viennastaterpx.at'));
+defined('FIVEM_PORT')        || define('FIVEM_PORT',   env('FIVEM_PORT',  '30120'));
+defined('FIVEM_LINK')        || define('FIVEM_LINK',   'fivem://connect/' . FIVEM_IP . ':' . FIVEM_PORT);
+defined('DISCORD_INVITE')    || define('DISCORD_INVITE', env('DISCORD_INVITE', 'https://discord.gg/za7wKkg3s8'));
 
-define('DISCORD_CLIENT_ID',     env('DISCORD_CLIENT_ID',     '1522589753105584178'));
-define('DISCORD_CLIENT_SECRET', env('DISCORD_CLIENT_SECRET', 'XnEX7ZNGquv8eosBupraBTlY8EbYsmuO'));
-define('DISCORD_REDIRECT_URI',  env('DISCORD_REDIRECT_URI',  rtrim(SITE_URL, '/') . '/callback.php'));
-define('DISCORD_GUILD_ID',      env('DISCORD_GUILD_ID',      '1520815251376050356'));
+defined('DISCORD_CLIENT_ID')     || define('DISCORD_CLIENT_ID',     env('DISCORD_CLIENT_ID',     '1522589753105584178'));
+defined('DISCORD_CLIENT_SECRET') || define('DISCORD_CLIENT_SECRET', env('DISCORD_CLIENT_SECRET', 'XnEX7ZNGquv8eosBupraBTlY8EbYsmuO'));
+defined('DISCORD_REDIRECT_URI')  || define('DISCORD_REDIRECT_URI',  env('DISCORD_REDIRECT_URI',  rtrim(SITE_URL, '/') . '/callback.php'));
+defined('DISCORD_GUILD_ID')      || define('DISCORD_GUILD_ID',      env('DISCORD_GUILD_ID',      '1520815251376050356'));
 
 // Alias für Kompatibilität
-define('FIVEM_CONNECT_LINK', FIVEM_LINK);
+defined('FIVEM_CONNECT_LINK') || define('FIVEM_CONNECT_LINK', FIVEM_LINK);
 
 // Verschluesselungs-Modul laden
 require_once __DIR__ . '/encryption.php';
