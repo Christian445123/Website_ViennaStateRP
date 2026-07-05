@@ -500,9 +500,19 @@ if (!function_exists('avatarUrl')) {
       <a href="<?= htmlspecialchars(FIVEM_LINK) ?>">Verbinden</a>
       <p class="server-ip"><?= htmlspecialchars(FIVEM_IP) ?>:<?= htmlspecialchars(FIVEM_PORT) ?></p>
     </div>
+    <div class="footer-links">
+      <h5>Rechtliches</h5>
+      <a href="impressum.php">Impressum</a>
+      <a href="datenschutz.php">Datenschutzerklärung</a>
+      <a href="allgemeine-hinweise.php">Allgemeine Hinweise</a>
+    </div>
   </div>
   <div class="footer-bottom">
-    <p>&copy; <?= date('Y') ?> ViennaStateRP / GamingCommunity24/7. Alle Rechte vorbehalten. | Kein offizielles Rockstar Games Produkt.</p>
+    <p>&copy; <?= date('Y') ?> ViennaStateRP / GamingCommunity24/7. Alle Rechte vorbehalten. | Kein offizielles Rockstar Games Produkt. |
+      <a href="impressum.php" style="color:inherit">Impressum</a> ·
+      <a href="datenschutz.php" style="color:inherit">Datenschutz</a> ·
+      <a href="allgemeine-hinweise.php" style="color:inherit">Hinweise</a>
+    </p>
   </div>
 </footer>
 
