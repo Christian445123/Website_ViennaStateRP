@@ -5,6 +5,12 @@ require_once __DIR__ . '/includes/session_config.php';
 require_once __DIR__ . '/includes/discord_config.php';
 require_once __DIR__ . '/includes/permissions.php';
 
+// ── Beta-Splash: Besucher einmalig auf beta.php umleiten ──────────────────────
+if (!isset($_COOKIE['vsrp_beta_seen'])) {
+    header('Location: beta.php');
+    exit;
+}
+
 $user = current_user();
 
 if (!function_exists('avatarUrl')) {
@@ -595,84 +601,5 @@ function toggleFaq(i) {
 }
 </script>
 
-<!-- BETA ANNOUNCEMENT MODAL -->
-<div id="betaModal" class="beta-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="betaModalTitle">
-  <div class="beta-modal">
-    <div class="beta-modal-banner">
-      <img src="assets/img/beta-banner.jpg" alt="ViennaStateRP Beta-Start" />
-    </div>
-    <div class="beta-modal-header">
-      <div class="beta-modal-badge">📢 ANKÜNDIGUNG</div>
-      <h2 class="beta-modal-title" id="betaModalTitle">ViennaStateRP – Beta‑Start!</h2>
-      <p class="beta-modal-subtitle">Heute um 19:00 Uhr geht es los!</p>
-    </div>
-    <div class="beta-modal-body">
-      <p>Liebe Community,<br>
-      heute ist es endlich soweit: <strong>ViennaStateRP öffnet um 19:00 Uhr offiziell die Beta‑Phase!</strong></p>
-      <p class="beta-modal-note">Anmerkung: Es wird für alle <strong>Verifizierten</strong> der Server freigeschaltet!</p>
-      <p>Wir haben in den letzten Wochen intensiv entwickelt, getestet und optimiert – jetzt seid ihr dran, die Stadt mit Leben zu füllen.</p>
-      <p>Bitte denkt daran, dass es sich um eine <strong>Beta</strong> handelt. Das bedeutet:</p>
-      <ul class="beta-modal-list">
-        <li>Es können Bugs, Fehler oder unerwartete Probleme auftreten.</li>
-        <li>Manche Systeme sind noch nicht final.</li>
-        <li>Performance‑Optimierungen laufen weiterhin im Hintergrund.</li>
-      </ul>
-      <div class="beta-modal-info-box">
-        <strong>🔧 Probleme oder Bugs?</strong><br>
-        Meldet euch bei unserem Support-Team über ein
-        <a href="https://discord.com/channels/1520815251376050356/1520863619485536489" target="_blank" rel="noopener">Bugreport Ticket</a>
-        oder den Channel
-        <a href="https://discord.com/channels/1520815251376050356/1525093395771687054" target="_blank" rel="noopener">#bug-report</a>.
-        Je genauer eure Beschreibung, desto schneller können wir reagieren.
-      </div>
-      <div class="beta-modal-goal">
-        <strong>🎯 Ziel der Beta:</strong><br>
-        Gemeinsam mit euch wollen wir Fehler finden, Systeme verbessern und ViennaStateRP für den offiziellen Release stabil und sauber vorbereiten.
-      </div>
-      <div class="beta-modal-time">
-        🕗 Start: <strong>Heute 10.07.2026, 19:00 Uhr</strong>
-      </div>
-      <p class="beta-modal-closing">Wir freuen uns auf euch – und auf die ersten RP‑Momente in Wien!<br>
-      Danke für eure Unterstützung und viel Spaß beim Spielen!</p>
-      <p class="beta-modal-sign"><em>Euer VSRP I Team</em></p>
-    </div>
-    <div class="beta-modal-footer">
-      <a href="https://discord.gg/c33S5eNf?event=1525094898347540520" target="_blank" rel="noopener" class="btn btn-discord beta-modal-discord">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 127.14 96.36" style="width:18px;height:18px"><path fill="#fff" d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
-        Discord Event öffnen
-      </a>
-      <button class="btn btn-outline beta-modal-close" id="betaModalClose">Schließen</button>
-    </div>
-  </div>
-</div>
-<script>
-(function () {
-  const modal   = document.getElementById('betaModal');
-  const closeBtn = document.getElementById('betaModalClose');
-  if (!modal) return;
-
-  // Show only once per session
-  if (!sessionStorage.getItem('betaAnnouncementSeen')) {
-    modal.classList.add('is-visible');
-  }
-
-  function closeModal() {
-    modal.classList.remove('is-visible');
-    sessionStorage.setItem('betaAnnouncementSeen', '1');
-  }
-
-  closeBtn.addEventListener('click', closeModal);
-
-  // Close on backdrop click
-  modal.addEventListener('click', function (e) {
-    if (e.target === modal) closeModal();
-  });
-
-  // Close on Escape
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && modal.classList.contains('is-visible')) closeModal();
-  });
-})();
-</script>
 </body>
 </html>
