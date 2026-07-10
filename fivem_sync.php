@@ -3,7 +3,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/session_config.php';
 require_once __DIR__ . '/includes/permissions.php';
-require_once __DIR__ . '/includes/fivem_db.php';
 
 require_login();
 if (!has_permission('admin')) {
@@ -11,8 +10,8 @@ if (!has_permission('admin')) {
     exit;
 }
 
-$cfg    = fivem_db_load();
-$hasCfg = $cfg !== null;
+header('Location: admin.php?notice=' . urlencode('Die direkte Spielserver-DB-Anbindung wurde deaktiviert.'));
+exit;
 ?>
 <!DOCTYPE html>
 <html lang="de">

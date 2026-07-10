@@ -109,7 +109,7 @@ if ($saved && isset($_GET['delete'])) {
 <?php if ($saved): ?>
 <div class="box">
   <strong class="ok">✓ Nächste Schritte:</strong><br>
-  1. <a href="fivem_sync.php" style="color:#e8b86d">fivem_sync.php</a> öffnen und Sync starten<br>
+  1. FiveM-DB-Sync wurde deaktiviert.<br>
   2. <strong>Diese Datei löschen!</strong><br><br>
   <a href="?delete=1<?= isset($_GET['key']) ? '&key='.urlencode($_GET['key']) : '' ?>"
      onclick="return confirm('setup_fivem_db.php jetzt löschen?')"

@@ -1,31 +1,11 @@
 <?php
 declare(strict_types=1);
-// ============================================================
-//  ViennaStateRP – DB_LIVE Sync API
-//  POST /api/live_db_sync.php  { action: 'sync'|'status'|'tables'|'browse' }
-//
-//  Quellen:
-//    • FiveM Remote-DB  → fivem_db_connect()  (read-only)
-//    • DB_LIVE lokal    → live_db_connect()    (read/write)
-//      Credentials: DB_LIVE_* in .env
-//
-//  Nur für Admins
-// ============================================================
-ini_set('display_errors', '0');
-
-require_once __DIR__ . '/../includes/db.php';
-require_once __DIR__ . '/../includes/session_config.php';
-require_once __DIR__ . '/../includes/permissions.php';
-require_once __DIR__ . '/../includes/fivem_db.php';
-
+// Dieser Endpunkt wurde deaktiviert.
+// Die direkte Spielserver-DB-Anbindung ist nicht mehr verfügbar.
+http_response_code(410);
 header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: no-store');
+echo json_encode(['ok' => false, 'error' => 'Endpunkt wurde deaktiviert (410 Gone).']);
 
-if (!is_logged_in() || !has_permission('admin')) {
-    http_response_code(403);
-    echo json_encode(['ok' => false, 'error' => 'Forbidden']);
-    exit;
-}
 
 $liveDbName = preg_replace('/[^a-zA-Z0-9_]/', '', env('DB_LIVE_NAME', 'DBLIVE'));
 

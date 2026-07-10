@@ -1,23 +1,11 @@
 <?php
 declare(strict_types=1);
-// ============================================================
-//  ViennaStateRP – FiveM DB Sync API
-//  POST /api/fivem_sync.php  { action: 'test'|'sync'|'status'|'save_config' }
-//  Nur für Admins
-// ============================================================
-require_once __DIR__ . '/../includes/db.php';
-require_once __DIR__ . '/../includes/session_config.php';
-require_once __DIR__ . '/../includes/permissions.php';
-require_once __DIR__ . '/../includes/fivem_db.php';
-
+// Dieser Endpunkt wurde deaktiviert.
+// Die direkte Spielserver-DB-Anbindung ist nicht mehr verfügbar.
+http_response_code(410);
 header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: no-store');
+echo json_encode(['ok' => false, 'error' => 'Endpunkt wurde deaktiviert (410 Gone).']);
 
-if (!is_logged_in() || !has_permission('admin')) {
-    http_response_code(403);
-    echo json_encode(['ok' => false, 'error' => 'Forbidden']);
-    exit;
-}
 
 // Sync-Log Datei
 define('SYNC_LOG_FILE', sys_get_temp_dir() . '/vsrp_fivem_sync.json');

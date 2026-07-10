@@ -135,7 +135,6 @@ if (!function_exists('avatarUrl')) {
         </div>
         <div style="display:flex;gap:8px">
           <button onclick="loadAdminData()" class="btn btn-outline" style="font-size:.82rem;padding:7px 16px">↻ Daten aktualisieren</button>
-          <a href="db_admin.php" class="btn btn-primary" style="font-size:.82rem;padding:7px 16px">🗄 Datenbank</a>
           <a href="admin.php" class="btn btn-outline" style="font-size:.82rem;padding:7px 16px">Vollständiges Admin-Panel →</a>
         </div>
       </div>
@@ -215,6 +214,18 @@ if (!function_exists('avatarUrl')) {
       </div>
 
       <div id="adminSaveMsg" style="margin-top:14px;font-size:.82rem;display:none"></div>
+
+      <!-- Online-Spieler (nur Admin) -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;margin-top:20px;overflow:hidden">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+          <span style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#64748b">👥 Online-Spieler</span>
+          <span style="margin-left:auto">
+            <button onclick="loadPlayerList()" class="btn btn-outline" style="font-size:.75rem;padding:4px 12px">↻ Aktualisieren</button>
+          </span>
+        </div>
+        <div id="adminPlayerList" style="padding:20px;color:#94a3b8;font-size:.9rem">Lade...</div>
+      </div>
+
     </div>
 
     <style>
@@ -583,6 +594,43 @@ document.querySelectorAll('textarea[data-key]').forEach(el => {
 });
 
 loadAdminData();
+
+async function loadPlayerList() {
+  const el = document.getElementById('adminPlayerList');
+  if (!el) return;
+  el.innerHTML = '<span style="color:#64748b">Lade...</span>';
+  try {
+    const r = await fetch('api/admin_players.php');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    if (!d.ok || !d.players.length) {
+      el.innerHTML = '<span style="color:#64748b">Keine Spieler online.</span>';
+      return;
+    }
+    el.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:.85rem">'
+      + '<thead><tr>'
+      + '<th style="text-align:left;color:#64748b;padding:6px 10px;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border)">#</th>'
+      + '<th style="text-align:left;color:#64748b;padding:6px 10px;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border)">Name</th>'
+      + '<th style="text-align:left;color:#64748b;padding:6px 10px;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border)">Job</th>'
+      + '<th style="text-align:right;color:#64748b;padding:6px 10px;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border)">Ping</th>'
+      + '</tr></thead><tbody>'
+      + d.players.map(p =>
+          '<tr style="border-top:1px solid rgba(255,255,255,.05)">'
+          + '<td style="padding:6px 10px;color:#4b5563">' + p.id + '</td>'
+          + '<td style="padding:6px 10px;color:#e2e8f0;font-weight:600">' + p.name + '</td>'
+          + '<td style="padding:6px 10px;color:#94a3b8">' + (p.job || '–') + '</td>'
+          + '<td style="padding:6px 10px;text-align:right;color:' + (p.ping > 150 ? '#ef4444' : p.ping > 80 ? '#f59e0b' : '#22c55e') + '">' + p.ping + ' ms</td>'
+          + '</tr>'
+        ).join('')
+      + '</tbody></table>'
+      + '<div style="margin-top:10px;font-size:.75rem;color:#4b5563">'
+      + d.count + ' Spieler online · ' + new Date().toLocaleTimeString(\'de-AT\') + '</div>';
+  } catch(e) {
+    el.innerHTML = '<span style="color:#ef4444">Fehler: ' + e.message + '</span>';
+  }
+}
+
+loadPlayerList();
 <?php endif; ?>
 </script>
 </body>
