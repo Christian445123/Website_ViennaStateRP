@@ -448,20 +448,6 @@ if (!function_exists('avatarUrl')) {
   </div>
 </section>
 
-<!-- DISCORD WIDGET -->
-<section class="section section-dark" id="discord">
-  <div class="container">
-    <div class="section-header">
-      <span class="section-tag">Community</span>
-      <h2>Unser <span class="accent">Discord</span></h2>
-      <p>Schau vorbei, chatte mit der Community und bleib immer auf dem neuesten Stand.</p>
-    </div>
-    <div style="display:flex;justify-content:center">
-      <iframe src="https://discord.com/widget?id=1520815251376050356&theme=dark" width="350" height="500" allowtransparency="true" frameborder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts" style="border-radius:12px"></iframe>
-    </div>
-  </div>
-</section>
-
 <!-- CTA -->
 <section class="cta-section">
   <div class="cta-bg"></div>
