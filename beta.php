@@ -7,7 +7,7 @@ require_once __DIR__ . '/includes/permissions.php';
 
 if (isset($_GET['proceed'])) {
     $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
-    setcookie('vsrp_beta_seen', '1', [
+    setcookie('vsrp_beta_v2', '1', [
         'expires'  => time() + 60 * 60 * 24 * 7,
         'path'     => '/',
         'secure'   => $secure,

@@ -6,7 +6,7 @@ require_once __DIR__ . '/includes/discord_config.php';
 require_once __DIR__ . '/includes/permissions.php';
 
 // ── Beta-Splash: Besucher einmalig auf beta.php umleiten ──────────────────────
-if (!isset($_COOKIE['vsrp_beta_seen'])) {
+if (!isset($_COOKIE['vsrp_beta_v2'])) {
     header('Location: beta.php');
     exit;
 }
