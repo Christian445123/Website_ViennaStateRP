@@ -654,12 +654,10 @@ function toggleFaq(i) {
   // Show only once per session
   if (!sessionStorage.getItem('betaAnnouncementSeen')) {
     modal.classList.add('is-visible');
-    document.body.style.overflow = 'hidden';
   }
 
   function closeModal() {
     modal.classList.remove('is-visible');
-    document.body.style.overflow = '';
     sessionStorage.setItem('betaAnnouncementSeen', '1');
   }
 
