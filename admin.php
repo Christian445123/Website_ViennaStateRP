@@ -33,7 +33,7 @@ if (!function_exists('avatarUrl')) {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/style.css?v=<?= @filemtime(__DIR__ . '/assets/css/style.css') ?>" />
   <style>
     .admin-page { padding: 90px 0 80px; min-height: 100vh; }
     .admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; flex-wrap: wrap; gap: 12px; }
@@ -398,7 +398,7 @@ if (!function_exists('avatarUrl')) {
   <button onclick="saveSettings()" class="btn btn-primary">💾 Einstellungen speichern</button>
 </div>
 
-<script src="assets/js/main.js"></script>
+<script src="assets/js/main.js?v=<?= @filemtime(__DIR__ . '/assets/js/main.js') ?>"></script>
 <script>
 // ── DB-Konfiguration ──────────────────────────────────────────────────────────
 function toggleDbPw() {

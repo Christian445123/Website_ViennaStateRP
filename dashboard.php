@@ -27,7 +27,7 @@ function avatarUrl(array $user): string {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/style.css?v=<?= @filemtime(__DIR__ . '/assets/css/style.css') ?>" />
 </head>
 <body class="dashboard-body">
 
@@ -146,7 +146,7 @@ function avatarUrl(array $user): string {
   </div>
 </main>
 
-<script src="assets/js/main.js"></script>
+<script src="assets/js/main.js?v=<?= @filemtime(__DIR__ . '/assets/js/main.js') ?>"></script>
 <script>
 // ── Live Server Status ────────────────────────────────────────────────────────
 async function loadServerStatus() {

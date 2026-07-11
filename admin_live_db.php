@@ -22,7 +22,7 @@ exit;
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/style.css?v=<?= @filemtime(__DIR__ . '/assets/css/style.css') ?>" />
   <style>
     body { padding: 90px 0 80px; }
 
@@ -222,7 +222,7 @@ exit;
 </div>
 </main>
 
-<script src="assets/js/main.js"></script>
+<script src="assets/js/main.js?v=<?= @filemtime(__DIR__ . '/assets/js/main.js') ?>"></script>
 <script>
 const CSRF        = '<?= csrf_token() ?>';
 const FIVEM_OK    = <?= $hasFivemCfg ? 'true' : 'false' ?>;

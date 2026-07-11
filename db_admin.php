@@ -101,7 +101,7 @@ function htmle(mixed $v): string {
   <title>DB Admin – ViennaStateRP</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/style.css?v=<?= @filemtime(__DIR__ . '/assets/css/style.css') ?>" />
   <style>
     body { padding-top: 0; }
     .db-wrap { display: flex; min-height: 100vh; }

@@ -20,7 +20,7 @@ exit;
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FiveM DB Sync – ViennaStateRP</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/style.css?v=<?= @filemtime(__DIR__ . '/assets/css/style.css') ?>" />
   <style>
     body{padding:90px 0 80px}
     .sync-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
@@ -219,7 +219,7 @@ exit;
 </div>
 </main>
 
-<script src="assets/js/main.js"></script>
+<script src="assets/js/main.js?v=<?= @filemtime(__DIR__ . '/assets/js/main.js') ?>"></script>
 <script>
 const CSRF = '<?= csrf_token() ?>';
 let availTables = [];

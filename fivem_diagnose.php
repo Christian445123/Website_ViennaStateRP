@@ -157,7 +157,7 @@ $allOk = $dnsOk && $tests[0]['ok'] && $tests[1]['ok'] && $tests[2]['ok'];
   <title>FiveM Diagnose – ViennaStateRP</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/style.css?v=<?= @filemtime(__DIR__ . '/assets/css/style.css') ?>" />
   <style>
     body { padding: 40px 0 80px; }
     .diag-wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
