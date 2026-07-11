@@ -149,6 +149,22 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Orbitron', sans-serif; font-weight: 700; line-
 .btn-green:hover { background: #16a34a; }
 
 /* ============================================================
+   MAINTENANCE BANNER
+   ============================================================ */
+.maintenance-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1001;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  flex-wrap: wrap; text-align: center;
+  background: rgba(239,68,68,0.14);
+  border-bottom: 1px solid rgba(239,68,68,0.35);
+  color: #fecaca;
+  font-size: .85rem;
+  padding: 9px 20px;
+}
+.maintenance-banner strong { color: #fff; }
+.maintenance-banner-icon { flex-shrink: 0; }
+
+/* ============================================================
    NAVBAR
    ============================================================ */
 .navbar {

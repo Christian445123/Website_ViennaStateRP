@@ -13,6 +13,16 @@
   onScroll();
 })();
 
+// --- Maintenance banner: pushes navbar + page content below it ---
+(function () {
+  const banner = document.querySelector('.maintenance-banner');
+  const navbar = document.getElementById('navbar');
+  if (!banner) return;
+  const h = banner.offsetHeight;
+  if (navbar) navbar.style.top = h + 'px';
+  document.body.style.marginTop = h + 'px';
+})();
+
 // --- Hamburger menu ---
 (function () {
   const btn   = document.getElementById('hamburger');

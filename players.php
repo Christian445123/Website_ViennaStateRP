@@ -60,7 +60,33 @@ if (!function_exists('avatarUrl')) {
   </div>
 </nav>
 
+<?php include __DIR__ . '/includes/maintenance_banner.php'; ?>
+
 <main class="sp-page">
+  <?php if ($cfg['maintenance_mode']): ?>
+  <div class="sp-hero">
+    <div class="sp-hero-inner">
+      <div class="sp-badge" style="border-color:rgba(239,68,68,.35);color:#f87171">
+        <span class="sp-badge-dot offline"></span>
+        <span>Wartungsmodus</span>
+      </div>
+      <h1 class="sp-title">Server <span class="accent">Status</span></h1>
+      <p class="sp-sub">Echtzeit-&Uuml;bersicht · ViennaStateRP</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="sp-section">
+      <div style="background:var(--bg-card);border:1px solid rgba(239,68,68,.25);border-left:3px solid var(--red);border-radius:14px;padding:28px 32px;text-align:center">
+        <div style="font-size:2rem;margin-bottom:10px">&#128295;</div>
+        <h2 style="font-size:1.2rem;margin-bottom:8px">FiveM-Server in Wartung</h2>
+        <p style="color:var(--text-2);font-size:.92rem;line-height:1.7;max-width:560px;margin:0 auto">
+          <?= nl2br(htmlspecialchars($cfg['maintenance_message'])) ?>
+        </p>
+      </div>
+    </div>
+  </div>
+  <?php else: ?>
   <div class="sp-hero">
     <div class="sp-hero-inner">
       <div class="sp-badge">
@@ -119,7 +145,10 @@ if (!function_exists('avatarUrl')) {
         <div class="sp-skeleton"></div>
       </div>
     </div>
+  </div>
+  <?php endif; ?>
 
+  <div class="container">
     <?php if ($isAdmin): ?>
     <!-- ═══════════════════════════════════════════════════════
          ADMIN-BEREICH  (nur sichtbar für Admins)
@@ -440,7 +469,9 @@ function tick() {
   }, 1000);
 }
 
+<?php if (!$cfg['maintenance_mode']): ?>
 load(); tick();
+<?php endif; ?>
 
 <?php if ($isAdmin): ?>
 // ── Admin-Dashboard JS ────────────────────────────────────────────────────────

@@ -6,12 +6,6 @@ require_once __DIR__ . '/includes/discord_config.php';
 require_once __DIR__ . '/includes/permissions.php';
 require_once __DIR__ . '/includes/site_settings.php';
 
-// ── Wartungsmodus: per Admin-Dashboard aktivierbar ────────────────────────────
-if (setting('maintenance_mode')) {
-    header('Location: maintenance.php');
-    exit;
-}
-
 // ── Beta-Splash: Besucher einmalig auf beta.php umleiten ──────────────────────
 if (!isset($_COOKIE['vsrp_beta_v2'])) {
     header('Location: beta.php');
@@ -74,6 +68,8 @@ if (!function_exists('avatarUrl')) {
     <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
   </div>
 </nav>
+
+<?php include __DIR__ . '/includes/maintenance_banner.php'; ?>
 
 <!-- HERO -->
 <section class="hero" id="hero">

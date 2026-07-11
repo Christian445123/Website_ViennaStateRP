@@ -48,6 +48,8 @@ function avatarUrl(array $user): string {
   </div>
 </nav>
 
+<?php include __DIR__ . '/includes/maintenance_banner.php'; ?>
+
 <main class="dashboard-main">
   <div class="container">
 
