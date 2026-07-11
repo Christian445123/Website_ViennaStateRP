@@ -59,7 +59,7 @@ if (!function_exists('avatarUrl')) {
       <li><a href="index.php#about">Über uns</a></li>
       <li><a href="index.php#features">Features</a></li>
       <li><a href="index.php#fraktionen">Fraktionen</a></li>
-      <li><a href="index.php#rules">Regeln</a></li>
+      <li><a href="regelwerk.php">Regeln</a></li>
       <li><a href="index.php#join">Beitreten</a></li>
       <li><a href="players.php">Server Status</a></li>
       <li><a href="<?= htmlspecialchars(DISCORD_INVITE) ?>" target="_blank" rel="noopener">Discord</a></li>
@@ -162,7 +162,7 @@ if (!function_exists('avatarUrl')) {
       <h5>Navigation</h5>
       <a href="index.php">Startseite</a>
       <a href="index.php#features">Features</a>
-      <a href="index.php#rules">Regeln</a>
+      <a href="regelwerk.php">Regeln</a>
       <a href="players.php">Server Status</a>
     </div>
     <div class="footer-links">

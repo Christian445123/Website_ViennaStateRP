@@ -46,7 +46,7 @@ if (!function_exists('avatarUrl')) {
       <li><a href="#about">Über uns</a></li>
       <li><a href="#features">Features</a></li>
       <li><a href="#fraktionen">Fraktionen</a></li>
-      <li><a href="#rules">Regeln</a></li>
+      <li><a href="regelwerk.php">Regeln</a></li>
       <li><a href="#join">Beitreten</a></li>
       <li><a href="#faq">FAQ</a></li>
       <li><a href="players.php">Server Status</a></li>
@@ -280,6 +280,9 @@ if (!function_exists('avatarUrl')) {
         <div class="rule-item">Echtgeld-Handel (RMT) für Ingame-Güter. → BAN</div>
       </div>
     </div>
+    <div style="text-align:center;margin-top:24px">
+      <a href="regelwerk.php" class="btn btn-outline">📜 Vollständiges Regelwerk ansehen →</a>
+    </div>
   </div>
 </section>
 
@@ -481,7 +484,7 @@ if (!function_exists('avatarUrl')) {
       <h5>Navigation</h5>
       <a href="#about">Über uns</a>
       <a href="#features">Features</a>
-      <a href="#rules">Regeln</a>
+      <a href="regelwerk.php">Regeln</a>
       <a href="#join">Beitreten</a>
     </div>
     <div class="footer-links">

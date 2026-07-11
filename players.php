@@ -41,7 +41,7 @@ if (!function_exists('avatarUrl')) {
     <ul class="nav-links" id="navLinks">
       <li><a href="index.php#about">Uber uns</a></li>
       <li><a href="index.php#features">Features</a></li>
-      <li><a href="index.php#rules">Regeln</a></li>
+      <li><a href="regelwerk.php">Regeln</a></li>
       <li><a href="players.php" class="active">Server Status</a></li>
       <li><a href="<?= htmlspecialchars(DISCORD_INVITE) ?>" target="_blank" rel="noopener">Discord</a></li>
     </ul>
@@ -284,7 +284,7 @@ if (!function_exists('avatarUrl')) {
       <h5>Navigation</h5>
       <a href="index.php">Startseite</a>
       <a href="index.php#features">Features</a>
-      <a href="index.php#rules">Regeln</a>
+      <a href="regelwerk.php">Regeln</a>
       <a href="players.php">Server Status</a>
     </div>
     <div class="footer-links">
