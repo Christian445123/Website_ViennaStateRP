@@ -155,7 +155,7 @@ if (!function_exists('avatarUrl')) {
 
       <?php if ($hasBanner): ?>
       <div class="beta-banner">
-        <img src="assets/img/beta-banner.jpg" alt="ViennaStateRP Beta-Start" />
+        <img src="assets/img/beta-banner.jpg" alt="ViennaStateRP Release" />
       </div>
       <?php endif; ?>
 
@@ -169,14 +169,14 @@ if (!function_exists('avatarUrl')) {
 
         <p class="beta-note">Anmerkung: Zum Release wird der Server f&uuml;r alle <strong>Verifizierten</strong> freigeschaltet!</p>
 
-        <p>Bis dahin befinden wir uns weiterhin in der <strong>Beta-Phase</strong> &ndash; wir entwickeln, testen
-        und optimieren intensiv, damit ViennaStateRP zum Release stabil und bereit f&uuml;r euch ist.</p>
+        <p>Bis dahin laufen bei uns die letzten Vorbereitungen auf Hochtouren &ndash; wir testen, optimieren
+        und feilen an den letzten Details, damit ViennaStateRP zum Release stabil und bereit f&uuml;r euch ist.</p>
 
-        <p>Bitte denkt daran, dass es sich bis zum Release noch um eine <strong>Beta</strong> handelt. Das bedeutet:</p>
+        <p>Ein paar Dinge, die ihr zum Release wissen solltet:</p>
         <ul class="beta-list">
-          <li>Es k&ouml;nnen Bugs, Fehler oder unerwartete Probleme auftreten.</li>
-          <li>Manche Systeme sind noch nicht final.</li>
-          <li>Performance-Optimierungen laufen weiterhin im Hintergrund.</li>
+          <li>Der Server wird zum Release f&uuml;r alle Verifizierten freigeschaltet.</li>
+          <li>Solltet ihr dennoch auf Bugs oder Probleme sto&szlig;en, meldet euch gerne bei uns.</li>
+          <li>Weitere Updates und Erweiterungen folgen laufend nach dem Release.</li>
         </ul>
 
         <hr class="sep" />
@@ -191,9 +191,9 @@ if (!function_exists('avatarUrl')) {
         </div>
 
         <div class="goal-box">
-          &#127919; <strong>Ziel bis zum Release:</strong><br>
-          Gemeinsam mit euch wollen wir bis zum 01.08.2026 alle wichtigen Systeme finalisieren
-          und ViennaStateRP stabil und sauber f&uuml;r den Release vorbereiten.
+          &#127919; <strong>Bis zum Release:</strong><br>
+          Wir bereiten alles vor, damit ViennaStateRP ab dem 01.08.2026 stabil, poliert
+          und bereit f&uuml;r euch an den Start geht.
         </div>
 
         <div class="time-box">
