@@ -146,6 +146,7 @@ if (!function_exists('avatarUrl')) {
   </div>
 </nav>
 
+<?php include __DIR__ . '/includes/release_countdown.php'; ?>
 <?php include __DIR__ . '/includes/maintenance_banner.php'; ?>
 
 <main class="beta-page">
