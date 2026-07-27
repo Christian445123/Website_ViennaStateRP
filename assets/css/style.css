@@ -149,20 +149,35 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Orbitron', sans-serif; font-weight: 700; line-
 .btn-green:hover { background: #16a34a; }
 
 /* ============================================================
-   MAINTENANCE BANNER
+   TOP BANNERS (Wartung / Release-Countdown) – stapelbar, JS setzt "top"
    ============================================================ */
-.maintenance-banner {
+.top-banner {
   position: fixed; top: 0; left: 0; right: 0; z-index: 1001;
   display: flex; align-items: center; justify-content: center; gap: 8px;
   flex-wrap: wrap; text-align: center;
-  background: rgba(239,68,68,0.14);
-  border-bottom: 1px solid rgba(239,68,68,0.35);
-  color: #fecaca;
   font-size: .85rem;
   padding: 9px 20px;
 }
+
+.maintenance-banner {
+  background: rgba(239,68,68,0.14);
+  border-bottom: 1px solid rgba(239,68,68,0.35);
+  color: #fecaca;
+}
 .maintenance-banner strong { color: #fff; }
 .maintenance-banner-icon { flex-shrink: 0; }
+
+.release-countdown {
+  background: linear-gradient(90deg, rgba(232,184,109,0.16), rgba(124,58,237,0.14));
+  border-bottom: 1px solid rgba(232,184,109,0.35);
+  color: var(--text);
+}
+.release-countdown .rc-label { color: var(--gold); font-weight: 700; flex-shrink: 0; }
+.release-countdown .rc-timer { display: flex; align-items: center; gap: 10px; }
+.release-countdown .rc-unit { display: flex; flex-direction: column; align-items: center; min-width: 30px; }
+.release-countdown .rc-unit .rc-num { font-family: 'Orbitron', sans-serif; font-size: .9rem; font-weight: 700; color: #fff; line-height: 1.1; }
+.release-countdown .rc-unit .rc-lbl { font-size: .55rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 1px; }
+.release-countdown .rc-sep { color: var(--text-3); font-size: .8rem; margin: 0 -2px; }
 
 /* ============================================================
    NAVBAR

@@ -13,15 +13,19 @@
   onScroll();
 })();
 
-// --- Maintenance banner: pushes navbar + page content below it ---
-(function () {
-  const banner = document.querySelector('.maintenance-banner');
-  const navbar = document.getElementById('navbar');
-  if (!banner) return;
-  const h = banner.offsetHeight;
-  if (navbar) navbar.style.top = h + 'px';
-  document.body.style.marginTop = h + 'px';
-})();
+// --- Top banners (maintenance / release countdown): stack + push navbar/page below them ---
+function vsrpRestackBanners() {
+  const banners = Array.from(document.querySelectorAll('.top-banner'));
+  const navbar  = document.getElementById('navbar');
+  let offset = 0;
+  banners.forEach(b => {
+    b.style.top = offset + 'px';
+    offset += b.offsetHeight;
+  });
+  if (navbar) navbar.style.top = offset + 'px';
+  document.body.style.marginTop = offset + 'px';
+}
+vsrpRestackBanners();
 
 // --- Hamburger menu ---
 (function () {

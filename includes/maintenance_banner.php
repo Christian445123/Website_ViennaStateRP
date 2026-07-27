@@ -5,7 +5,7 @@ if (!function_exists('setting')) {
 if (setting('maintenance_mode')):
     $maintenanceBannerMsg = (string) setting('maintenance_message');
 ?>
-<div class="maintenance-banner">
+<div class="top-banner maintenance-banner">
   <span class="maintenance-banner-icon">&#9888;&#65039;</span>
   <span><strong>FiveM-Server in Wartung:</strong> <?= htmlspecialchars($maintenanceBannerMsg) ?></span>
 </div>

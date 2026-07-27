@@ -41,7 +41,7 @@ if (!function_exists('avatarUrl')) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Beta-Start &ndash; ViennaStateRP</title>
+  <title>Release-Ank&uuml;ndigung &ndash; ViennaStateRP</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -160,18 +160,18 @@ if (!function_exists('avatarUrl')) {
 
       <div class="beta-inner">
         <div class="section-tag">Offizielle Ank&uuml;ndigung</div>
-        <h1>ViennaStateRP &ndash; Beta-Start!</h1>
-        <p class="beta-sub">Heute um 19:00 Uhr geht es los!</p>
+        <h1>ViennaStateRP &ndash; Release!</h1>
+        <p class="beta-sub">Am 01.08.2026 um 20:00 Uhr ist es soweit!</p>
 
         <p>Liebe Community,<br>
-        heute ist es endlich soweit: <strong>ViennaStateRP &ouml;ffnet um 19:00 Uhr offiziell die Beta-Phase!</strong></p>
+        wir freuen uns, es euch endlich mitteilen zu k&ouml;nnen: <strong>ViennaStateRP geht am 01.08.2026 um 20:00 Uhr offiziell live!</strong></p>
 
-        <p class="beta-note">Anmerkung: Es wird f&uuml;r alle <strong>Verifizierten</strong> der Server freigeschaltet!</p>
+        <p class="beta-note">Anmerkung: Zum Release wird der Server f&uuml;r alle <strong>Verifizierten</strong> freigeschaltet!</p>
 
-        <p>Wir haben in den letzten Wochen intensiv entwickelt, getestet und optimiert &ndash;
-        jetzt seid ihr dran, die Stadt mit Leben zu f&uuml;llen.</p>
+        <p>Bis dahin befinden wir uns weiterhin in der <strong>Beta-Phase</strong> &ndash; wir entwickeln, testen
+        und optimieren intensiv, damit ViennaStateRP zum Release stabil und bereit f&uuml;r euch ist.</p>
 
-        <p>Bitte denkt daran, dass es sich um eine <strong>Beta</strong> handelt. Das bedeutet:</p>
+        <p>Bitte denkt daran, dass es sich bis zum Release noch um eine <strong>Beta</strong> handelt. Das bedeutet:</p>
         <ul class="beta-list">
           <li>Es k&ouml;nnen Bugs, Fehler oder unerwartete Probleme auftreten.</li>
           <li>Manche Systeme sind noch nicht final.</li>
@@ -190,13 +190,13 @@ if (!function_exists('avatarUrl')) {
         </div>
 
         <div class="goal-box">
-          &#127919; <strong>Ziel der Beta:</strong><br>
-          Gemeinsam mit euch wollen wir Fehler finden, Systeme verbessern und
-          ViennaStateRP f&uuml;r den offiziellen Release stabil und sauber vorbereiten.
+          &#127919; <strong>Ziel bis zum Release:</strong><br>
+          Gemeinsam mit euch wollen wir bis zum 01.08.2026 alle wichtigen Systeme finalisieren
+          und ViennaStateRP stabil und sauber f&uuml;r den Release vorbereiten.
         </div>
 
         <div class="time-box">
-          &#128343; Start: <strong>Heute 10.07.2026, 19:00 Uhr</strong>
+          &#128640; Release: <strong>01.08.2026, 20:00 Uhr</strong>
         </div>
 
         <p>Wir freuen uns auf euch &ndash; und auf die ersten RP-Momente in Wien!<br>
@@ -205,11 +205,11 @@ if (!function_exists('avatarUrl')) {
         <p class="beta-sign">Euer VSRP I Team</p>
 
         <div class="beta-actions">
-          <a href="https://discord.gg/c33S5eNf?event=1525094898347540520" target="_blank" rel="noopener" class="btn btn-discord">
+          <a href="<?= htmlspecialchars(DISCORD_INVITE) ?>" target="_blank" rel="noopener" class="btn btn-discord">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 127.14 96.36" style="width:18px;height:18px"><path fill="#fff" d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
-            Discord Event
+            Discord beitreten
           </a>
-          <a href="beta.php?proceed=1" class="btn btn-primary">
+          <a href="release.php?proceed=1" class="btn btn-primary">
             Zur Hauptseite &rarr;
           </a>
         </div>
