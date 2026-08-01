@@ -12,6 +12,9 @@ define('DISCORD_LOGGING_ENABLED', env('DISCORD_LOGGING_ENABLED', 'false') === 't
 define('DISCORD_WEBHOOK_URL',     env('DISCORD_WEBHOOK_URL', ''));
 define('DISCORD_BOT_NAME',        env('DISCORD_BOT_NAME', 'ViennaStateRP'));
 define('DISCORD_BOT_AVATAR',      env('DISCORD_BOT_AVATAR', ''));
+// Eigener Webhook für öffentliche Changelog-Ankündigungen (z.B. #ankündigungen).
+// Fällt auf den allgemeinen Webhook zurück, falls keiner separat gesetzt ist.
+define('DISCORD_CHANGELOG_WEBHOOK_URL', env('DISCORD_CHANGELOG_WEBHOOK_URL', DISCORD_WEBHOOK_URL));
 
 // ── OAuth2 Helfer ─────────────────────────────────────────────────────────────
 

@@ -60,6 +60,7 @@ if (!function_exists('avatarUrl')) {
       <li><a href="index.php#features">Features</a></li>
       <li><a href="index.php#fraktionen">Fraktionen</a></li>
       <li><a href="regelwerk.php">Regeln</a></li>
+      <li><a href="changelog.php">Changelog</a></li>
       <li><a href="index.php#join">Beitreten</a></li>
       <li><a href="players.php">Server Status</a></li>
       <li><a href="<?= htmlspecialchars(DISCORD_INVITE) ?>" target="_blank" rel="noopener">Discord</a></li>

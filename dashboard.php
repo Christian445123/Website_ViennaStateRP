@@ -36,6 +36,7 @@ function avatarUrl(array $user): string {
     <a class="nav-logo" href="index.php"><span class="logo-accent">Vienna</span>StateRP</a>
     <ul class="nav-links" id="navLinks">
       <li><a href="index.php">Startseite</a></li>
+      <li><a href="changelog.php">Changelog</a></li>
       <li><a href="players.php">Server Status</a></li>
       <?php if (has_permission('admin')): ?>
       <li><a href="admin.php">⚙️ Admin</a></li>

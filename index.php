@@ -5,6 +5,7 @@ require_once __DIR__ . '/includes/session_config.php';
 require_once __DIR__ . '/includes/discord_config.php';
 require_once __DIR__ . '/includes/permissions.php';
 require_once __DIR__ . '/includes/site_settings.php';
+require_once __DIR__ . '/includes/changelog.php';
 
 // ── Release-Splash: Besucher einmalig auf release.php umleiten ────────────────
 // Im Wartungsmodus wird der Splash übersprungen (Banner zeigt den Hinweis stattdessen).
@@ -47,6 +48,7 @@ if (!function_exists('avatarUrl')) {
       <li><a href="#features">Features</a></li>
       <li><a href="#fraktionen">Fraktionen</a></li>
       <li><a href="regelwerk.php">Regeln</a></li>
+      <li><a href="changelog.php">Changelog</a></li>
       <li><a href="#join">Beitreten</a></li>
       <li><a href="#faq">FAQ</a></li>
       <li><a href="players.php">Server Status</a></li>
@@ -455,6 +457,46 @@ if (!function_exists('avatarUrl')) {
     </div>
   </div>
 </section>
+
+<?php
+$latestChangelog = isset($pdo) ? changelog_latest($pdo) : null;
+if ($latestChangelog):
+  $clMeta = changelog_tag_meta($latestChangelog['tag']);
+  $clDate = DateTime::createFromFormat('Y-m-d', $latestChangelog['entry_date']);
+?>
+<!-- CHANGELOG (neuester Eintrag) -->
+<section class="section section-dark" id="changelog">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Updates</span>
+      <h2>Letztes <span class="accent">Update</span></h2>
+      <p>Was sich zuletzt bei ViennaStateRP getan hat.</p>
+    </div>
+    <div class="changelog-widget">
+      <div class="timeline-card">
+        <div class="timeline-card-head">
+          <span class="timeline-tag" style="background:<?= htmlspecialchars($clMeta['color']) ?>1a;color:<?= htmlspecialchars($clMeta['color']) ?>;border-color:<?= htmlspecialchars($clMeta['color']) ?>4d"><?= htmlspecialchars($clMeta['label']) ?></span>
+          <?php if ($latestChangelog['version'] !== ''): ?>
+            <span class="timeline-version"><?= htmlspecialchars($latestChangelog['version']) ?></span>
+          <?php endif; ?>
+          <span class="timeline-date"><?= $clDate ? htmlspecialchars($clDate->format('d.m.Y')) : htmlspecialchars($latestChangelog['entry_date']) ?></span>
+        </div>
+        <h3 class="timeline-title"><?= htmlspecialchars($latestChangelog['title']) ?></h3>
+        <?php if ($latestChangelog['points']): ?>
+        <ul class="timeline-list">
+          <?php foreach ($latestChangelog['points'] as $point): ?>
+            <li><?= htmlspecialchars($point) ?></li>
+          <?php endforeach; ?>
+        </ul>
+        <?php endif; ?>
+      </div>
+      <div class="changelog-widget-foot">
+        <a href="changelog.php" class="btn btn-outline">Alle &Auml;nderungen ansehen &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+<?php endif; ?>
 
 <!-- CTA -->
 <section class="cta-section">
