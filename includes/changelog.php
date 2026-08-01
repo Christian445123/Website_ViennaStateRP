@@ -9,6 +9,7 @@ if (defined('_VSRP_CHANGELOG_LOADED')) return;
 define('_VSRP_CHANGELOG_LOADED', true);
 
 require_once __DIR__ . '/discord_config.php';
+require_once __DIR__ . '/site_settings.php';
 
 const CHANGELOG_TAGS = [
     'feature'     => ['label' => 'Neu',         'color' => '#22c55e'],
@@ -116,7 +117,12 @@ function changelog_latest(PDO $pdo): ?array
  */
 function changelog_notify_discord(array $row): bool
 {
-    if (!DISCORD_CHANGELOG_WEBHOOK_URL) return false;
+    // Admin-Panel-Einstellung hat Vorrang vor .env-Konstante
+    $webhookUrl = (string) setting('discord_changelog_webhook');
+    if ($webhookUrl === '') {
+        $webhookUrl = DISCORD_CHANGELOG_WEBHOOK_URL;
+    }
+    if (!$webhookUrl) return false;
 
     $meta  = changelog_tag_meta($row['tag']);
     $color = hexdec(ltrim($meta['color'], '#'));
@@ -144,7 +150,7 @@ function changelog_notify_discord(array $row): bool
     $payload = ['username' => DISCORD_BOT_NAME, 'embeds' => [$embed]];
     if (DISCORD_BOT_AVATAR) $payload['avatar_url'] = DISCORD_BOT_AVATAR;
 
-    $ch = curl_init(DISCORD_CHANGELOG_WEBHOOK_URL);
+    $ch = curl_init($webhookUrl);
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => json_encode($payload, JSON_UNESCAPED_UNICODE),

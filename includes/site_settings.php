@@ -27,6 +27,8 @@ const SETTINGS_DEFAULTS = [
     // Allgemein
     'maintenance_mode'     => false,  // Wartungsmodus
     'maintenance_message'  => 'Der Server befindet sich im Wartungsmodus.',
+    // Discord
+    'discord_changelog_webhook' => '',  // Webhook-URL für Changelog-Ankündigungen
 ];
 
 function settings_load(): array

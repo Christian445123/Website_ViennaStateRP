@@ -208,6 +208,25 @@ if (!function_exists('avatarUrl')) {
     </div><!-- /.admin-grid -->
 
     <!-- ═══════════════════════════════════════════════════
+         DISCORD-EINSTELLUNGEN
+    ═══════════════════════════════════════════════════ -->
+    <div style="margin-top:32px;border-top:1px solid var(--border);padding-top:32px">
+      <div class="admin-card">
+        <div class="admin-card-title">🔔 Discord – Webhook Einstellungen</div>
+        <div class="toggle-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+          <div>
+            <div class="toggle-label">Changelog-Webhook URL</div>
+            <div class="toggle-sub">Discord Webhook für automatische Changelog-Ankündigungen (z.B. #ankündigungen). Leer lassen = allgemeiner Logging-Webhook wird verwendet.</div>
+          </div>
+          <input type="url" data-key="discord_changelog_webhook"
+            value="<?= htmlspecialchars($settings['discord_changelog_webhook'] ?? '') ?>"
+            placeholder="https://discord.com/api/webhooks/..."
+            style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:inherit;font-size:.88rem" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
          FRAKTIONEN-VERWALTUNG
     ═══════════════════════════════════════════════════ -->
     <div style="margin-top:40px;border-top:1px solid var(--border);padding-top:36px" id="fraktionenSection">
