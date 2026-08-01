@@ -483,6 +483,8 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Orbitron', sans-serif; font-weight: 700; line-
 .qa-primary:hover { background: rgba(232,184,109,0.18); }
 .qa-discord { background: rgba(88,101,242,0.1); border: 1px solid rgba(88,101,242,0.2); color: #818cf8; }
 .qa-discord:hover { background: rgba(88,101,242,0.18); }
+.qa-time { background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.2); color: var(--purple); }
+.qa-time:hover { background: rgba(124,58,237,0.18); }
 
 /* Announcements */
 .announcement-list { display: flex; flex-direction: column; gap: 16px; }
