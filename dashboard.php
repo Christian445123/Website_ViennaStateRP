@@ -121,11 +121,11 @@ function avatarUrl(array $user): string {
         </div>
       </div>
 
-      <!-- Ankündigungen (letzte Changelog-Einträge) -->
+      <!-- Changelog (letzte Einträge) -->
       <div class="dash-card glass dash-wide">
-        <h3 class="dash-card-title">📢 Ankündigungen</h3>
+        <h3 class="dash-card-title">📝 Changelog</h3>
         <?php if (!$announcements): ?>
-          <p style="color:var(--text-2);font-size:.9rem">Noch keine Ankündigungen vorhanden.</p>
+          <p style="color:var(--text-2);font-size:.9rem">Noch keine Changelog-Eintr&auml;ge vorhanden.</p>
         <?php else: ?>
         <div class="announcement-list">
           <?php foreach ($announcements as $a):
