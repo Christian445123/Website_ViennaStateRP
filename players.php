@@ -664,7 +664,7 @@ async function loadPlayerList() {
         ).join('')
       + '</tbody></table>'
       + '<div style="margin-top:10px;font-size:.75rem;color:#4b5563">'
-      + d.count + ' Spieler online · ' + new Date().toLocaleTimeString(\'de-AT\') + '</div>';
+      + d.count + ' Spieler online · ' + new Date().toLocaleTimeString('de-AT') + '</div>';
   } catch(e) {
     el.innerHTML = '<span style="color:#ef4444">Fehler: ' + e.message + '</span>';
   }
