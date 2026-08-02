@@ -275,7 +275,7 @@ if (!function_exists('avatarUrl')) {
         Bei Fragen, Beschwerden oder zur Ausübung deiner Datenschutzrechte:
       </p>
       <ul>
-        <li>E-Mail: <a href="mailto:[DEINE-EMAIL@DOMAIN.AT]">[DEINE-EMAIL@DOMAIN.AT]</a></li>
+        <li>E-Mail: <a href="mailto:support@viennastaterp.at">support@viennastaterp.at</a></li>
         <li>Discord: <a href="<?= htmlspecialchars(DISCORD_INVITE) ?>" target="_blank" rel="noopener">Support-Ticket auf unserem Server</a></li>
       </ul>
 

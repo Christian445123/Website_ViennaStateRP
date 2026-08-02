@@ -53,7 +53,7 @@ function settings_save(array $data): bool
                 : (string) $val;
         }
     }
-    $merged = array_merge(SETTINGS_DEFAULTS, $filtered);
+    $merged = array_merge(settings_load(), $filtered);
     return file_put_contents(SETTINGS_FILE, json_encode($merged, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) !== false;
 }
 

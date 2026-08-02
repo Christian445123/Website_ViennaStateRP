@@ -125,10 +125,10 @@ if (!function_exists('avatarUrl')) {
       <!-- 1. Verantwortlicher -->
       <h2>1. Verantwortlicher</h2>
       <address>
-        <strong>[DEIN NAME / ORGANISATIONSNAME]</strong><br />
-        [Straße und Hausnummer]<br />
-        [PLZ] [Ort], Österreich<br />
-        E-Mail: <a href="mailto:[DEINE-EMAIL@DOMAIN.AT]">[DEINE-EMAIL@DOMAIN.AT]</a>
+        <strong>ViennaStateRP</strong><br />
+        Klammstraße 44<br />
+        6020 Innsbruck, Österreich<br />
+        E-Mail: <a href="mailto:support@viennastaterp.at">support@viennastaterp.at</a>
       </address>
 
       <!-- 2. Datenerhebung & -verarbeitung -->
@@ -251,7 +251,7 @@ if (!function_exists('avatarUrl')) {
       </ul>
       <p>
         Zur Ausübung deiner Rechte wende dich per E-Mail an:
-        <a href="mailto:[DEINE-EMAIL@DOMAIN.AT]">[DEINE-EMAIL@DOMAIN.AT]</a>
+        <a href="mailto:support@viennastaterp.at">support@viennastaterp.at</a>
         oder kontaktiere uns auf unserem
         <a href="<?= htmlspecialchars(DISCORD_INVITE) ?>" target="_blank" rel="noopener">Discord-Server</a>.
       </p>

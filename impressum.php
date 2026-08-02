@@ -102,15 +102,15 @@ if (!function_exists('avatarUrl')) {
 
       <h2>Betreiber & Verantwortlicher</h2>
       <address>
-        <strong>[DEIN NAME / ORGANISATIONSNAME]</strong><br />
-        [Straße und Hausnummer]<br />
-        [PLZ] [Ort]<br />
+        <strong>ViennaStateRP</strong><br />
+        Klammstraße 44<br />
+        6020 Innsbruck<br />
         Österreich
       </address>
 
       <h2>Kontakt</h2>
       <p>
-        E-Mail: <a href="mailto:[DEINE-EMAIL@DOMAIN.AT]">[DEINE-EMAIL@DOMAIN.AT]</a><br />
+        E-Mail: <a href="mailto:support@viennastaterp.at">support@viennastaterp.at</a><br />
         Discord: <a href="<?= htmlspecialchars(DISCORD_INVITE) ?>" target="_blank" rel="noopener"><?= htmlspecialchars(DISCORD_INVITE) ?></a>
       </p>
 
