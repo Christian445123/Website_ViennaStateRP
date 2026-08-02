@@ -160,18 +160,28 @@ try {
 if ($pdo !== null) {
     try {
         // Spalten-Cache (wird von callback.php / process_register.php ebenfalls genutzt)
-        $migrateFlag = sys_get_temp_dir() . '/vsrp_migrated_role.flag';
+        $migrateFlag = sys_get_temp_dir() . '/vsrp_migrated_users_v2.flag';
         if (!file_exists($migrateFlag)) {
-            $hasRoleCol = $pdo->query("SHOW COLUMNS FROM `users` LIKE 'role'")->fetch();
-            if (!$hasRoleCol) {
-                $pdo->exec(
-                    "ALTER TABLE `users`
-                     ADD COLUMN `role` ENUM('player','supporter','moderator','admin')
-                     NOT NULL DEFAULT 'player'
-                     AFTER `is_verified`"
-                );
-                error_log('[VSRP Migration] Spalte `role` erfolgreich zur Tabelle `users` hinzugefügt.');
+            $existingCols = $pdo->query("SHOW COLUMNS FROM `users`")->fetchAll(PDO::FETCH_COLUMN);
+
+            // Spalten, die von der Benutzerverwaltung benötigt werden, aber auf
+            // älteren Deployments (vor Schema v2.0) noch fehlen können.
+            $columnsToAdd = [
+                'is_verified' => "ADD COLUMN `is_verified` TINYINT(1) NOT NULL DEFAULT 1",
+                'role'        => "ADD COLUMN `role` ENUM('player','supporter','moderator','admin') NOT NULL DEFAULT 'player'",
+                'is_banned'   => "ADD COLUMN `is_banned` TINYINT(1) NOT NULL DEFAULT 0",
+                'ban_reason'  => "ADD COLUMN `ban_reason` TEXT NULL",
+                'banned_by'   => "ADD COLUMN `banned_by` BIGINT UNSIGNED NULL",
+                'banned_at'   => "ADD COLUMN `banned_at` DATETIME NULL",
+            ];
+
+            foreach ($columnsToAdd as $col => $ddl) {
+                if (!in_array($col, $existingCols, true)) {
+                    $pdo->exec("ALTER TABLE `users` {$ddl}");
+                    error_log("[VSRP Migration] Spalte `{$col}` erfolgreich zur Tabelle `users` hinzugefügt.");
+                }
             }
+
             // Flag setzen damit die Prüfung nur einmal läuft
             @file_put_contents($migrateFlag, date('Y-m-d H:i:s'));
             // Spalten-Cache invalidieren (falls process_register.php ihn gecacht hat)

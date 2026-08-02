@@ -161,8 +161,12 @@ async function loadServerStatus() {
   const dot  = document.getElementById('statusDot');
   if (!body) return;
 
+  const controller = new AbortController();
+  const abortTimer = setTimeout(() => controller.abort(), 12000);
+
   try {
-    const res  = await fetch('api/server_status.php');
+    const res  = await fetch('api/server_status.php', { signal: controller.signal, cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
 
     if (!data.online) {
@@ -196,6 +200,8 @@ async function loadServerStatus() {
   } catch (e) {
     dot.className  = 'status-dot offline';
     body.innerHTML = '<div class="status-offline">Server nicht erreichbar</div>';
+  } finally {
+    clearTimeout(abortTimer);
   }
 }
 

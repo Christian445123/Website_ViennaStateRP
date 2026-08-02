@@ -360,14 +360,22 @@ function getJobLabel(j) {
 let cd = 30, timer;
 
 async function load() {
+  const controller = new AbortController();
+  const abortTimer = setTimeout(() => controller.abort(), 12000);
   try {
-    const r = await fetch('api/players_status.php');
+    const r = await fetch('api/players_status.php', { signal: controller.signal, cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
     render(d);
   } catch(e) {
     document.getElementById('spDot').className = 'sp-badge-dot offline';
     document.getElementById('spStatus').textContent = 'Nicht erreichbar';
+    document.getElementById('spPlayers').textContent = '0';
+    ['spMax','spPct'].forEach(id => document.getElementById(id).textContent = '–');
+    document.getElementById('spBar').style.width = '0%';
     renderJobs([]);
+  } finally {
+    clearTimeout(abortTimer);
   }
 }
 
