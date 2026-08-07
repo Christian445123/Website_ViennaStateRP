@@ -69,11 +69,6 @@ if (!function_exists('avatarUrl')) {
     .regel-cta p { color: var(--text-2); font-size: 0.9rem; margin: 0 auto 20px; max-width: 480px; }
     .regel-cta .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
   </style>
-  <script type="text/javascript" src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"></script>
-  <script type="text/javascript">
-    kofiwidget2.init('Unterstütze das Projekt', '#72a4f2', 'A6G022PDLK');
-    kofiwidget2.draw();
-  </script>
 </head>
 <body>
 

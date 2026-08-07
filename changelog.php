@@ -29,11 +29,6 @@ if (!function_exists('avatarUrl')) {
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/style.css?v=<?= @filemtime(__DIR__ . '/assets/css/style.css') ?>" />
   <link rel="icon" href="assets/img/favicon.ico" type="image/x-icon" />
-  <script type="text/javascript" src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"></script>
-  <script type="text/javascript">
-    kofiwidget2.init('Unterstütze das Projekt', '#72a4f2', 'A6G022PDLK');
-    kofiwidget2.draw();
-  </script>
 </head>
 <body>
 

@@ -118,11 +118,6 @@ if (!function_exists('avatarUrl')) {
       .beta-actions { flex-direction: column; }
     }
   </style>
-  <script type="text/javascript" src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"></script>
-  <script type="text/javascript">
-    kofiwidget2.init('Unterstütze das Projekt', '#72a4f2', 'A6G022PDLK');
-    kofiwidget2.draw();
-  </script>
 </head>
 <body>
 

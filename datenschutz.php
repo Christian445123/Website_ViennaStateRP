@@ -61,11 +61,6 @@ if (!function_exists('avatarUrl')) {
     .legal-nav a:hover, .legal-nav a.active { color: var(--gold); border-color: rgba(232,184,109,0.4); }
     @media (max-width: 640px) { .legal-card { padding: 28px 20px; } }
   </style>
-  <script type="text/javascript" src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"></script>
-  <script type="text/javascript">
-    kofiwidget2.init('Unterstütze das Projekt', '#72a4f2', 'A6G022PDLK');
-    kofiwidget2.draw();
-  </script>
 </head>
 <body>
 
