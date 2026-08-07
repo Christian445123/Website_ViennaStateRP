@@ -7,13 +7,6 @@ require_once __DIR__ . '/includes/permissions.php';
 require_once __DIR__ . '/includes/site_settings.php';
 require_once __DIR__ . '/includes/changelog.php';
 
-// ── Release-Splash: Besucher einmalig auf release.php umleiten ────────────────
-// Im Wartungsmodus wird der Splash übersprungen (Banner zeigt den Hinweis stattdessen).
-if (!setting('maintenance_mode') && !isset($_COOKIE['vsrp_beta_v2'])) {
-    header('Location: release.php');
-    exit;
-}
-
 $user = current_user();
 
 if (!function_exists('avatarUrl')) {
