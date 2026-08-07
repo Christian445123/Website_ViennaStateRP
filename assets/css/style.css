@@ -145,6 +145,8 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Orbitron', sans-serif; font-weight: 700; line-
 .btn-ghost:hover { color: var(--text); background: rgba(255,255,255,0.05); }
 .btn-discord { background: var(--discord); color: #fff; }
 .btn-discord:hover { background: #4752c4; transform: translateY(-1px); }
+.btn-kofi { background: #72a4f2; color: #fff; }
+.btn-kofi:hover { background: #5b8fe0; transform: translateY(-1px); }
 .btn-green { background: var(--green); color: #0a0a0f; font-weight: 700; }
 .btn-green:hover { background: #16a34a; }
 
@@ -403,7 +405,7 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Orbitron', sans-serif; font-weight: 700; line-
 .footer { background: var(--bg-card); border-top: 1px solid var(--border); padding: 60px 0 0; }
 .footer-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
   gap: 40px;
   max-width: 1160px; margin: 0 auto; padding: 0 24px;
   padding-bottom: 48px;

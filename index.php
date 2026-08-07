@@ -36,6 +36,11 @@ if (!function_exists('avatarUrl')) {
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/style.css?v=<?= @filemtime(__DIR__ . '/assets/css/style.css') ?>" />
   <link rel="icon" href="assets/img/favicon.ico" type="image/x-icon" />
+  <script type="text/javascript" src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"></script>
+  <script type="text/javascript">
+    kofiwidget2.init('Unterstütze das Projekt', '#72a4f2', 'A6G022PDLK');
+    kofiwidget2.draw();
+  </script>
 </head>
 <body>
 
@@ -55,6 +60,7 @@ if (!function_exists('avatarUrl')) {
       <li><a href="<?= htmlspecialchars(DISCORD_INVITE) ?>" target="_blank" rel="noopener">Discord</a></li>
     </ul>
     <div class="nav-actions">
+      <a href="https://ko-fi.com/viennastaterp" target="_blank" rel="noopener" class="btn btn-kofi">☕ Unterstützen</a>
       <?php if ($user): ?>
         <a href="dashboard.php" class="btn btn-ghost">
           <img src="<?= avatarUrl($user) ?>" alt="Avatar" class="nav-avatar" />
@@ -348,14 +354,18 @@ if (!function_exists('avatarUrl')) {
     <div style="max-width:800px;margin:0 auto;display:flex;flex-direction:column;gap:8px" id="faqList">
       <?php
       $faqs = [
-        ['Muss ich Mitglied bei GC24/7 sein?',           'Nein. Jeder kann auf ViennaStateRP spielen – du musst nur unserem Discord beitreten und dich verifizieren.'],
-        ['Kann ich mehrere Charaktere spielen?',           'Ja. Du kannst mehrere Charaktere erstellen, jeder mit seiner eigenen Geschichte und Entwicklung.'],
-        ['Was passiert wenn mein Charakter stirbt?',       'New Life Regel: Dein Charakter vergisst alle Ereignisse die direkt zu seinem Tod geführt haben und kehrt nicht an den Tatort zurück.'],
-        ['Wie bewerbe ich mich für eine Fraktion?',        'Direkt über Discord. Jede Fraktion hat einen eigenen Bewerbungskanal mit Anforderungen und Leitfaden.'],
-        ['Ich wurde gebannt – was kann ich tun?',          'Öffne ein Support-Ticket auf unserem Discord. Das Staff-Team prüft deinen Fall und gibt dir eine Rückmeldung.'],
-        ['Ist der Server kostenlos?',                      'Ja, vollständig kostenlos. Du brauchst nur ein lizenziertes GTA V und FiveM.'],
-        ['Wird das Regelwerk aktualisiert?',               'Ja. Regeländerungen werden in Discord angekündigt. Es gilt immer das aktuellste Regelwerk.'],
-        ['Ab welchem Alter darf ich spielen?',             'Der Server ist ab 18 Jahren. Ausnahmen können in begründeten Fällen beim Staff beantragt werden.'],
+        ['Welches Roleplay wird auf dem Server durchgeführt?', 'Dieser Server ist Midcore und ist sehr auf Realismus ausgelegt.'],
+        ['Ist der Server mit Whitelist oder ohne Whitelist?',  'Der Server ist mit Discordwhitelist aufgesetzt. Um auf den Server zu joinen musst du dem Discord beitreten.'],
+        ['Welches Voice System wird verwendet?',               'Der Server basiert auf einem reinen Ingame Voice System (PMA Voice).'],
+        ['Wie wird bei Metagaming vorgegangen?',               'Bei Metagaming wird die Person, die Metagaming betrieben hat, verwarnt. Dem Streamer erwarten keine Konsequenzen, nur eine Aufforderung, Metagaming-Personen so schnell wie möglich zu melden.'],
+        ['Was passiert wenn mein Charakter stirbt?',           'New Life Regel: Dein Charakter vergisst alle Ereignisse die direkt zu seinem Tod geführt haben und kehrt nicht an den Tatort zurück.'],
+        ['Wie bewerbe ich mich für eine Fraktion?',            'Direkt über Discord. Jede Fraktion hat einen eigenen Bewerbungskanal mit Anforderungen und Leitfaden.'],
+        ['Ich wurde gebannt – was kann ich tun?',              'Öffne ein Support-Ticket auf unserem Discord. Das Staff-Team prüft deinen Fall und gibt dir eine Rückmeldung.'],
+        ['Muss ich Mitglied bei VSRP sein?',                   'Ja, man muss dem Discord beitreten, um auf den Server zu kommen. Des Weiteren muss man sich verifizieren, sonst kann man nicht auf den Server joinen.'],
+        ['Ist der Server kostenlos?',                          'Ja, der Server ist kostenlos. Du brauchst nur ein lizenziertes GTA V und FiveM. Jedoch sind wir auf Spenden angewiesen, um die Serverkosten zu decken.'],
+        ['Wird das Regelwerk aktualisiert?',                   'Ja. Regeländerungen werden in Discord angekündigt. Es gilt immer das aktuellste Regelwerk.<br>Das aktuellste Regelwerk findest du hier: <a href="regelwerk.php" style="color:#e8b86d">viennastaterp.at/regelwerk.php</a>'],
+        ['Ab welchem Alter darf ich spielen?',                 'Der Server ist ab 18 Jahren aufgrund der Altersbeschränkung von GTA V. Ausnahmen können in begründeten Fällen beim VSRP-Team beantragt werden.'],
+        ['Wie kann man Streamer werden?',                      'Öffne ein Streamerticket im Discord, sende deinen Streamerlink und schreib etwas über deine Person dazu. Du bekommst dann die Streamerrolle und kannst deinen Livestream ankündigen.'],
       ];
       foreach ($faqs as $i => [$q, $a]): ?>
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;overflow:hidden">
@@ -528,6 +538,7 @@ if ($latestChangelog):
       <a href="#about">Über uns</a>
       <a href="#features">Features</a>
       <a href="regelwerk.php">Regeln</a>
+      <a href="#faq">FAQ</a>
       <a href="#join">Beitreten</a>
     </div>
     <div class="footer-links">
@@ -541,6 +552,11 @@ if ($latestChangelog):
       <a href="players.php">Server Status</a>
       <a href="<?= htmlspecialchars(FIVEM_LINK) ?>">Verbinden</a>
       <p class="server-ip"><?= htmlspecialchars(FIVEM_IP) ?>:<?= htmlspecialchars(FIVEM_PORT) ?></p>
+    </div>
+    <div class="footer-links">
+      <h5>Unterstützung</h5>
+      <a href="https://www.paypal.com/paypalme/ViennaStateRPStateRP" target="_blank" rel="noopener">PayPal</a>
+      <a href="https://ko-fi.com/viennastaterp" target="_blank" rel="noopener">Ko-fi</a>
     </div>
     <div class="footer-links">
       <h5>Rechtliches</h5>

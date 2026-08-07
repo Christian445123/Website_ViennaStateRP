@@ -32,6 +32,11 @@ if (!function_exists('avatarUrl')) {
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/style.css?v=<?= @filemtime(__DIR__ . '/assets/css/style.css') ?>" />
   <link rel="icon" href="assets/img/favicon.ico" type="image/x-icon" />
+  <script type="text/javascript" src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"></script>
+  <script type="text/javascript">
+    kofiwidget2.init('Unterstütze das Projekt', '#72a4f2', 'A6G022PDLK');
+    kofiwidget2.draw();
+  </script>
 </head>
 <body>
 
@@ -39,14 +44,18 @@ if (!function_exists('avatarUrl')) {
   <div class="nav-container">
     <a class="nav-logo" href="index.php"><span class="logo-accent">Vienna</span>StateRP</a>
     <ul class="nav-links" id="navLinks">
-      <li><a href="index.php#about">Uber uns</a></li>
+      <li><a href="index.php#about">Über uns</a></li>
       <li><a href="index.php#features">Features</a></li>
+      <li><a href="index.php#fraktionen">Fraktionen</a></li>
       <li><a href="regelwerk.php">Regeln</a></li>
       <li><a href="changelog.php">Changelog</a></li>
+      <li><a href="index.php#join">Beitreten</a></li>
+      <li><a href="index.php#faq">FAQ</a></li>
       <li><a href="players.php" class="active">Server Status</a></li>
       <li><a href="<?= htmlspecialchars(DISCORD_INVITE) ?>" target="_blank" rel="noopener">Discord</a></li>
     </ul>
     <div class="nav-actions">
+      <a href="https://ko-fi.com/viennastaterp" target="_blank" rel="noopener" class="btn btn-kofi" style="font-size:.85rem">☕ Unterstützen</a>
       <?php if ($user): ?>
         <a href="dashboard.php" class="btn btn-ghost">
           <img src="<?= avatarUrl($user) ?>" alt="Avatar" class="nav-avatar" />
@@ -286,6 +295,7 @@ if (!function_exists('avatarUrl')) {
       <a href="index.php">Startseite</a>
       <a href="index.php#features">Features</a>
       <a href="regelwerk.php">Regeln</a>
+      <a href="index.php#faq">FAQ</a>
       <a href="players.php">Server Status</a>
     </div>
     <div class="footer-links">
@@ -298,6 +308,11 @@ if (!function_exists('avatarUrl')) {
       <h5>Server</h5>
       <a href="<?= htmlspecialchars(FIVEM_LINK) ?>">Verbinden</a>
       <p class="server-ip"><?= htmlspecialchars(FIVEM_IP) ?>:<?= htmlspecialchars(FIVEM_PORT) ?></p>
+    </div>
+    <div class="footer-links">
+      <h5>Unterstützung</h5>
+      <a href="https://www.paypal.com/paypalme/ViennaStateRPStateRP" target="_blank" rel="noopener">PayPal</a>
+      <a href="https://ko-fi.com/viennastaterp" target="_blank" rel="noopener">Ko-fi</a>
     </div>
     <div class="footer-links">
       <h5>Rechtliches</h5>

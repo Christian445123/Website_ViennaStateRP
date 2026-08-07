@@ -118,6 +118,11 @@ if (!function_exists('avatarUrl')) {
       .beta-actions { flex-direction: column; }
     }
   </style>
+  <script type="text/javascript" src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"></script>
+  <script type="text/javascript">
+    kofiwidget2.init('Unterstütze das Projekt', '#72a4f2', 'A6G022PDLK');
+    kofiwidget2.draw();
+  </script>
 </head>
 <body>
 
@@ -127,12 +132,16 @@ if (!function_exists('avatarUrl')) {
     <ul class="nav-links" id="navLinks">
       <li><a href="index.php#about">&Uuml;ber uns</a></li>
       <li><a href="index.php#features">Features</a></li>
+      <li><a href="index.php#fraktionen">Fraktionen</a></li>
       <li><a href="regelwerk.php">Regeln</a></li>
       <li><a href="changelog.php">Changelog</a></li>
+      <li><a href="index.php#join">Beitreten</a></li>
+      <li><a href="index.php#faq">FAQ</a></li>
       <li><a href="players.php">Server Status</a></li>
       <li><a href="<?= htmlspecialchars(DISCORD_INVITE) ?>" target="_blank" rel="noopener">Discord</a></li>
     </ul>
     <div class="nav-actions">
+      <a href="https://ko-fi.com/viennastaterp" target="_blank" rel="noopener" class="btn btn-kofi" style="font-size:.85rem">☕ Unterstützen</a>
       <?php if ($user): ?>
         <a href="dashboard.php" class="btn btn-ghost">
           <img src="<?= htmlspecialchars(avatarUrl($user)) ?>" alt="Avatar" class="nav-avatar" />
@@ -231,12 +240,18 @@ if (!function_exists('avatarUrl')) {
       <h5>Navigation</h5>
       <a href="index.php">Startseite</a>
       <a href="index.php#features">Features</a>
+      <a href="index.php#faq">FAQ</a>
       <a href="players.php">Server Status</a>
     </div>
     <div class="footer-links">
       <h5>Community</h5>
       <a href="<?= htmlspecialchars(DISCORD_INVITE) ?>" target="_blank" rel="noopener">Discord</a>
       <a href="login.php">Login</a>
+    </div>
+    <div class="footer-links">
+      <h5>Unterstützung</h5>
+      <a href="https://www.paypal.com/paypalme/ViennaStateRPStateRP" target="_blank" rel="noopener">PayPal</a>
+      <a href="https://ko-fi.com/viennastaterp" target="_blank" rel="noopener">Ko-fi</a>
     </div>
     <div class="footer-links">
       <h5>Rechtliches</h5>

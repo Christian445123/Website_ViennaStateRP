@@ -61,6 +61,11 @@ if (!function_exists('avatarUrl')) {
     .legal-nav a:hover, .legal-nav a.active { color: var(--gold); border-color: rgba(232,184,109,0.4); }
     @media (max-width: 640px) { .legal-card { padding: 28px 20px; } }
   </style>
+  <script type="text/javascript" src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"></script>
+  <script type="text/javascript">
+    kofiwidget2.init('Unterstütze das Projekt', '#72a4f2', 'A6G022PDLK');
+    kofiwidget2.draw();
+  </script>
 </head>
 <body>
 
@@ -75,10 +80,12 @@ if (!function_exists('avatarUrl')) {
       <li><a href="regelwerk.php">Regeln</a></li>
       <li><a href="changelog.php">Changelog</a></li>
       <li><a href="index.php#join">Beitreten</a></li>
+      <li><a href="index.php#faq">FAQ</a></li>
       <li><a href="players.php">Server Status</a></li>
       <li><a href="<?= htmlspecialchars(DISCORD_INVITE) ?>" target="_blank" rel="noopener">Discord</a></li>
     </ul>
     <div class="nav-actions">
+      <a href="https://ko-fi.com/viennastaterp" target="_blank" rel="noopener" class="btn btn-kofi">☕ Unterstützen</a>
       <?php if ($user): ?>
         <a href="dashboard.php" class="btn btn-ghost">
           <img src="<?= htmlspecialchars(avatarUrl($user)) ?>" alt="Avatar" class="nav-avatar" />
@@ -316,6 +323,7 @@ if (!function_exists('avatarUrl')) {
       <a href="index.php">Startseite</a>
       <a href="index.php#features">Features</a>
       <a href="regelwerk.php">Regeln</a>
+      <a href="index.php#faq">FAQ</a>
       <a href="players.php">Server Status</a>
     </div>
     <div class="footer-links">
@@ -323,6 +331,11 @@ if (!function_exists('avatarUrl')) {
       <a href="<?= htmlspecialchars(DISCORD_INVITE) ?>" target="_blank" rel="noopener">Discord</a>
       <a href="login.php">Login</a>
       <a href="dashboard.php">Dashboard</a>
+    </div>
+    <div class="footer-links">
+      <h5>Unterstützung</h5>
+      <a href="https://www.paypal.com/paypalme/ViennaStateRPStateRP" target="_blank" rel="noopener">PayPal</a>
+      <a href="https://ko-fi.com/viennastaterp" target="_blank" rel="noopener">Ko-fi</a>
     </div>
     <div class="footer-links">
       <h5>Rechtliches</h5>
