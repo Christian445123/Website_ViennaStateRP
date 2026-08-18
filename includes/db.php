@@ -195,7 +195,7 @@ if ($pdo !== null) {
 // ── Konstanten aus .env ───────────────────────────────────────────────────────
 defined('SITE_NAME')         || define('SITE_NAME',    env('SITE_NAME',   'ViennaStateRP'));
 defined('SITE_URL')          || define('SITE_URL',     env('SITE_URL',    'https://viennastaterp.at'));
-defined('FIVEM_IP')          || define('FIVEM_IP',     env('FIVEM_IP',    'fivem.viennastaterpx.at'));
+defined('FIVEM_IP')          || define('FIVEM_IP',     env('FIVEM_IP',    'fivem.viennastaterp.at'));
 defined('FIVEM_PORT')        || define('FIVEM_PORT',   env('FIVEM_PORT',  '30120'));
 defined('FIVEM_LINK')        || define('FIVEM_LINK',   'fivem://connect/' . FIVEM_IP . ':' . FIVEM_PORT);
 defined('DISCORD_INVITE')    || define('DISCORD_INVITE', env('DISCORD_INVITE', 'https://discord.gg/za7wKkg3s8'));

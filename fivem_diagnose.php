@@ -21,7 +21,7 @@ if (!$ok) {
 // Alle Tests direkt mit curl – keine Klassen-Abstraktion
 $base = defined('FIVEM_API_URL')
     ? rtrim(FIVEM_API_URL, '/')
-    : ('http://' . (defined('FIVEM_IP') ? FIVEM_IP : 'fivem.viennastaterpx.at')
+    : ('http://' . (defined('FIVEM_IP') ? FIVEM_IP : 'fivem.viennastaterp.at')
        . ':' . (defined('FIVEM_PORT') ? FIVEM_PORT : '30120'));
 
 function diag_curl(string $url, string $method = 'GET', ?string $body = null, array $headers = []): array

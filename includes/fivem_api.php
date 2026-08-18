@@ -21,7 +21,7 @@ define('_VSRP_FIVEM_LOADED', true);
 
 // API-URL aus FIVEM_IP/PORT aufbauen (konfigurierbar via .env)
 define('FIVEM_API_URL', env('FIVEM_API_URL',
-    'http://' . (defined('FIVEM_IP') ? FIVEM_IP : 'fivem.viennastaterpx.at')
+    'http://' . (defined('FIVEM_IP') ? FIVEM_IP : 'fivem.viennastaterp.at')
     . ':' . (defined('FIVEM_PORT') ? FIVEM_PORT : '30120')
 ));
 define('FIVEM_BRIDGE_SECRET', env('FIVEM_BRIDGE_SECRET', ''));
