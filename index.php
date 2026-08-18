@@ -543,7 +543,7 @@ if ($latestChangelog):
     </div>
     <div class="footer-links">
       <h5>Unterstützung</h5>
-      <a href="https://www.paypal.com/paypalme/ViennaStateRPStateRP" target="_blank" rel="noopener">PayPal</a>
+      <a href="https://www.paypal.com/paypalme/chrisgaming445" target="_blank" rel="noopener">PayPal</a>
       <a href="https://ko-fi.com/viennastaterp" target="_blank" rel="noopener">Ko-fi</a>
     </div>
     <div class="footer-links">
