@@ -169,6 +169,14 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Orbitron', sans-serif; font-weight: 700; line-
 .maintenance-banner strong { color: #fff; }
 .maintenance-banner-icon { flex-shrink: 0; }
 
+.restart-banner {
+  background: rgba(232,184,109,0.14);
+  border-bottom: 1px solid rgba(232,184,109,0.35);
+  color: #fde9c8;
+}
+.restart-banner strong { color: var(--gold); }
+.restart-banner-icon { flex-shrink: 0; }
+
 .release-countdown {
   background: linear-gradient(90deg, rgba(232,184,109,0.16), rgba(124,58,237,0.14));
   border-bottom: 1px solid rgba(232,184,109,0.35);

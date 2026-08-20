@@ -27,6 +27,52 @@ function vsrpRestackBanners() {
 }
 vsrpRestackBanners();
 
+// --- Restart-Warnbanner: erscheint automatisch 30 Min. vor geplantem Neustart ---
+(function () {
+  const el = document.getElementById('restartBanner');
+  if (!el) return;
+
+  let times = [];
+  try { times = JSON.parse(el.dataset.restartTimes || '[]'); } catch (e) { times = []; }
+  if (!times.length) return;
+
+  const minsEl = document.getElementById('restartBannerMins');
+
+  function nextRestart() {
+    const now = new Date();
+    let best = null;
+    times.forEach(t => {
+      const parts = String(t).split(':');
+      const h = parseInt(parts[0], 10), m = parseInt(parts[1] || '0', 10);
+      if (isNaN(h)) return;
+      for (let dayOffset = 0; dayOffset <= 1; dayOffset++) {
+        const d = new Date(now);
+        d.setDate(d.getDate() + dayOffset);
+        d.setHours(h, m, 0, 0);
+        if (d > now && (!best || d < best)) best = d;
+      }
+    });
+    return best;
+  }
+
+  function tick() {
+    const next = nextRestart();
+    const diffMin = next ? Math.ceil((next - new Date()) / 60000) : Infinity;
+    const shouldShow = diffMin <= 30 && diffMin >= 0;
+
+    if (shouldShow && minsEl) minsEl.textContent = diffMin;
+
+    const isVisible = el.style.display !== 'none';
+    if (shouldShow !== isVisible) {
+      el.style.display = shouldShow ? '' : 'none';
+      vsrpRestackBanners();
+    }
+  }
+
+  tick();
+  setInterval(tick, 15000);
+})();
+
 // --- Hamburger menu ---
 (function () {
   const btn   = document.getElementById('hamburger');

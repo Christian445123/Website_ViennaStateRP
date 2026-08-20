@@ -64,6 +64,7 @@ if (!function_exists('avatarUrl')) {
 
 <?php include __DIR__ . '/includes/release_countdown.php'; ?>
 <?php include __DIR__ . '/includes/maintenance_banner.php'; ?>
+<?php include __DIR__ . '/includes/restart_banner.php'; ?>
 
 <main class="changelog-page">
   <div class="container">
