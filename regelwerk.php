@@ -320,6 +320,7 @@ if (!function_exists('avatarUrl')) {
       <a href="impressum.php">Impressum</a>
       <a href="datenschutz.php">Datenschutzerkl&auml;rung</a>
       <a href="allgemeine-hinweise.php">Allgemeine Hinweise</a>
+      <a href="#" onclick="window.vsrpOpenCookieSettings &amp;&amp; window.vsrpOpenCookieSettings(); return false;">Cookie-Einstellungen</a>
     </div>
   </div>
   <div class="footer-bottom">
@@ -328,5 +329,6 @@ if (!function_exists('avatarUrl')) {
 </footer>
 
 <script src="assets/js/main.js?v=<?= @filemtime(__DIR__ . '/assets/js/main.js') ?>"></script>
+<?php include __DIR__ . '/includes/cookie_consent.php'; ?>
 </body>
 </html>

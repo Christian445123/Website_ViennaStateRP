@@ -119,9 +119,13 @@ if (!function_exists('avatarUrl')) {
       </p>
 
       <div class="highlight-box">
-        <strong>Kurzfassung:</strong> Wir betreiben kein Tracking, keine Werbung und verkaufen keine Daten.
-        Personenbezogene Daten werden ausschließlich erhoben, um den Betrieb des Roleplay-Servers und
-        dieser Website zu ermöglichen (Login, Whitelist, Server-Verwaltung).
+        <strong>Kurzfassung:</strong> Wir betreiben keine Werbung und verkaufen keine Daten.
+        Personenbezogene Daten werden erhoben, um den Betrieb des Roleplay-Servers und dieser Website
+        zu ermöglichen (Login, Whitelist, Server-Verwaltung). Nur mit deiner ausdrücklichen Zustimmung
+        setzen wir zusätzlich Google Analytics zur anonymisierten Reichweitenmessung ein – du kannst
+        diese Zustimmung jederzeit über die
+        <a href="#" onclick="window.vsrpOpenCookieSettings &amp;&amp; window.vsrpOpenCookieSettings(); return false;">Cookie-Einstellungen</a>
+        widerrufen.
       </div>
 
       <!-- 1. Verantwortlicher -->
@@ -207,11 +211,17 @@ if (!function_exists('avatarUrl')) {
       <!-- 3. Cookies & Sessions -->
       <h2>3. Cookies &amp; Sessions</h2>
       <p>
-        Diese Website setzt ausschließlich einen technisch notwendigen Session-Cookie
-        (<code>PHPSESSID</code>). Dieser Cookie enthält keine personenbezogenen Daten, sondern
-        lediglich eine zufällige Session-ID, die beim Schließen des Browsers abläuft.
-        Es werden keine Tracking-Cookies, Analytics- oder Werbe-Cookies verwendet.
-        Rechtsgrundlage: § 165 Abs. 3 TKG 2021 (technisch notwendige Cookies bedürfen keiner Einwilligung).
+        Diese Website setzt einen technisch notwendigen Session-Cookie (<code>PHPSESSID</code>).
+        Dieser Cookie enthält keine personenbezogenen Daten, sondern lediglich eine zufällige
+        Session-ID, die beim Schließen des Browsers abläuft. Rechtsgrundlage: § 165 Abs. 3 TKG 2021
+        (technisch notwendige Cookies bedürfen keiner Einwilligung).
+      </p>
+      <p>
+        Beim ersten Besuch der Website wird dir außerdem ein Cookie-Banner angezeigt, über das du
+        der Nutzung von Google Analytics (siehe Abschnitt 9) zustimmen oder sie ablehnen kannst.
+        Deine Entscheidung wird lokal in deinem Browser (<code>localStorage</code>) gespeichert, damit
+        du nicht bei jedem Besuch erneut gefragt wirst. Analytics-Cookies werden erst gesetzt,
+        <strong>nachdem</strong> du aktiv zugestimmt hast, und niemals vorher.
       </p>
 
       <!-- 4. Weitergabe an Dritte -->
@@ -225,6 +235,8 @@ if (!function_exists('avatarUrl')) {
         Authentifizierung gemäß deren Datenschutzrichtlinien.</li>
         <li><strong>Hosting-Anbieter:</strong> Unser Webserver (Hetzner) hat technischen Zugriff auf
         Serverlogs. Hetzner ist DSGVO-konform und hat einen Auftragsverarbeitungsvertrag (AVV) mit uns.</li>
+        <li><strong>Google Analytics:</strong> Ausschließlich bei erteilter Einwilligung (siehe
+        Abschnitt 9) – Nutzungsdaten werden dabei an Google übertragen und verarbeitet.</li>
         <li><strong>Gesetzliche Verpflichtung:</strong> Bei berechtigten behördlichen Anfragen.</li>
       </ul>
 
@@ -290,6 +302,28 @@ if (!function_exists('avatarUrl')) {
           Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einheitlichem Design).
         </li>
         <li>
+          <strong>Google Analytics:</strong> Nur sofern du im Cookie-Banner ausdrücklich zugestimmt hast,
+          setzen wir Google Analytics (Google Ireland Limited, Gordon House, Barrow Street, Dublin 4,
+          Irland) zur statistischen Auswertung der Websitenutzung ein (z.&nbsp;B. aufgerufene Seiten,
+          Verweildauer, verwendetes Gerät/Browser, ungefährer Standort auf Länder-/Regionsebene).
+          Dabei werden Cookies gesetzt und deine IP-Adresse sowie Nutzungsdaten an Google-Server
+          übertragen und verarbeitet, auch in die USA. Google ist unter dem
+          <a href="https://www.dataprivacyframework.gov/" target="_blank" rel="noopener">EU-U.S. Data Privacy Framework</a>
+          zertifiziert. Deine IP-Adresse wird von Google innerhalb der EU/des EWR gekürzt, bevor sie in
+          die USA übertragen wird. Wir haben mit Google einen Auftragsverarbeitungsvertrag (Data
+          Processing Terms) abgeschlossen.
+          <br />
+          Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung). Google Analytics wird erst
+          geladen und es werden erst Cookies gesetzt, nachdem du im Cookie-Banner aktiv auf
+          „Akzeptieren" geklickt hast. Du kannst deine Einwilligung jederzeit mit Wirkung für die
+          Zukunft über den Link
+          <a href="#" onclick="window.vsrpOpenCookieSettings &amp;&amp; window.vsrpOpenCookieSettings(); return false;">„Cookie-Einstellungen"</a>
+          im Footer widerrufen. Weitere Informationen:
+          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Datenschutzrichtlinie</a>
+          und
+          <a href="https://support.google.com/analytics/answer/6004245" target="_blank" rel="noopener">Hinweise zu Google Analytics</a>.
+        </li>
+        <li>
           <strong>Discord CDN:</strong> Profilbilder werden direkt von
           <code>cdn.discordapp.com</code> geladen. Discord erhebt dabei ggf. Zugriffsdaten gemäß
           deren Datenschutzrichtlinie.
@@ -337,6 +371,7 @@ if (!function_exists('avatarUrl')) {
       <a href="impressum.php">Impressum</a>
       <a href="datenschutz.php">Datenschutzerklärung</a>
       <a href="allgemeine-hinweise.php">Allgemeine Hinweise</a>
+      <a href="#" onclick="window.vsrpOpenCookieSettings &amp;&amp; window.vsrpOpenCookieSettings(); return false;">Cookie-Einstellungen</a>
     </div>
   </div>
   <div class="footer-bottom">
@@ -349,5 +384,6 @@ if (!function_exists('avatarUrl')) {
 </footer>
 
 <script src="assets/js/main.js?v=<?= @filemtime(__DIR__ . '/assets/js/main.js') ?>"></script>
+<?php include __DIR__ . '/includes/cookie_consent.php'; ?>
 </body>
 </html>

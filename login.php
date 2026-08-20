@@ -120,5 +120,6 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
   }
 });
 </script>
+<?php include __DIR__ . '/includes/cookie_consent.php'; ?>
 </body>
 </html>

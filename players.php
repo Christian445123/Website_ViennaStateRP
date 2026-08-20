@@ -306,6 +306,7 @@ if (!function_exists('avatarUrl')) {
       <a href="impressum.php">Impressum</a>
       <a href="datenschutz.php">Datenschutzerklärung</a>
       <a href="allgemeine-hinweise.php">Allgemeine Hinweise</a>
+      <a href="#" onclick="window.vsrpOpenCookieSettings &amp;&amp; window.vsrpOpenCookieSettings(); return false;">Cookie-Einstellungen</a>
     </div>
   </div>
   <div class="footer-bottom">
@@ -613,5 +614,6 @@ async function loadPlayerList() {
 loadPlayerList();
 <?php endif; ?>
 </script>
+<?php include __DIR__ . '/includes/cookie_consent.php'; ?>
 </body>
 </html>

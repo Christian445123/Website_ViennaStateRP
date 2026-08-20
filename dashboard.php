@@ -208,4 +208,6 @@ async function loadServerStatus() {
 loadServerStatus();
 setInterval(loadServerStatus, 30000); // alle 30 Sekunden aktualisieren
 </script>
+<?php include __DIR__ . '/includes/cookie_consent.php'; ?>
+</body>
 </html>

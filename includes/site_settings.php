@@ -27,6 +27,9 @@ const SETTINGS_DEFAULTS = [
     'maintenance_message'  => 'Der Server befindet sich im Wartungsmodus.',
     // Discord
     'discord_changelog_webhook' => '',  // Webhook-URL für Changelog-Ankündigungen
+    // Google Analytics (nur nach Cookie-Consent geladen)
+    'ga_enabled'          => true,             // GA global aktiv/inaktiv (Kill-Switch)
+    'ga_measurement_id'   => 'G-LWR7JY7EQV',   // GA4 Measurement ID
 ];
 
 function settings_load(): array
