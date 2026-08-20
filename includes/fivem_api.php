@@ -10,7 +10,6 @@
 //    whitelist_add / whitelist_remove / whitelist_check
 //    kick / ban / unban / ban_check
 //    broadcast
-//    job_stats         – alle Jobs dynamisch gezählt
 //    get_players       – alle Online-Spieler mit Job, Endpoint etc.
 //    get_player_detail – einzelner Spieler (discord_id|server_id)
 //    get_server_info   – Convars, Ressourcen, Framework
@@ -216,33 +215,6 @@ class FiveMAPI
             // Rohdaten für Debug (nur im Admin sichtbar)
             '_raw_vars'           => $vars,
         ];
-    }
-
-    /**
-     * Job-Statistiken über die Bridge.
-     * Vollständig dynamisch – alle Jobs die aktuell von Online-Spielern
-     * gehalten werden, ohne Hardcodierung.
-     *
-     * @return array<int, array{key: string, label: string, count: int}>
-     */
-    public static function getJobStats(): array
-    {
-        $data = self::bridgeQuery('job_stats');
-        if (!isset($data['jobs']) || !is_array($data['jobs'])) {
-            return [];
-        }
-
-        $jobs = [];
-        foreach ($data['jobs'] as $key => $count) {
-            $jobs[] = [
-                'key'   => $key,
-                'label' => ucfirst(str_replace(['_', '-'], ' ', $key)),
-                'count' => (int) $count,
-            ];
-        }
-        // Sortiere absteigend nach Spieleranzahl
-        usort($jobs, fn($a, $b) => $b['count'] <=> $a['count']);
-        return $jobs;
     }
 
     /**

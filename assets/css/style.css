@@ -644,20 +644,6 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Orbitron', sans-serif; font-weight: 700; line-
 .sp-section-tag { display: inline-block; font-size: .68rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); border: 1px solid rgba(232,184,109,.3); border-radius: 4px; padding: 3px 10px; margin-bottom: 10px; }
 .sp-section-title { font-family: 'Orbitron', sans-serif; font-size: clamp(1.2rem, 3vw, 1.8rem); font-weight: 700; margin: 0; }
 
-.sp-jobs { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
-.sp-job { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 18px 16px; position: relative; overflow: hidden; transition: transform .2s ease, border-color .2s ease; }
-.sp-job::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--jc, var(--purple)); }
-.sp-job:hover { transform: translateY(-3px); border-color: var(--jc, var(--purple)); }
-.sp-job-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.sp-job-icon { width: 28px; height: 28px; color: var(--jc, var(--purple)); flex-shrink: 0; }
-.sp-job-icon svg { width: 28px; height: 28px; display: block; }
-.sp-job-num { font-family: 'Orbitron', sans-serif; font-size: 2rem; font-weight: 900; color: var(--jc, var(--purple)); line-height: 1; }
-.sp-job-name { font-size: .82rem; color: var(--text-2); margin-bottom: 12px; display: block; }
-.sp-job-bar-wrap { background: rgba(255,255,255,.06); border-radius: 999px; height: 2px; overflow: hidden; }
-.sp-job-bar { height: 2px; border-radius: 999px; background: var(--jc, var(--purple)); transition: width 1s ease; }
-.sp-skeleton { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; height: 120px; animation: sp-skel 1.4s ease infinite; }
-@keyframes sp-skel { 0%,100%{opacity:.3} 50%{opacity:.7} }
-
 .sp-details { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
 .sp-detail-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: flex; align-items: flex-start; gap: 12px; }
 

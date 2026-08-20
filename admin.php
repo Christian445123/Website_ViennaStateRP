@@ -92,14 +92,6 @@ if (!function_exists('avatarUrl')) {
     .online-num.offline { color: var(--text-3); }
     .online-sub { font-size: .8rem; color: var(--text-2); }
 
-    .job-mini-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
-    @media (max-width: 900px) { .job-mini-grid { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 560px) { .job-mini-grid { grid-template-columns: repeat(2, 1fr); } }
-    .job-mini-card { background: rgba(255,255,255,.02); border: 1px solid var(--border); border-top: 3px solid var(--jc, var(--purple)); border-radius: 10px; padding: 14px; text-align: center; }
-    .job-mini-icon { font-size: 1.3rem; margin-bottom: 6px; }
-    .job-mini-num { font-family: 'Orbitron', sans-serif; font-size: 1.4rem; font-weight: 900; color: var(--jc, var(--purple)); line-height: 1; }
-    .job-mini-label { font-size: .68rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; }
-
     /* Navigationskarten */
     .nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     @media (max-width: 480px) { .nav-grid { grid-template-columns: 1fr; } }
@@ -165,21 +157,17 @@ if (!function_exists('avatarUrl')) {
       </div>
     </div>
 
-    <!-- Live-Status: Online-Spieler & Einsatzkräfte -->
+    <!-- Live-Status: Online-Spieler -->
     <div class="admin-card live-card">
       <div class="live-head">
         <span class="live-badge"><span class="live-badge-dot"></span> LIVE</span>
-        <span class="live-title">Einsatzkräfte im Dienst</span>
+        <span class="live-title">Server-Status</span>
         <button onclick="loadLiveStatus()" class="btn btn-outline live-refresh" style="padding:4px 12px;font-size:.78rem">↻ Aktualisieren</button>
       </div>
 
       <div class="online-row">
         <div class="online-num offline" id="liveOnlineNum">–</div>
         <div class="online-sub" id="liveOnlineSub">Lade Spielerzahl...</div>
-      </div>
-
-      <div class="job-mini-grid" id="liveJobsGrid">
-        <div style="grid-column:1/-1;color:var(--text-2);font-size:.85rem">Lade Einsatzkräfte...</div>
       </div>
     </div>
 
@@ -244,19 +232,10 @@ if (!function_exists('avatarUrl')) {
 
 <script src="assets/js/main.js?v=<?= @filemtime(__DIR__ . '/assets/js/main.js') ?>"></script>
 <script>
-// ── Live-Status: Online-Spieler & Einsatzkräfte ────────────────────────────────
-const JOB_MINI = {
-  police:    { color: '#3b82f6', icon: '👮', label: 'Polizei' },
-  fire:      { color: '#f97316', icon: '🚒', label: 'Feuerwehr' },
-  ambulance: { color: '#ef4444', icon: '🚑', label: 'Berufsrettung' },
-  mechanic:  { color: '#a3a3a3', icon: '🔧', label: 'Mechaniker' },
-  user:      { color: '#22c55e', icon: '🙂', label: 'User' },
-};
-
+// ── Live-Status: Online-Spieler ────────────────────────────────────────────────
 async function loadLiveStatus() {
   const numEl = document.getElementById('liveOnlineNum');
   const subEl = document.getElementById('liveOnlineSub');
-  const jobsEl = document.getElementById('liveJobsGrid');
   subEl.textContent = 'Lade Spielerzahl...';
 
   const controller = new AbortController();
@@ -276,21 +255,8 @@ async function loadLiveStatus() {
       numEl.classList.remove('offline');
       subEl.textContent = 'Online-Spieler von ' + d.max_players + ' Slots';
     }
-
-    const jobs = d.jobs || [];
-    const jobByKey = {};
-    jobs.forEach(j => { jobByKey[j.key] = j.count; });
-
-    jobsEl.innerHTML = Object.entries(JOB_MINI).map(([key, meta]) => `
-      <div class="job-mini-card" style="--jc:${meta.color}">
-        <div class="job-mini-icon">${meta.icon}</div>
-        <div class="job-mini-num">${jobByKey[key] ?? 0}</div>
-        <div class="job-mini-label">${meta.label}</div>
-      </div>
-    `).join('');
   } catch (e) {
     subEl.textContent = 'Fehler beim Abrufen der Daten';
-    jobsEl.innerHTML = '<div style="grid-column:1/-1;color:var(--red);font-size:.85rem">❌ ' + e.message + '</div>';
   } finally {
     clearTimeout(abortTimer);
   }

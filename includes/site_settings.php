@@ -17,10 +17,7 @@ const SETTINGS_DEFAULTS = [
     'show_player_count'    => true,   // Spieleranzahl
     'show_max_slots'       => true,   // Max Slots
     'show_load_percent'    => true,   // Auslastung %
-    'show_jobs_police'     => true,   // Polizei
-    'show_jobs_fire'       => true,   // Feuerwehr
-    'show_jobs_ambulance'  => true,   // Berufsrettung
-    'show_jobs_mechanic'   => true,   // Mechanik
+    'restart_times'        => '04:00,12:00,18:00', // Tägliche Server-Neustarts (HH:MM, kommagetrennt)
     // index.php Hero-Stats
     'show_hero_status'     => true,   // Online/Offline Badge
     'show_hero_players'    => true,   // Spielerzahl im Hero

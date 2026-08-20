@@ -141,33 +141,20 @@ if (!function_exists('avatarUrl')) {
           </div>
           <label class="toggle"><input type="checkbox" data-key="show_load_percent" <?= $settings['show_load_percent'] ? 'checked' : '' ?> /><span class="toggle-slider"></span></label>
         </div>
-        <div class="toggle-row">
+      </div>
+
+      <!-- Server-Neustarts -->
+      <div class="admin-card">
+        <div class="admin-card-title">🔁 Server-Neustarts</div>
+        <div class="toggle-row" style="flex-direction:column;align-items:flex-start;gap:8px;border-bottom:none">
           <div>
-            <div class="toggle-label">Polizei-Anzeige</div>
-            <div class="toggle-sub">Polizisten im Dienst</div>
+            <div class="toggle-label">Tägliche Neustart-Zeiten</div>
+            <div class="toggle-sub">Kommagetrennt, Format HH:MM (z.B. 04:00,12:00,18:00) – wird auf players.php als „Nächster Neustart" angezeigt</div>
           </div>
-          <label class="toggle"><input type="checkbox" data-key="show_jobs_police" <?= $settings['show_jobs_police'] ? 'checked' : '' ?> /><span class="toggle-slider"></span></label>
-        </div>
-        <div class="toggle-row">
-          <div>
-            <div class="toggle-label">Feuerwehr-Anzeige</div>
-            <div class="toggle-sub">Feuerwehr im Dienst</div>
-          </div>
-          <label class="toggle"><input type="checkbox" data-key="show_jobs_fire" <?= $settings['show_jobs_fire'] ? 'checked' : '' ?> /><span class="toggle-slider"></span></label>
-        </div>
-        <div class="toggle-row">
-          <div>
-            <div class="toggle-label">Berufsrettung-Anzeige</div>
-            <div class="toggle-sub">Berufsrettung Wien im Dienst</div>
-          </div>
-          <label class="toggle"><input type="checkbox" data-key="show_jobs_ambulance" <?= $settings['show_jobs_ambulance'] ? 'checked' : '' ?> /><span class="toggle-slider"></span></label>
-        </div>
-        <div class="toggle-row">
-          <div>
-            <div class="toggle-label">Mechaniker-Anzeige</div>
-            <div class="toggle-sub">Mechaniker im Dienst</div>
-          </div>
-          <label class="toggle"><input type="checkbox" data-key="show_jobs_mechanic" <?= $settings['show_jobs_mechanic'] ? 'checked' : '' ?> /><span class="toggle-slider"></span></label>
+          <input type="text" data-key="restart_times"
+            value="<?= htmlspecialchars($settings['restart_times']) ?>"
+            placeholder="04:00,12:00,18:00"
+            style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:inherit;font-size:.88rem" />
         </div>
       </div>
 
@@ -493,24 +480,6 @@ function renderData(d) {
     ['Banner (Detail)',     det.banner_detail     ? '<a href="' + det.banner_detail     + '" target="_blank" style="color:var(--gold)">Link</a>' : '–'],
     ['Server-Icon',         det.icon_url ? '<img src="' + det.icon_url + '" style="width:48px;height:48px;border-radius:6px;margin-top:4px">' : '–'],
   ];
-
-  // Einsatzkraefte
-  let jobsHtml = '–';
-  if (d.jobs && d.jobs.length) {
-    const total = d.jobs.reduce((s,j) => s + j.count, 0);
-    jobsHtml = '<table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:.85rem">'
-      + '<tr style="color:#4b5563;font-size:.7rem"><th style="text-align:left;padding:2px 6px">Job</th><th style="text-align:right;padding:2px 6px">Spieler</th><th style="text-align:right;padding:2px 6px">Anteil</th></tr>';
-    d.jobs.forEach(j => {
-      const pct = total > 0 ? Math.round(j.count/total*100) : 0;
-      jobsHtml += '<tr style="border-top:1px solid #1e1e28">'
-        + '<td style="padding:5px 6px;color:#e2e8f0">' + (j.label || j.key) + '</td>'
-        + '<td style="padding:5px 6px;text-align:right;font-family:monospace;color:#e8b86d"><b>' + j.count + '</b></td>'
-        + '<td style="padding:5px 6px;text-align:right;color:#64748b">' + pct + '%</td>'
-        + '</tr>';
-    });
-    jobsHtml += '</table>';
-  }
-  rows.push(['Einsatzkräfte gesamt (' + (d.jobs ? d.jobs.length : 0) + ' Jobs)', jobsHtml]);
 
   let html = '<table class="data-table"><thead><tr><th>Feld</th><th>Wert</th></tr></thead><tbody>';
   rows.forEach(([k, v]) => {

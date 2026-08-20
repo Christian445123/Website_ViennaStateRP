@@ -104,6 +104,10 @@ if (!function_exists('avatarUrl')) {
         <span class="sp-badge-dot" id="devDot"></span>
         <span id="devStatus">Dev-Server: Verbinde...</span>
       </div>
+      <div class="sp-badge" style="margin-top:-10px">
+        <span class="sp-badge-dot" style="background:var(--gold)"></span>
+        <span id="restartStatus">Nächster Neustart: –</span>
+      </div>
       <h1 class="sp-title">Server <span class="accent">Status</span></h1>
       <p class="sp-sub">Echtzeit-Ubersicht · ViennaStateRP</p>
     </div>
@@ -141,19 +145,6 @@ if (!function_exists('avatarUrl')) {
       <div class="sp-details" id="spDetailsGrid"></div>
     </div>
 
-    <!-- Einsatzkraefte -->
-    <div class="sp-section" id="spJobsSection">
-      <div class="sp-section-head">
-        <span class="sp-section-tag">Live</span>
-        <h2 class="sp-section-title">Einsatzkräfte <span class="accent">im Dienst</span></h2>
-      </div>
-      <div class="sp-jobs" id="spJobs">
-        <div class="sp-skeleton"></div>
-        <div class="sp-skeleton"></div>
-        <div class="sp-skeleton"></div>
-        <div class="sp-skeleton"></div>
-      </div>
-    </div>
   </div>
   <?php endif; ?>
 
@@ -196,10 +187,6 @@ if (!function_exists('avatarUrl')) {
             ['show_player_count',   'Spieleranzahl',         'Aktive Spieler anzeigen'],
             ['show_max_slots',      'Max Slots',             'Maximale Kapazität anzeigen'],
             ['show_load_percent',   'Auslastung %',          'Prozentuale Auslastung'],
-            ['show_jobs_police',    'Polizei-Karte',         'Polizisten im Dienst'],
-            ['show_jobs_fire',      'Feuerwehr-Karte',       'Feuerwehr im Dienst'],
-            ['show_jobs_ambulance', 'Berufsrettung-Karte',   'Berufsrettung im Dienst'],
-            ['show_jobs_mechanic',  'Mechaniker-Karte',      'Mechaniker im Dienst'],
             ['show_hero_status',    'Online-Badge (Startseite)', 'Server-Status im Hero'],
             ['show_hero_players',   'Spieler (Startseite)',  'Spielerzahl auf Startseite'],
           ];
@@ -335,41 +322,8 @@ const IS_LOGGED_IN = <?= $loggedIn ? 'true' : 'false' ?>;
 const SHOW_PLAYERS  = <?= $cfg['show_player_count']   ? 'true' : 'false' ?>;
 const SHOW_SLOTS    = <?= $cfg['show_max_slots']       ? 'true' : 'false' ?>;
 const SHOW_PCT      = <?= $cfg['show_load_percent']    ? 'true' : 'false' ?>;
-const SHOW_JOBS     = {
-  police:    <?= $cfg['show_jobs_police']    ? 'true' : 'false' ?>,
-  fire:      <?= $cfg['show_jobs_fire']      ? 'true' : 'false' ?>,
-  ambulance: <?= $cfg['show_jobs_ambulance'] ? 'true' : 'false' ?>,
-  mechanic:  <?= $cfg['show_jobs_mechanic']  ? 'true' : 'false' ?>,
-};
 const ALWAYS_SHOW_DETAILS = true;
-
-// ── Job-Daten: bekannte Jobs mit Icon + Farbe ─────────────────────────────────
-const JOB_DATA = {
-  police:        { color:'#3b82f6', label:'Polizei',             icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2 5h5l-4 3 1.5 5L12 12l-4.5 3L9 10 5 7h5z"/></svg>' },
-  fire:          { color:'#f97316', label:'Feuerwehr',           icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 6-6 8-6 13a6 6 0 0012 0c0-5-6-7-6-13z"/><path d="M12 12c0 3-2 4-2 6a2 2 0 004 0c0-2-2-3-2-6z"/></svg>' },
-  ambulance:     { color:'#ef4444', label:'Berufsrettung Wien',  icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>' },
-  mechanic:      { color:'#a3a3a3', label:'Mechanik',            icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>' },
-  taxi:          { color:'#fbbf24', label:'Taxi',                icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="10" width="22" height="9" rx="2"/><path d="M5 10V7a2 2 0 012-2h4l2 5"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg>' },
-  judge:         { color:'#8b5cf6', label:'Richter',             icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>' },
-  lawyer:        { color:'#06b6d4', label:'Anwalt',              icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' },
-  reporter:      { color:'#10b981', label:'Reporter',            icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h4"/></svg>' },
-  unemployed:    { color:'#4b5563', label:'Zivilist',            icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' },
-};
-
-// Farb-Palette für unbekannte Jobs (rotiert durch)
-const FALLBACK_COLORS = ['#7c3aed','#0ea5e9','#14b8a6','#f59e0b','#ec4899','#84cc16','#6366f1'];
-const FALLBACK_ICON   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>';
-
-function getJobColor(key, index) {
-  return JOB_DATA[key] ? JOB_DATA[key].color : FALLBACK_COLORS[index % FALLBACK_COLORS.length];
-}
-function getJobIcon(key) {
-  return JOB_DATA[key] ? JOB_DATA[key].icon : FALLBACK_ICON;
-}
-function getJobLabel(j) {
-  if (JOB_DATA[j.key]) return JOB_DATA[j.key].label;
-  return j.label || j.key.charAt(0).toUpperCase() + j.key.slice(1).replace(/[_-]/g,' ');
-}
+const RESTART_TIMES = <?= json_encode(array_values(array_filter(array_map('trim', explode(',', $cfg['restart_times']))))) ?>;
 
 let cd = 30, timer;
 
@@ -387,7 +341,6 @@ async function load() {
     document.getElementById('spPlayers').textContent = '0';
     ['spMax','spPct'].forEach(id => document.getElementById(id).textContent = '–');
     document.getElementById('spBar').style.width = '0%';
-    renderJobs([]);
     renderDevStatus(null);
   } finally {
     clearTimeout(abortTimer);
@@ -422,7 +375,6 @@ function render(d) {
     document.getElementById('spPlayers').textContent = '0';
     ['spMax','spPct'].forEach(id => document.getElementById(id).textContent = '–');
     document.getElementById('spBar').style.width = '0%';
-    renderJobs([]);
     return;
   }
   dot.className = 'sp-badge-dot online';
@@ -433,47 +385,38 @@ function render(d) {
   document.getElementById('spMax').textContent     = d.max_players;
   document.getElementById('spPct').textContent     = pct + '%';
   document.getElementById('spBar').style.width     = pct + '%';
-  renderJobs(d.jobs || []);
   if (d.details) renderDetails(d.details);
 }
 
-function renderJobs(jobs) {
-  const g    = document.getElementById('spJobs');
-  const sect = document.getElementById('spJobsSection');
-
-  // Bridge nicht verbunden oder keine Daten
-  if (!jobs || !jobs.length) {
-    if (sect) sect.style.display = 'none';
-    return;
-  }
-
-  if (sect) sect.style.display = '';
-
-  // Filter: Admin-Toggles nur für bekannte Jobs, unbekannte immer anzeigen
-  const visible = jobs.filter(j => {
-    if (j.key in SHOW_JOBS) return SHOW_JOBS[j.key] !== false;
-    return true;
+// ── Nächster Server-Neustart (fixer täglicher Zeitplan) ───────────────────────
+function nextRestartDate() {
+  if (!RESTART_TIMES.length) return null;
+  const now = new Date();
+  let best = null;
+  RESTART_TIMES.forEach(t => {
+    const parts = t.split(':');
+    const h = parseInt(parts[0], 10), m = parseInt(parts[1] || '0', 10);
+    if (isNaN(h)) return;
+    for (let dayOffset = 0; dayOffset <= 1; dayOffset++) {
+      const d = new Date(now);
+      d.setDate(d.getDate() + dayOffset);
+      d.setHours(h, m, 0, 0);
+      if (d > now && (!best || d < best)) best = d;
+    }
   });
+  return best;
+}
 
-  if (!visible.length) {
-    if (sect) sect.style.display = 'none';
-    return;
-  }
-
-  g.innerHTML = visible.map((j, i) => {
-    const c   = getJobColor(j.key, i);
-    const ico = getJobIcon(j.key);
-    const lbl = getJobLabel(j);
-    const pct = Math.min(j.count * 10, 100);
-    return '<div class="sp-job" style="--jc:' + c + '">'
-      + '<div class="sp-job-head">'
-      + '<span class="sp-job-icon" style="width:28px;height:28px;color:' + c + '">' + ico + '</span>'
-      + '<span class="sp-job-num">' + j.count + '</span>'
-      + '</div>'
-      + '<span class="sp-job-name">' + lbl + '</span>'
-      + '<div class="sp-job-bar-wrap"><div class="sp-job-bar" style="width:' + pct + '%"></div></div>'
-      + '</div>';
-  }).join('');
+function renderRestartStatus() {
+  const el = document.getElementById('restartStatus');
+  if (!el) return;
+  const next = nextRestartDate();
+  if (!next) { el.textContent = 'Neustart-Zeitplan nicht konfiguriert'; return; }
+  const hh = String(next.getHours()).padStart(2, '0');
+  const mm = String(next.getMinutes()).padStart(2, '0');
+  const diffMin = Math.max(0, Math.round((next - new Date()) / 60000));
+  const countdown = diffMin < 60 ? ('in ' + diffMin + ' Min.') : ('in ' + Math.floor(diffMin / 60) + 'h ' + (diffMin % 60) + 'min');
+  el.textContent = 'Nächster Neustart: ' + hh + ':' + mm + ' Uhr (' + countdown + ')';
 }
 
 function renderDetails(det) {
@@ -512,6 +455,8 @@ function tick() {
 
 <?php if (!$cfg['maintenance_mode']): ?>
 load(); tick();
+renderRestartStatus();
+setInterval(renderRestartStatus, 30000);
 <?php endif; ?>
 
 <?php if ($isAdmin): ?>
@@ -583,25 +528,6 @@ function renderAdminData(d) {
     ['Connect IPs',      (det.connect_endpoints || []).join(', ') || '–'],
     ['Owner',            det.owner_name || '–'],
   ];
-
-  // Jobs-Tabelle
-  let jobsHtml = '–';
-  if (d.jobs && d.jobs.length) {
-    const total = d.jobs.reduce((s,j) => s + j.count, 0);
-    jobsHtml = '<table style="width:100%;border-collapse:collapse;font-size:.82rem">'
-      + '<tr style="color:#64748b;font-size:.7rem"><th style="text-align:left;padding:2px 6px">Job</th>'
-      + '<th style="text-align:right;padding:2px 6px">Spieler</th>'
-      + '<th style="text-align:right;padding:2px 6px">Anteil</th></tr>';
-    d.jobs.forEach(j => {
-      const pct = total > 0 ? Math.round(j.count/total*100) : 0;
-      jobsHtml += '<tr style="border-top:1px solid rgba(255,255,255,.06)">'
-        + '<td style="padding:4px 6px;color:#e2e8f0">' + (j.label || j.key) + '</td>'
-        + '<td style="padding:4px 6px;text-align:right;color:#e8b86d"><b>' + j.count + '</b></td>'
-        + '<td style="padding:4px 6px;text-align:right;color:#64748b">' + pct + '%</td></tr>';
-    });
-    jobsHtml += '</table>';
-  }
-  rows.push(['Einsatzkräfte (' + (d.jobs ? d.jobs.length : 0) + ' Jobs)', jobsHtml]);
 
   // Custom Vars
   if (det.custom_vars && Object.keys(det.custom_vars).length) {
@@ -684,14 +610,12 @@ async function loadPlayerList() {
       + '<th style="text-align:left;color:#64748b;padding:6px 10px;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border)">#</th>'
       + '<th style="text-align:left;color:#64748b;padding:6px 10px;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border)">Name</th>'
       + '<th style="text-align:left;color:#64748b;padding:6px 10px;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border)">Job</th>'
-      + '<th style="text-align:right;color:#64748b;padding:6px 10px;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border)">Ping</th>'
       + '</tr></thead><tbody>'
       + d.players.map(p =>
           '<tr style="border-top:1px solid rgba(255,255,255,.05)">'
           + '<td style="padding:6px 10px;color:#4b5563">' + p.id + '</td>'
           + '<td style="padding:6px 10px;color:#e2e8f0;font-weight:600">' + p.name + '</td>'
           + '<td style="padding:6px 10px;color:#94a3b8">' + (p.job || '–') + '</td>'
-          + '<td style="padding:6px 10px;text-align:right;color:' + (p.ping > 150 ? '#ef4444' : p.ping > 80 ? '#f59e0b' : '#22c55e') + '">' + p.ping + ' ms</td>'
           + '</tr>'
         ).join('')
       + '</tbody></table>'

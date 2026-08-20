@@ -132,15 +132,15 @@ if ($bridgeSecret !== '') {
     $t['label'] = 'Bridge /vsrp – Ping';
     $tests[] = $t;
 
-    // 5. Bridge – job_stats
-    $payload   = json_encode(['action' => 'job_stats', 'timestamp' => time(), 'secret' => $bridgeSecret]);
+    // 5. Bridge – server_info
+    $payload   = json_encode(['action' => 'server_info', 'timestamp' => time(), 'secret' => $bridgeSecret]);
     $signature = hash_hmac('sha256', $payload, $bridgeSecret);
     $t = diag_curl($bridgeUrl, 'POST', $payload, [
         'Content-Type: application/json',
         'X-VSRP-Signature: ' . $signature,
         'X-VSRP-Timestamp: ' . time(),
     ]);
-    $t['label'] = 'Bridge /vsrp – job_stats';
+    $t['label'] = 'Bridge /vsrp – server_info';
     $tests[] = $t;
 } else {
     $tests[] = [

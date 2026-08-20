@@ -3,7 +3,7 @@ declare(strict_types=1);
 // ============================================================
 //  ViennaStateRP – Admin-Only Spielerliste
 //  GET /api/admin_players.php
-//  Gibt Spielernamen + Ping via FiveM HTTP-API zurück.
+//  Gibt Spielernamen + Job via FiveM HTTP-API zurück.
 //  Kein direkter DB-Zugriff auf den Spielserver.
 // ============================================================
 ini_set('display_errors', '0');
@@ -38,7 +38,6 @@ $safe = array_map(function (array $p): array {
     return [
         'id'   => (int)    ($p['id']   ?? 0),
         'name' => htmlspecialchars((string) ($p['name'] ?? ''), ENT_QUOTES, 'UTF-8'),
-        'ping' => (int)    ($p['ping'] ?? 0),
         'job'  => isset($p['job']['label']) ? htmlspecialchars((string) $p['job']['label'], ENT_QUOTES, 'UTF-8') : null,
     ];
 }, $players);

@@ -3,7 +3,7 @@
 //  ViennaStateRP – Server-Status API Endpoint
 //  GET /api/players_status.php
 //
-//  Öffentlich:  online, players, max_players, jobs
+//  Öffentlich:  online, players, max_players, dev_server_online
 //  Eingeloggt:  + details (map, gametype, resources, etc.)
 // ============================================================
 ini_set('display_errors', '0');
@@ -24,16 +24,14 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTtl) {
     exit;
 }
 
-$status   = FiveMAPI::getStatus();
-$jobStats = FiveMAPI::getJobStats();
+$status = FiveMAPI::getStatus();
 
 $response = [
-    'online'          => $status['online'],
-    'players'         => $status['players'],
-    'max_players'     => $status['max_players'],
-    'hostname'        => $status['hostname'],
-    'jobs'            => $jobStats,
-    'dev_server_online' => dev_server_is_online(),
+    'online'             => $status['online'],
+    'players'            => $status['players'],
+    'max_players'        => $status['max_players'],
+    'hostname'           => $status['hostname'],
+    'dev_server_online'  => dev_server_is_online(),
 ];
 
 if ($status['online']) {
