@@ -68,9 +68,6 @@ if (!function_exists('avatarUrl')) {
 <?php include __DIR__ . '/includes/maintenance_banner.php'; ?>
 
 <main class="sp-page">
-  <div class="container">
-    <?php include __DIR__ . '/includes/restart_banner.php'; ?>
-  </div>
   <?php if ($cfg['maintenance_mode']): ?>
   <div class="sp-hero">
     <div class="sp-hero-inner">
@@ -97,6 +94,7 @@ if (!function_exists('avatarUrl')) {
   <?php else: ?>
   <div class="sp-hero">
     <div class="sp-hero-inner">
+      <?php include __DIR__ . '/includes/restart_banner.php'; ?>
       <div class="sp-badge">
         <span class="sp-badge-dot" id="spDot"></span>
         <span id="spStatus">Verbinde...</span>
