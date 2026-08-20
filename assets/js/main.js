@@ -27,50 +27,61 @@ function vsrpRestackBanners() {
 }
 vsrpRestackBanners();
 
-// --- Restart-Warnbanner: erscheint automatisch 30 Min. vor geplantem Neustart ---
+// --- Naechster Server-Neustart: kombiniert taeglichen Zeitplan + manuell geplanten Einzeltermin ---
+// times: Array von "HH:MM"-Strings (taeglich). manualAt: "YYYY-MM-DDTHH:MM"-String oder leer.
+window.vsrpNextRestart = function (times, manualAt) {
+  const now = new Date();
+  let best = null;
+
+  (times || []).forEach(t => {
+    const parts = String(t).split(':');
+    const h = parseInt(parts[0], 10), m = parseInt(parts[1] || '0', 10);
+    if (isNaN(h)) return;
+    for (let dayOffset = 0; dayOffset <= 1; dayOffset++) {
+      const d = new Date(now);
+      d.setDate(d.getDate() + dayOffset);
+      d.setHours(h, m, 0, 0);
+      if (d > now && (!best || d < best)) best = d;
+    }
+  });
+
+  if (manualAt) {
+    const d = new Date(manualAt);
+    if (!isNaN(d.getTime()) && d > now && (!best || d < best)) best = d;
+  }
+
+  return best;
+};
+
+// --- Restart-Warnbanner: erscheint automatisch 30 Min. vor geplantem Neustart, Countdown laeuft live runter ---
 (function () {
   const el = document.getElementById('restartBanner');
   if (!el) return;
 
   let times = [];
   try { times = JSON.parse(el.dataset.restartTimes || '[]'); } catch (e) { times = []; }
-  if (!times.length) return;
+  const manualAt = el.dataset.manualRestart || '';
+  if (!times.length && !manualAt) return;
 
-  const minsEl = document.getElementById('restartBannerMins');
-
-  function nextRestart() {
-    const now = new Date();
-    let best = null;
-    times.forEach(t => {
-      const parts = String(t).split(':');
-      const h = parseInt(parts[0], 10), m = parseInt(parts[1] || '0', 10);
-      if (isNaN(h)) return;
-      for (let dayOffset = 0; dayOffset <= 1; dayOffset++) {
-        const d = new Date(now);
-        d.setDate(d.getDate() + dayOffset);
-        d.setHours(h, m, 0, 0);
-        if (d > now && (!best || d < best)) best = d;
-      }
-    });
-    return best;
-  }
+  const countdownEl = document.getElementById('restartBannerCountdown');
+  const WARN_SECONDS = 30 * 60;
 
   function tick() {
-    const next = nextRestart();
-    const diffMin = next ? Math.ceil((next - new Date()) / 60000) : Infinity;
-    const shouldShow = diffMin <= 30 && diffMin >= 0;
+    const next = window.vsrpNextRestart(times, manualAt);
+    const diffSec = next ? Math.max(0, Math.round((next - new Date()) / 1000)) : Infinity;
+    const shouldShow = diffSec <= WARN_SECONDS;
 
-    if (shouldShow && minsEl) minsEl.textContent = diffMin;
-
-    const isVisible = el.style.display !== 'none';
-    if (shouldShow !== isVisible) {
-      el.style.display = shouldShow ? '' : 'none';
-      vsrpRestackBanners();
+    if (shouldShow && countdownEl) {
+      const mm = String(Math.floor(diffSec / 60)).padStart(2, '0');
+      const ss = String(diffSec % 60).padStart(2, '0');
+      countdownEl.textContent = mm + ':' + ss;
     }
+
+    el.style.display = shouldShow ? '' : 'none';
   }
 
   tick();
-  setInterval(tick, 15000);
+  setInterval(tick, 1000);
 })();
 
 // --- Hamburger menu ---

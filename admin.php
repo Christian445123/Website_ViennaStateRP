@@ -227,6 +227,33 @@ if (!function_exists('avatarUrl')) {
       </div>
     </div>
 
+    <!-- Server-Neustart planen -->
+    <div class="admin-card" style="margin-top:24px">
+      <div style="font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text-2);margin-bottom:20px;display:flex;align-items:center;gap:8px">
+        🔁 Server-Neustart planen
+      </div>
+
+      <div id="restartPlanStatus" style="font-size:.88rem;color:var(--text-2);margin-bottom:16px">
+        <?php if (!empty($settings['manual_restart_at']) && ($restartTs = strtotime((string)$settings['manual_restart_at'])) && $restartTs > time()): ?>
+          Geplant: <strong style="color:var(--gold)"><?= htmlspecialchars(date('d.m.Y H:i', $restartTs)) ?> Uhr</strong>
+        <?php else: ?>
+          Kein manueller Neustart geplant. Täglicher Zeitplan: <?= htmlspecialchars($settings['restart_times'] ?: '–') ?>
+        <?php endif; ?>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div>
+          <div style="font-size:.72rem;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Datum &amp; Uhrzeit</div>
+          <input type="datetime-local" id="restartPlanInput"
+            value="<?= htmlspecialchars($settings['manual_restart_at'] ?? '') ?>"
+            style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:inherit;font-size:.88rem" />
+        </div>
+        <button class="btn btn-primary" onclick="setManualRestart()" style="padding:9px 18px">🔁 Neustart planen</button>
+        <button class="btn btn-outline" onclick="clearManualRestart()" style="padding:9px 18px">✕ Entfernen</button>
+      </div>
+      <p class="maint-hint">Ab 30 Minuten vorher erscheint automatisch der Neustart-Banner auf der Serverstatus-Seite mit Live-Countdown. Gilt zusätzlich zum täglichen Zeitplan unter „Server &amp; Sichtbarkeit“.</p>
+    </div>
+
   </div>
 </main>
 
@@ -294,6 +321,41 @@ async function toggleMaintenance() {
   } finally {
     btn.disabled = false;
   }
+}
+
+// ── Server-Neustart planen ──────────────────────────────────────────────────
+async function saveManualRestart(val) {
+  const statusEl = document.getElementById('restartPlanStatus');
+  try {
+    const r = await fetch('api/admin_settings.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ manual_restart_at: val }),
+    });
+    const d = await r.json();
+    if (!d.ok) { alert('Fehler beim Speichern: ' + (d.error || 'Unbekannt')); return; }
+
+    if (val) {
+      const dt = new Date(val);
+      const label = isNaN(dt.getTime()) ? val : dt.toLocaleString('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      statusEl.innerHTML = 'Geplant: <strong style="color:var(--gold)">' + label + ' Uhr</strong>';
+    } else {
+      statusEl.textContent = 'Kein manueller Neustart geplant.';
+    }
+  } catch (e) {
+    alert('Netzwerkfehler: ' + e.message);
+  }
+}
+
+function setManualRestart() {
+  const input = document.getElementById('restartPlanInput');
+  if (!input.value) { alert('Bitte Datum und Uhrzeit wählen.'); return; }
+  saveManualRestart(input.value);
+}
+
+function clearManualRestart() {
+  document.getElementById('restartPlanInput').value = '';
+  saveManualRestart('');
 }
 </script>
 </body>

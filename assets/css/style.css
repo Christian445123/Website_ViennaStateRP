@@ -170,11 +170,17 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Orbitron', sans-serif; font-weight: 700; line-
 .maintenance-banner-icon { flex-shrink: 0; }
 
 .restart-banner {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  flex-wrap: wrap; text-align: center;
+  font-size: .88rem;
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  border-radius: 12px;
   background: rgba(232,184,109,0.14);
-  border-bottom: 1px solid rgba(232,184,109,0.35);
+  border: 1px solid rgba(232,184,109,0.35);
   color: #fde9c8;
 }
-.restart-banner strong { color: var(--gold); }
+.restart-banner strong { color: var(--gold); font-variant-numeric: tabular-nums; }
 .restart-banner-icon { flex-shrink: 0; }
 
 .release-countdown {

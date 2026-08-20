@@ -53,7 +53,6 @@ function avatarUrl(array $user): string {
 </nav>
 
 <?php include __DIR__ . '/includes/maintenance_banner.php'; ?>
-<?php include __DIR__ . '/includes/restart_banner.php'; ?>
 
 <main class="dashboard-main">
   <div class="container">

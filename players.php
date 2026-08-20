@@ -66,9 +66,11 @@ if (!function_exists('avatarUrl')) {
 </nav>
 
 <?php include __DIR__ . '/includes/maintenance_banner.php'; ?>
-<?php include __DIR__ . '/includes/restart_banner.php'; ?>
 
 <main class="sp-page">
+  <div class="container">
+    <?php include __DIR__ . '/includes/restart_banner.php'; ?>
+  </div>
   <?php if ($cfg['maintenance_mode']): ?>
   <div class="sp-hero">
     <div class="sp-hero-inner">
@@ -325,6 +327,7 @@ const SHOW_SLOTS    = <?= $cfg['show_max_slots']       ? 'true' : 'false' ?>;
 const SHOW_PCT      = <?= $cfg['show_load_percent']    ? 'true' : 'false' ?>;
 const ALWAYS_SHOW_DETAILS = true;
 const RESTART_TIMES = <?= json_encode(array_values(array_filter(array_map('trim', explode(',', $cfg['restart_times']))))) ?>;
+const MANUAL_RESTART_AT = <?= json_encode($cfg['manual_restart_at'] ?? '') ?>;
 
 let cd = 30, timer;
 
@@ -389,29 +392,11 @@ function render(d) {
   if (d.details) renderDetails(d.details);
 }
 
-// ── Nächster Server-Neustart (fixer täglicher Zeitplan) ───────────────────────
-function nextRestartDate() {
-  if (!RESTART_TIMES.length) return null;
-  const now = new Date();
-  let best = null;
-  RESTART_TIMES.forEach(t => {
-    const parts = t.split(':');
-    const h = parseInt(parts[0], 10), m = parseInt(parts[1] || '0', 10);
-    if (isNaN(h)) return;
-    for (let dayOffset = 0; dayOffset <= 1; dayOffset++) {
-      const d = new Date(now);
-      d.setDate(d.getDate() + dayOffset);
-      d.setHours(h, m, 0, 0);
-      if (d > now && (!best || d < best)) best = d;
-    }
-  });
-  return best;
-}
-
+// ── Nächster Server-Neustart (täglicher Zeitplan + manuell geplanter Termin) ──
 function renderRestartStatus() {
   const el = document.getElementById('restartStatus');
   if (!el) return;
-  const next = nextRestartDate();
+  const next = window.vsrpNextRestart(RESTART_TIMES, MANUAL_RESTART_AT);
   if (!next) { el.textContent = 'Neustart-Zeitplan nicht konfiguriert'; return; }
   const hh = String(next.getHours()).padStart(2, '0');
   const mm = String(next.getMinutes()).padStart(2, '0');

@@ -18,6 +18,7 @@ const SETTINGS_DEFAULTS = [
     'show_max_slots'       => true,   // Max Slots
     'show_load_percent'    => true,   // Auslastung %
     'restart_times'        => '04:00,12:00,18:00', // Tägliche Server-Neustarts (HH:MM, kommagetrennt)
+    'manual_restart_at'    => '', // Einmaliger, manuell geplanter Neustart (YYYY-MM-DDTHH:MM, leer = keiner)
     // index.php Hero-Stats
     'show_hero_status'     => true,   // Online/Offline Badge
     'show_hero_players'    => true,   // Spielerzahl im Hero
