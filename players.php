@@ -100,6 +100,10 @@ if (!function_exists('avatarUrl')) {
         <span style="opacity:.3;margin:0 4px">·</span>
         <span style="font-size:.75rem;color:#4b5563">Aktualisiert in <span id="spCountdown">30</span>s</span>
       </div>
+      <div class="sp-badge" style="margin-top:-10px">
+        <span class="sp-badge-dot" id="devDot"></span>
+        <span id="devStatus">Dev-Server: Verbinde...</span>
+      </div>
       <h1 class="sp-title">Server <span class="accent">Status</span></h1>
       <p class="sp-sub">Echtzeit-Ubersicht · ViennaStateRP</p>
     </div>
@@ -384,8 +388,25 @@ async function load() {
     ['spMax','spPct'].forEach(id => document.getElementById(id).textContent = '–');
     document.getElementById('spBar').style.width = '0%';
     renderJobs([]);
+    renderDevStatus(null);
   } finally {
     clearTimeout(abortTimer);
+  }
+}
+
+function renderDevStatus(online) {
+  const dot = document.getElementById('devDot');
+  const txt = document.getElementById('devStatus');
+  if (!dot || !txt) return;
+  if (online === true) {
+    dot.className = 'sp-badge-dot online';
+    txt.textContent = 'Dev-Server: Online';
+  } else if (online === false) {
+    dot.className = 'sp-badge-dot offline';
+    txt.textContent = 'Dev-Server: Offline';
+  } else {
+    dot.className = 'sp-badge-dot';
+    txt.textContent = 'Dev-Server: Unbekannt';
   }
 }
 
@@ -393,6 +414,7 @@ function render(d) {
   const dot = document.getElementById('spDot');
   const txt = document.getElementById('spStatus');
   const box = document.getElementById('spStats');
+  renderDevStatus(d.dev_server_online === true);
   if (!d.online) {
     dot.className = 'sp-badge-dot offline';
     txt.textContent = 'Server offline';

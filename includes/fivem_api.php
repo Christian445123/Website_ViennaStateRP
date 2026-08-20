@@ -404,7 +404,7 @@ class FiveMAPI
     /** Bridge-URL aufbauen */
     private static function bridgeUrl(): string
     {
-        return rtrim(FIVEM_API_URL, '/') . '/vsrp_bridge/vsrp';
+        return rtrim(FIVEM_API_URL, '/') . '/gc_bridge/vsrp';
     }
 
     /** Bridge-Request der eine bool-Antwort erwartet */
@@ -451,4 +451,20 @@ class FiveMAPI
         }
         return json_decode((string) $result, true) ?? null;
     }
+}
+
+/**
+ * Reiner Erreichbarkeits-Check für den Dev-Server (TCP-Connect, kein FiveM-API-Call).
+ * Liefert nur online/offline – keine Spieler- oder Serverdaten.
+ */
+function dev_server_is_online(): bool
+{
+    $ip   = defined('DEV_SERVER_IP')   ? DEV_SERVER_IP   : '';
+    $port = defined('DEV_SERVER_PORT') ? (int) DEV_SERVER_PORT : 0;
+    if ($ip === '' || $port <= 0) return false;
+
+    $conn = @fsockopen($ip, $port, $errno, $errstr, 2);
+    if ($conn === false) return false;
+    fclose($conn);
+    return true;
 }

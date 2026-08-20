@@ -200,6 +200,10 @@ defined('FIVEM_PORT')        || define('FIVEM_PORT',   env('FIVEM_PORT',  '30120
 defined('FIVEM_LINK')        || define('FIVEM_LINK',   'fivem://connect/' . FIVEM_IP . ':' . FIVEM_PORT);
 defined('DISCORD_INVITE')    || define('DISCORD_INVITE', env('DISCORD_INVITE', 'https://discord.gg/za7wKkg3s8'));
 
+// ── Dev-Server (nur Online/Offline-Anzeige, kein FiveM-API-Zugriff) ──────────
+defined('DEV_SERVER_IP')     || define('DEV_SERVER_IP',   env('DEV_SERVER_IP',   '148.251.13.14'));
+defined('DEV_SERVER_PORT')   || define('DEV_SERVER_PORT', env('DEV_SERVER_PORT', '30120'));
+
 defined('DISCORD_CLIENT_ID')     || define('DISCORD_CLIENT_ID',     env('DISCORD_CLIENT_ID',     '1522589753105584178'));
 defined('DISCORD_CLIENT_SECRET') || define('DISCORD_CLIENT_SECRET', env('DISCORD_CLIENT_SECRET', 'XnEX7ZNGquv8eosBupraBTlY8EbYsmuO'));
 defined('DISCORD_REDIRECT_URI')  || define('DISCORD_REDIRECT_URI',  env('DISCORD_REDIRECT_URI',  rtrim(SITE_URL, '/') . '/callback.php'));

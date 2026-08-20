@@ -120,7 +120,7 @@ $tests[] = $t;
 
 // 4. Bridge – Ping (falls Secret gesetzt)
 $bridgeSecret = defined('FIVEM_BRIDGE_SECRET') ? FIVEM_BRIDGE_SECRET : '';
-$bridgeUrl    = $base . '/vsrp_bridge/vsrp';
+$bridgeUrl    = $base . '/gc_bridge/vsrp';
 if ($bridgeSecret !== '') {
     $payload   = json_encode(['action' => 'ping', 'timestamp' => time(), 'secret' => $bridgeSecret]);
     $signature = hash_hmac('sha256', $payload, $bridgeSecret);

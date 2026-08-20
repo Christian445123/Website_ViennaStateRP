@@ -28,11 +28,12 @@ $status   = FiveMAPI::getStatus();
 $jobStats = FiveMAPI::getJobStats();
 
 $response = [
-    'online'      => $status['online'],
-    'players'     => $status['players'],
-    'max_players' => $status['max_players'],
-    'hostname'    => $status['hostname'],
-    'jobs'        => $jobStats,
+    'online'          => $status['online'],
+    'players'         => $status['players'],
+    'max_players'     => $status['max_players'],
+    'hostname'        => $status['hostname'],
+    'jobs'            => $jobStats,
+    'dev_server_online' => dev_server_is_online(),
 ];
 
 if ($status['online']) {
