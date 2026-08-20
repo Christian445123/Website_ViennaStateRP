@@ -7,7 +7,6 @@
 //    /players.json  – Spielerliste (ID, Ping, Identifiers)
 //
 //  BRIDGE ENDPOINT (HMAC-Auth):
-//    whitelist_add / whitelist_remove / whitelist_check
 //    kick / ban / unban / ban_check
 //    broadcast
 //    get_players       – alle Online-Spieler mit Job, Endpoint etc.
@@ -293,28 +292,6 @@ class FiveMAPI
     // =========================================================================
     //  BRIDGE COMMANDS  (Auth via HMAC-SHA256 + Secret im Body)
     // =========================================================================
-
-    /** Spieler zur Whitelist hinzufügen */
-    public static function whitelistAdd(string $discordId, string $playerName = ''): bool
-    {
-        return self::bridgeRequest('whitelist_add', [
-            'discord_id'  => $discordId,
-            'player_name' => $playerName,
-        ]);
-    }
-
-    /** Spieler von der Whitelist entfernen */
-    public static function whitelistRemove(string $discordId): bool
-    {
-        return self::bridgeRequest('whitelist_remove', ['discord_id' => $discordId]);
-    }
-
-    /** Whitelist-Status eines Spielers prüfen */
-    public static function whitelistCheck(string $discordId): bool
-    {
-        $r = self::bridgeQuery('whitelist_check', ['discord_id' => $discordId]);
-        return ($r['whitelisted'] ?? false) === true;
-    }
 
     /** Spieler kicken (falls online) */
     public static function kickPlayer(string $discordId, string $reason = 'Kein Grund'): bool

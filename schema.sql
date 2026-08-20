@@ -130,31 +130,6 @@ CREATE TABLE IF NOT EXISTS `server_status_log` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
---  whitelist_applications
--- ============================================================
-CREATE TABLE IF NOT EXISTS `whitelist_applications` (
-  `id`            INT UNSIGNED     NOT NULL AUTO_INCREMENT,
-  `user_id`       BIGINT UNSIGNED  NOT NULL,
-  `real_name`     VARCHAR(100)     NOT NULL,
-  `age`           TINYINT UNSIGNED NOT NULL,
-  `char_name`     VARCHAR(100)     NOT NULL,
-  `char_story`    TEXT             NOT NULL,
-  `motivation`    TEXT             NOT NULL,
-  `rp_experience` TEXT             NOT NULL,
-  `status`        ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
-  `staff_note`    TEXT                 NULL,
-  `reviewed_by`   BIGINT UNSIGNED      NULL,
-  `reviewed_at`   DATETIME             NULL,
-  `created_at`    DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at`    DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_user_id` (`user_id`),
-  KEY `idx_status`  (`status`),
-  CONSTRAINT `fk_wl_user`  FOREIGN KEY (`user_id`)     REFERENCES `users`(`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_wl_staff` FOREIGN KEY (`reviewed_by`) REFERENCES `users`(`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ============================================================
 --  login_log
 -- ============================================================
 CREATE TABLE IF NOT EXISTS `login_log` (

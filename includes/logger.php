@@ -18,10 +18,6 @@ define('VSRP_LOG_TYPES', [
     'discord_logout'        => ['color' => 0x64748b, 'emoji' => '🚪', 'label' => 'Logout'],
     'login_banned'          => ['color' => 0xef4444, 'emoji' => '🔨', 'label' => 'Gebannter User'],
     'login_bruteforce'      => ['color' => 0xef4444, 'emoji' => '🔨', 'label' => 'Brute-Force erkannt'],
-    // Whitelist
-    'whitelist_submitted'   => ['color' => 0xf59e0b, 'emoji' => '📋', 'label' => 'Whitelist-Bewerbung'],
-    'whitelist_approved'    => ['color' => 0x059669, 'emoji' => '✅', 'label' => 'Whitelist genehmigt'],
-    'whitelist_rejected'    => ['color' => 0xef4444, 'emoji' => '❌', 'label' => 'Whitelist abgelehnt'],
     // Admin
     'admin_login'           => ['color' => 0xef4444, 'emoji' => '🔐', 'label' => 'Admin-Login'],
     'admin_ban'             => ['color' => 0xef4444, 'emoji' => '🔨', 'label' => 'Spieler gebannt'],
