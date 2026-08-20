@@ -18,6 +18,15 @@ if (!$ok) {
     die('403 Forbidden - Admin-Login oder ?key=DIAG_SECRET erforderlich');
 }
 
+$user = function_exists('current_user') ? current_user() : null;
+
+if (!function_exists('avatarUrl')) {
+    function avatarUrl(?array $user): string {
+        if (empty($user['avatar']) || empty($user['id'])) return 'https://cdn.discordapp.com/embed/avatars/0.png';
+        return 'https://cdn.discordapp.com/avatars/' . $user['id'] . '/' . $user['avatar'] . '.png?size=64';
+    }
+}
+
 // Alle Tests direkt mit curl – keine Klassen-Abstraktion
 $base = defined('FIVEM_API_URL')
     ? rtrim(FIVEM_API_URL, '/')
@@ -147,18 +156,57 @@ if ($bridgeSecret !== '') {
 }
 
 $allOk = $dnsOk && $tests[0]['ok'] && $tests[1]['ok'] && $tests[2]['ok'];
+
+// ── Diagnose-Export als JSON-Datei ────────────────────────────────────────────
+if (($_GET['export'] ?? '') === '1') {
+    $exportPayload = [
+        'generated_at' => date('c'),
+        'site'         => defined('SITE_URL') ? SITE_URL : null,
+        'api_url'      => $base,
+        'host'         => $host,
+        'dns'          => ['ok' => $dnsOk, 'resolved_ip' => $dnsOk ? $hostIp : null],
+        'php_version'  => phpversion(),
+        'curl_version' => curl_version()['version'],
+        'overall_ok'   => $allOk,
+        'tests'        => array_map(function ($t) {
+            return [
+                'label'                => $t['label'],
+                'url'                  => $t['url'] ?? null,
+                'method'               => $t['method'] ?? null,
+                'http_status'          => $t['http'],
+                'duration_ms'          => $t['ms'],
+                'remote_ip'            => $t['ip'] ?? null,
+                'ok'                   => $t['ok'],
+                'curl_errno'           => $t['curl_err'] ?? null,
+                'curl_error'           => $t['curl_msg'] ?? null,
+                'response_fields'      => $t['fields'] ?? null,
+                'response_json'        => $t['json'] ?? null,
+                'response_raw_snippet' => $t['raw'] ?? null,
+                'extra'                => $t['extra'] ?? null,
+            ];
+        }, $tests),
+    ];
+
+    $filename = 'fivem_diagnose_' . date('Y-m-d_His') . '.json';
+    header('Content-Type: application/json; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    echo json_encode($exportPayload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+$keyParam = isset($_GET['key']) ? '&key=' . urlencode((string)$_GET['key']) : '';
 ?>
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FiveM Diagnose – ViennaStateRP</title>
+  <title>FiveM Diagnose – Admin – ViennaStateRP</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/style.css?v=<?= @filemtime(__DIR__ . '/assets/css/style.css') ?>" />
   <style>
-    body { padding: 40px 0 80px; }
+    body { padding: <?= $user ? 90 : 40 ?>px 0 80px; }
     .diag-wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
     .diag-title { font-family: 'Orbitron', sans-serif; font-size: 2rem; font-weight: 900; margin-bottom: 6px; }
     .diag-sub { color: var(--text-2); font-size: .9rem; margin-bottom: 32px; }
@@ -242,6 +290,29 @@ $allOk = $dnsOk && $tests[0]['ok'] && $tests[1]['ok'] && $tests[2]['ok'];
   </style>
 </head>
 <body>
+
+<?php if ($user): ?>
+<nav class="navbar scrolled">
+  <div class="nav-container">
+    <a class="nav-logo" href="index.php"><span class="logo-accent">Vienna</span>StateRP</a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="dashboard.php">Dashboard</a></li>
+      <li><a href="players.php">Server Status</a></li>
+      <li><a href="admin.php" class="active">Admin</a></li>
+      <li><a href="db_admin.php">DB Browser</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="dashboard.php" class="btn btn-ghost">
+        <img src="<?= avatarUrl($user) ?>" alt="" class="nav-avatar" />
+        <?= htmlspecialchars($user['global_name']) ?>
+      </a>
+      <a href="logout.php" class="btn btn-outline">Abmelden</a>
+    </div>
+    <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+<?php endif; ?>
+
 <div class="diag-wrap">
 
   <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:8px">
@@ -250,8 +321,9 @@ $allOk = $dnsOk && $tests[0]['ok'] && $tests[1]['ok'] && $tests[2]['ok'];
       <div class="diag-sub">Vollständige Verbindungsdiagnose · <?= date('d.m.Y H:i:s') ?></div>
     </div>
     <div style="display:flex;gap:8px">
-      <a href="?" class="btn btn-outline" style="font-size:.82rem">↻ Neu laden</a>
-      <a href="dashboard.php" class="btn btn-ghost" style="font-size:.82rem">← Dashboard</a>
+      <a href="?export=1<?= $keyParam ?>" class="btn btn-outline" style="font-size:.82rem">⬇ Diagnose exportieren</a>
+      <a href="?<?= ltrim($keyParam, '&') ?>" class="btn btn-outline" style="font-size:.82rem">↻ Neu laden</a>
+      <a href="<?= $user ? 'admin.php' : 'dashboard.php' ?>" class="btn btn-ghost" style="font-size:.82rem">← <?= $user ? 'Admin' : 'Dashboard' ?></a>
     </div>
   </div>
 
@@ -397,7 +469,7 @@ $allOk = $dnsOk && $tests[0]['ok'] && $tests[1]['ok'] && $tests[2]['ok'];
   <?php endif; ?>
 
   <p style="font-size:.75rem;color:var(--text-3);margin-top:24px;text-align:center">
-    Diese Seite ist nur für Admins zugänglich. Nach Abschluss der Diagnose kann sie gelöscht werden.
+    Diese Seite ist nur für Admins zugänglich (oder mit gültigem <code>?key=</code>-Parameter).
   </p>
 
 </div>

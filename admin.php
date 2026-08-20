@@ -226,6 +226,11 @@ if (!function_exists('avatarUrl')) {
           <div class="nav-card-title">Changelog</div>
           <div class="nav-card-sub">Update-Ankündigungen &amp; Discord-Posts</div>
         </a>
+        <a href="fivem_diagnose.php" class="nav-card">
+          <div class="nav-card-icon">🔬</div>
+          <div class="nav-card-title">FiveM Diagnose</div>
+          <div class="nav-card-sub">Verbindungstest &amp; Diagnose-Export</div>
+        </a>
         <a href="db_admin.php" class="nav-card" style="grid-column:1 / -1">
           <div class="nav-card-icon">🗄</div>
           <div class="nav-card-title">Datenbank-Browser</div>
