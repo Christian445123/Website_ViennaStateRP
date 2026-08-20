@@ -72,7 +72,6 @@ function _discord_post(string $url, array $data): array
         CURLOPT_SSL_VERIFYPEER => true,
     ]);
     $result = curl_exec($ch);
-    curl_close($ch);
     return json_decode((string) $result, true) ?? [];
 }
 
@@ -86,6 +85,5 @@ function _discord_get(string $url, string $token): array
         CURLOPT_SSL_VERIFYPEER => true,
     ]);
     $result = curl_exec($ch);
-    curl_close($ch);
     return json_decode((string) $result, true) ?? [];
 }

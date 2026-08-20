@@ -161,7 +161,6 @@ function changelog_notify_discord(array $row): bool
     ]);
     $result = curl_exec($ch);
     $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
 
     return $result !== false && $httpCode >= 200 && $httpCode < 300;
 }

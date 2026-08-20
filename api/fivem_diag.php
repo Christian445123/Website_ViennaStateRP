@@ -33,7 +33,6 @@ foreach ($endpoints as $path) {
     $code   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $time   = round(curl_getinfo($ch, CURLINFO_TOTAL_TIME) * 1000);
     $error  = curl_error($ch);
-    curl_close($ch);
 
     echo "GET $path\n";
     echo "  HTTP: $code  Time: {$time}ms\n";

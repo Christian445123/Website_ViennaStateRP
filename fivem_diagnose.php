@@ -51,7 +51,6 @@ function diag_curl(string $url, string $method = 'GET', ?string $body = null, ar
     $ip      = curl_getinfo($ch, CURLINFO_PRIMARY_IP);
     $errNo   = curl_errno($ch);
     $errMsg  = curl_error($ch);
-    curl_close($ch);
 
     $json = null;
     if ($result !== false && $result !== '') {

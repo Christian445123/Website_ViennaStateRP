@@ -393,7 +393,6 @@ class FiveMAPI
         $result = curl_exec($ch);
         $code   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error  = curl_error($ch);
-        curl_close($ch);
 
         if ($result === false || $code !== 200) {
             error_log('[FiveMAPI] fetchPublic ' . $path . ' failed: HTTP ' . $code . ' ' . $error);
@@ -445,7 +444,6 @@ class FiveMAPI
         $result = curl_exec($ch);
         $code   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error  = curl_error($ch);
-        curl_close($ch);
 
         if ($result === false || $code !== 200) {
             error_log('[FiveMAPI] bridgeQuery ' . $action . ' failed: HTTP ' . $code . ' ' . $error);

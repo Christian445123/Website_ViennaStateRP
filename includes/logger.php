@@ -155,5 +155,4 @@ function _vsrp_send_discord(
         CURLOPT_SSL_VERIFYPEER => true,
     ]);
     curl_exec($ch);
-    curl_close($ch);
 }
