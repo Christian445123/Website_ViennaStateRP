@@ -32,10 +32,11 @@ if (!function_exists('avatarUrl')) {
 
     /* ── "PDF viewer" chrome ─────────────────────────────────────── */
     .pdf-toolbar {
-      max-width: 840px; margin: 0 auto; background: #323236; border-radius: 8px 8px 0 0;
-      padding: 11px 20px; display: flex; align-items: center; gap: 10px;
+      max-width: 840px; margin: 0 auto; background: linear-gradient(#3a3a3f, #2c2c30);
+      border-radius: 8px 8px 0 0; padding: 11px 20px; display: flex; align-items: center; gap: 10px;
       font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-      box-shadow: 0 -1px 0 rgba(255,255,255,.05) inset;
+      box-shadow: 0 -1px 0 rgba(255,255,255,.06) inset, 0 6px 16px rgba(0,0,0,.35);
+      position: sticky; top: 84px; z-index: 5;
     }
     .pdf-toolbar-dots { display: flex; gap: 6px; margin-right: 6px; }
     .pdf-toolbar-dots span { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
@@ -44,34 +45,60 @@ if (!function_exists('avatarUrl')) {
     .pdf-toolbar-dots span:nth-child(3) { background: #28c840; }
     .pdf-toolbar-icon { font-size: 1rem; }
     .pdf-toolbar-name { color: #ececec; font-size: .82rem; font-weight: 600; }
-    .pdf-toolbar-meta { margin-left: auto; color: #9a9a9e; font-size: .72rem; white-space: nowrap; }
+    .pdf-toolbar-meta {
+      margin-left: auto; color: #c9c5b8; font-size: .68rem; white-space: nowrap;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08);
+      padding: 3px 10px; border-radius: 20px;
+    }
 
     .pdf-container { max-width: 840px; margin: 0 auto; padding: 22px 0 6px; }
 
     /* ── the paper page itself ───────────────────────────────────── */
     .pdf-page {
-      background: #faf8f3; color: #262620; max-width: 840px; margin: 0 auto 28px;
-      padding: 60px 68px 44px; box-shadow: 0 18px 45px rgba(0,0,0,.5), 0 2px 10px rgba(0,0,0,.35);
+      background: #faf8f3; color: #262620; max-width: 840px; margin: 0 auto 34px;
+      padding: 60px 68px 44px; min-height: 1040px; display: flex; flex-direction: column;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,.7) inset,
+        0 1px 2px rgba(0,0,0,.06),
+        0 24px 50px -8px rgba(0,0,0,.55),
+        0 4px 14px rgba(0,0,0,.35);
       border-radius: 2px; position: relative;
       font-family: Georgia, 'Times New Roman', Cambria, serif; line-height: 1.68;
     }
+    .pdf-page::before {
+      content: ''; position: absolute; inset: 16px; border: 1px solid rgba(32,31,26,.08);
+      pointer-events: none;
+    }
+    .pdf-page::after {
+      content: ''; position: absolute; top: 0; right: 0; width: 0; height: 0;
+      border-style: solid; border-width: 0 30px 30px 0; border-color: transparent #ece6d6 transparent transparent;
+      filter: drop-shadow(-2px 2px 2px rgba(0,0,0,.18));
+    }
     .pdf-page:last-of-type { margin-bottom: 0; }
-    @media (max-width: 900px) { .pdf-page { padding: 40px 24px 34px; } }
+    @media (max-width: 900px) { .pdf-page { padding: 40px 24px 34px; min-height: 0; } }
 
     .pdf-page-header {
       display: flex; justify-content: space-between; align-items: center;
       font-family: Arial, Helvetica, sans-serif; font-size: .66rem; letter-spacing: .6px;
       color: #a3987e; text-transform: uppercase; border-bottom: 1px solid #e4dfd2;
-      padding-bottom: 12px; margin-bottom: 30px;
+      padding-bottom: 12px; margin-bottom: 30px; position: relative; z-index: 1;
     }
     .pdf-page-footer {
-      margin-top: 40px; padding-top: 14px; border-top: 1px solid #e4dfd2;
+      margin-top: auto; padding-top: 14px; border-top: 1px solid #e4dfd2;
       display: flex; justify-content: space-between; align-items: center;
       font-family: Arial, Helvetica, sans-serif; font-size: .66rem; color: #a3987e; letter-spacing: .5px;
+      position: relative; z-index: 1;
     }
 
     /* ── cover page ───────────────────────────────────────────────── */
-    .pdf-cover { text-align: center; margin-bottom: 18px; }
+    .pdf-cover { text-align: center; margin-bottom: 18px; position: relative; z-index: 1; }
+    .pdf-cover .pdf-crest {
+      width: 52px; height: 52px; margin: 0 auto 18px; border-radius: 50%;
+      border: 2px solid #9c6b1f; display: flex; align-items: center; justify-content: center;
+      font-family: Arial, Helvetica, sans-serif; font-size: 1rem; font-weight: 800;
+      color: #8a6a2e; letter-spacing: .5px;
+      box-shadow: 0 0 0 4px #faf8f3, 0 0 0 5px rgba(156,107,31,.3);
+    }
     .pdf-cover .pdf-tag {
       display: inline-block; font-family: Arial, Helvetica, sans-serif; font-size: .66rem;
       letter-spacing: 2.5px; text-transform: uppercase; color: #8a6a2e; border: 1px solid #c9a968;
@@ -85,53 +112,58 @@ if (!function_exists('avatarUrl')) {
       font-family: Arial, Helvetica, sans-serif; font-size: .82rem; letter-spacing: 3px;
       text-transform: uppercase; color: #a08b5c; margin-bottom: 24px;
     }
-    .pdf-cover hr { border: none; border-top: 2px solid #201f1a; width: 60px; margin: 0 auto 24px; }
-    .pdf-cover p { color: #4a453c; font-size: .95rem; max-width: 580px; margin: 0 auto; text-align: left; }
+    .pdf-cover hr { border: none; border-top: 3px double #201f1a; width: 90px; margin: 0 auto 24px; }
+    .pdf-cover p {
+      color: #4a453c; font-size: .95rem; max-width: 580px; margin: 0 auto;
+      text-align: justify; hyphens: auto;
+    }
 
     /* ── numbered sections ───────────────────────────────────────── */
-    .regel-cat { margin-bottom: 32px; }
+    .regel-cat { margin-bottom: 32px; position: relative; z-index: 1; }
     .regel-cat:last-child { margin-bottom: 0; }
     .regel-cat-label {
       display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px;
-      border-bottom: 1.5px solid #201f1a; padding-bottom: 8px;
+      border-bottom: 3px double #201f1a; padding-bottom: 9px;
     }
     .regel-cat-icon { font-size: .95rem; }
     .regel-cat-label h2 {
       font-family: Arial, Helvetica, sans-serif; font-size: .95rem; font-weight: 800;
-      letter-spacing: .4px; margin: 0; color: #201f1a; text-transform: uppercase;
+      letter-spacing: .4px; margin: 0; color: #5a3e14; text-transform: uppercase;
     }
     .regel-cat-line { display: none; }
 
     .regel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 26px; }
     @media (max-width: 760px) { .regel-grid { grid-template-columns: 1fr; } }
 
-    .regel-card { background: transparent; border: 1px solid #e0dbcc; border-radius: 3px; overflow: hidden; }
+    .regel-card { background: transparent; border: 1px solid #e0dbcc; border-radius: 3px; overflow: hidden; box-shadow: 0 1px 2px rgba(32,31,26,.04); }
     .regel-card-head { padding: 8px 15px; background: #f1ede2; border-bottom: 1px solid #e0dbcc; display: flex; align-items: center; gap: 8px; }
     .regel-card-head .ico { font-size: .82rem; }
     .regel-card-head h3 { font-family: Arial, Helvetica, sans-serif; font-size: .7rem; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: #4a3f27; margin: 0; }
     .regel-list { list-style: none; margin: 0; padding: 6px 0; }
-    .regel-list li { padding: 7px 15px; font-size: .86rem; color: #332f26; border-bottom: 1px solid #ece7d9; }
+    .regel-list li { padding: 7px 15px; font-size: .86rem; color: #332f26; border-bottom: 1px solid #ece7d9; text-align: justify; hyphens: auto; }
     .regel-list li:last-child { border-bottom: none; }
     .regel-list li strong { color: #201f1a; font-weight: 700; }
 
     .penalty {
       display: inline-block; margin-left: 6px; font-family: Arial, Helvetica, sans-serif;
-      font-size: .58rem; font-weight: 700; letter-spacing: .6px; text-transform: uppercase;
-      padding: 1px 7px; border-radius: 3px; border: 1px solid; white-space: nowrap;
+      font-size: .56rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+      padding: 1px 8px; border-radius: 2px; border: 1.5px solid; background: transparent;
+      white-space: nowrap; transform: rotate(-3deg); vertical-align: middle;
     }
-    .penalty-warn { color: #7a5a12; border-color: #c9a968; background: #f6ecd2; }
-    .penalty-kick { color: #8a4a13; border-color: #cf8a4a; background: #f7e6d2; }
-    .penalty-ban  { color: #7a1f1f; border-color: #c15a5a; background: #f6dcdc; }
+    .penalty-warn { color: #9a6a10; border-color: #9a6a10; }
+    .penalty-kick { color: #a1530f; border-color: #a1530f; }
+    .penalty-ban  { color: #8f1f1f; border-color: #8f1f1f; }
 
     .regel-callout {
       background: #f1ede2; border: 1px solid #e0dbcc; border-left: 3px solid #9c6b1f;
       border-radius: 0 3px 3px 0; padding: 12px 18px; margin-bottom: 16px;
-      font-size: .86rem; color: #332f26; line-height: 1.6;
+      font-size: .86rem; color: #332f26; line-height: 1.6; text-align: justify; hyphens: auto;
     }
     .regel-callout strong { color: #201f1a; }
 
     .guideline-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
-    .guideline-list li { display: flex; gap: 12px; align-items: flex-start; border: 1px solid #e0dbcc; border-radius: 3px; padding: 10px 15px; font-size: .86rem; color: #332f26; line-height: 1.55; }
+    .guideline-list li { display: flex; gap: 12px; align-items: flex-start; border: 1px solid #e0dbcc; border-radius: 3px; padding: 10px 15px; font-size: .86rem; color: #332f26; line-height: 1.55; box-shadow: 0 1px 2px rgba(32,31,26,.04); }
+    .guideline-list li div { text-align: justify; hyphens: auto; }
     .guideline-list li strong:first-child { color: #201f1a; display: block; margin-bottom: 2px; font-family: Arial, Helvetica, sans-serif; font-size: .76rem; letter-spacing: .3px; text-transform: uppercase; }
     .guideline-icon { font-size: .95rem; flex-shrink: 0; }
 
@@ -195,6 +227,7 @@ if (!function_exists('avatarUrl')) {
       <div class="pdf-page">
 
         <div class="pdf-cover">
+          <div class="pdf-crest">VS</div>
           <div class="pdf-tag">Offizielles Dokument</div>
           <h1>Regelwerk</h1>
           <div class="pdf-subtitle">ViennaStateRP · Roleplay Server</div>
