@@ -11,6 +11,7 @@
 declare(strict_types=1);
 ini_set('display_errors', '0');
 @set_time_limit(0);
+@ignore_user_abort(true); // läuft weiter, auch wenn der auslösende Fire-and-forget-Request bereits getrennt hat
 
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/discord_config.php';

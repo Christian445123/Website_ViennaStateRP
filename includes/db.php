@@ -275,3 +275,36 @@ defined('FIVEM_CONNECT_LINK') || define('FIVEM_CONNECT_LINK', FIVEM_LINK);
 
 // Verschluesselungs-Modul laden
 require_once __DIR__ . '/encryption.php';
+
+// ── Selbstauslösender Cron: Discord-Rollen-Sync alle 5 Stunden ──────────────
+// Kein Server-Cronjob nötig: ganz normaler Website-Traffic prüft bei jedem
+// Seitenaufruf (sehr günstig – nur ein Datei-Zeitstempel), ob der letzte Lauf
+// über 5 Stunden her ist, und stößt den Sync dann im Hintergrund an.
+// api/discord_role_sync_cron.php erledigt die eigentliche Arbeit inkl. Discord-Bericht.
+if ($pdo !== null) {
+    try {
+        $cronSecret = env('CRON_SECRET', '');
+        if ($cronSecret !== '') {
+            $lastRunFile = sys_get_temp_dir() . '/vsrp_discord_role_sync_last_run.flag';
+            $intervalSec = 5 * 3600;
+            if (!file_exists($lastRunFile) || (time() - filemtime($lastRunFile)) >= $intervalSec) {
+                // Zuerst "beanspruchen" (Zeitstempel jetzt setzen), damit nicht mehrere
+                // gleichzeitige Requests denselben Lauf parallel auslösen.
+                @file_put_contents($lastRunFile, (string) time());
+
+                $ch = curl_init(rtrim(SITE_URL, '/') . '/api/discord_role_sync_cron.php?secret=' . urlencode($cronSecret));
+                curl_setopt_array($ch, [
+                    CURLOPT_RETURNTRANSFER    => true,
+                    CURLOPT_TIMEOUT_MS        => 500,  // Fire-and-forget – wir warten nicht auf das Ergebnis
+                    CURLOPT_CONNECTTIMEOUT_MS => 500,
+                    CURLOPT_NOSIGNAL          => true, // nötig für Sub-Sekunden-Timeouts
+                    CURLOPT_SSL_VERIFYPEER    => true,
+                ]);
+                @curl_exec($ch);
+                curl_close($ch);
+            }
+        }
+    } catch (\Throwable $e) {
+        error_log('[VSRP Cron-Trigger] ' . $e->getMessage());
+    }
+}

@@ -150,10 +150,10 @@ if (!function_exists('avatarUrl')) {
         <div id="syncLog" style="margin-top:10px;font-size:.82rem;display:flex;flex-direction:column;gap:3px;max-height:220px;overflow-y:auto"></div>
 
         <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);font-size:.78rem;color:var(--text-3)">
-          ⏱️ <strong>Automatischer Sync alle 5 Stunden:</strong> per Server-Cronjob auf
-          <code>api/discord_role_sync_cron.php?secret=CRON_SECRET</code> (Secret siehe <code>.env</code>).
-          Nach jedem Lauf wird ein Sammelbericht in den unter <code>DISCORD_ROLE_SYNC_WEBHOOK_URL</code> hinterlegten
-          Discord-Kanal gepostet.
+          ⏱️ <strong>Automatischer Sync alle 5 Stunden</strong> &ndash; läuft von selbst, kein Server-Cronjob n&ouml;tig:
+          ganz normaler Website-Traffic st&ouml;&szlig;t den Sync im Hintergrund an, sobald der letzte Lauf &uuml;ber
+          5 Stunden her ist. Nach jedem Lauf wird ein Sammelbericht in den unter <code>DISCORD_ROLE_SYNC_WEBHOOK_URL</code>
+          hinterlegten Discord-Kanal gepostet.
         </div>
       </div>
     </div>
