@@ -6,13 +6,13 @@ require_once __DIR__ . '/includes/discord_config.php';
 require_once __DIR__ . '/includes/permissions.php';
 
 require_login();
-if (!has_permission('supporter')) {
+if (!has_capability('teamregelwerk.view')) {
     header('Location: dashboard.php?error=' . urlencode('Kein Zugriff'));
     exit;
 }
 
 $user    = current_user();
-$isAdmin = has_permission('admin');
+$isAdmin = has_capability('admin_hub.view');
 
 if (!function_exists('avatarUrl')) {
     function avatarUrl(?array $u): string {

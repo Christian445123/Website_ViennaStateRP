@@ -19,8 +19,8 @@ require_once __DIR__ . '/../includes/permissions.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
-// Lesen: Team (Supporter+) · Schreiben: nur Admin
-if (!is_logged_in() || !has_permission('supporter')) {
+// Lesen: strafenkatalog.view · Schreiben: strafenkatalog.edit
+if (!is_logged_in() || !has_capability('strafenkatalog.view')) {
     http_response_code(403);
     echo json_encode(['ok' => false, 'error' => 'Forbidden']);
     exit;
@@ -33,7 +33,7 @@ if (!isset($pdo)) {
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
-$isAdmin = has_permission('admin');
+$isAdmin = has_capability('strafenkatalog.edit');
 if ($method !== 'GET' && !$isAdmin) {
     http_response_code(403);
     echo json_encode(['ok' => false, 'error' => 'Nur Admins dürfen den Strafenkatalog bearbeiten']);

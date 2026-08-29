@@ -9,7 +9,10 @@ require_once __DIR__ . '/includes/fivem_api.php';
 
 $user     = current_user();
 $loggedIn = is_logged_in();
-$isAdmin  = has_permission('admin');
+$canViewSettings  = has_capability('settings.view');
+$canEditSettings  = has_capability('settings.edit');
+$canViewLivePlayers = has_capability('players_admin.view');
+$isAdmin  = $canViewSettings || $canEditSettings || $canViewLivePlayers;
 $cfg      = settings_load();
 
 if (!function_exists('avatarUrl')) {
@@ -179,6 +182,7 @@ if (!function_exists('avatarUrl')) {
       </div>
 
       <!-- Toggle-Grid -->
+      <?php if ($canEditSettings): ?>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
 
         <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px">
@@ -240,8 +244,10 @@ if (!function_exists('avatarUrl')) {
       </div>
 
       <div id="adminSaveMsg" style="margin-top:14px;font-size:.82rem;display:none"></div>
+      <?php endif; ?>
 
-      <!-- Online-Spieler (nur Admin) -->
+      <!-- Online-Spieler (nur mit Berechtigung) -->
+      <?php if ($canViewLivePlayers): ?>
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;margin-top:20px;overflow:hidden">
         <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
           <span style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#64748b">👥 Online-Spieler</span>
@@ -251,6 +257,7 @@ if (!function_exists('avatarUrl')) {
         </div>
         <div id="adminPlayerList" style="padding:20px;color:#94a3b8;font-size:.9rem">Lade...</div>
       </div>
+      <?php endif; ?>
 
     </div>
 
@@ -447,6 +454,9 @@ setInterval(renderRestartStatus, 30000);
 <?php if ($isAdmin): ?>
 // ── Admin-Dashboard JS ────────────────────────────────────────────────────────
 const IS_ADMIN = true;
+const CAN_VIEW_SETTINGS  = <?= $canViewSettings ? 'true' : 'false' ?>;
+const CAN_EDIT_SETTINGS  = <?= $canEditSettings ? 'true' : 'false' ?>;
+const CAN_VIEW_PLAYERS   = <?= $canViewLivePlayers ? 'true' : 'false' ?>;
 
 async function loadAdminData() {
   const el = document.getElementById('adminDataContent');
@@ -576,7 +586,7 @@ document.querySelectorAll('textarea[data-key]').forEach(el => {
   el.addEventListener('input', scheduleSave);
 });
 
-loadAdminData();
+if (CAN_VIEW_SETTINGS || CAN_EDIT_SETTINGS) loadAdminData();
 
 async function loadPlayerList() {
   const el = document.getElementById('adminPlayerList');
@@ -611,7 +621,7 @@ async function loadPlayerList() {
   }
 }
 
-loadPlayerList();
+if (CAN_VIEW_PLAYERS) loadPlayerList();
 <?php endif; ?>
 </script>
 <?php include __DIR__ . '/includes/cookie_consent.php'; ?>

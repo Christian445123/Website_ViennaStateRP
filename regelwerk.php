@@ -187,6 +187,9 @@ if (!function_exists('avatarUrl')) {
       <li><a href="index.php#join">Beitreten</a></li>
       <li><a href="index.php#faq">FAQ</a></li>
       <li><a href="players.php">Server Status</a></li>
+      <?php if ($user && has_capability('strafenkatalog.view')): ?>
+      <li><a href="strafen.php">🔒 Strafen</a></li>
+      <?php endif; ?>
       <li><a href="<?= htmlspecialchars(DISCORD_INVITE) ?>" target="_blank" rel="noopener">Discord</a></li>
     </ul>
     <div class="nav-actions">

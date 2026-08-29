@@ -5,10 +5,14 @@ require_once __DIR__ . '/includes/session_config.php';
 require_once __DIR__ . '/includes/permissions.php';
 
 require_login();
-if (!has_permission('admin')) {
+if (!has_capability('users.view')) {
     header('Location: dashboard.php?error=' . urlencode('Kein Zugriff'));
     exit;
 }
+$canChangeRole = has_capability('users.change_role');
+$canBan        = has_capability('users.ban');
+$canResetPw    = has_capability('users.reset_password');
+$canVerify     = has_capability('users.verify');
 
 $user = current_user();
 
@@ -50,11 +54,7 @@ if (!function_exists('avatarUrl')) {
     .u-name { font-weight: 700; color: var(--text); }
     .u-sub { font-size: .75rem; color: var(--text-3); }
 
-    .role-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .72rem; font-weight: 700; letter-spacing: .5px; }
-    .role-admin     { background: rgba(239,68,68,.15);  color: #f87171; border: 1px solid rgba(239,68,68,.3); }
-    .role-mod       { background: rgba(124,58,237,.15); color: #c4b5fd; border: 1px solid rgba(124,58,237,.3); }
-    .role-supporter { background: rgba(34,197,94,.15);  color: #86efac; border: 1px solid rgba(34,197,94,.3); }
-    .role-player    { background: rgba(100,116,139,.15);color: #94a3b8; border: 1px solid rgba(100,116,139,.3); }
+    .role-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .72rem; font-weight: 700; letter-spacing: .5px; white-space: nowrap; }
 
     .status-pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .7rem; font-weight: 700; margin-right: 4px; }
     .status-ok      { background: rgba(34,197,94,.15);  color: #86efac; border: 1px solid rgba(34,197,94,.3); }
@@ -123,10 +123,9 @@ if (!function_exists('avatarUrl')) {
         <input type="text" id="uSearch" placeholder="Suche nach Name, Username oder E-Mail..." />
         <select id="uRoleFilter">
           <option value="">Alle Rollen</option>
-          <option value="admin">Admin</option>
-          <option value="moderator">Moderator</option>
-          <option value="supporter">Supporter</option>
-          <option value="player">Spieler</option>
+          <?php foreach (array_reverse(role_options(), true) as $slug => $label): ?>
+          <option value="<?= htmlspecialchars($slug) ?>"><?= htmlspecialchars($label) ?></option>
+          <?php endforeach; ?>
         </select>
         <select id="uStatusFilter">
           <option value="">Alle Status</option>
@@ -188,6 +187,13 @@ if (!function_exists('avatarUrl')) {
 
 <script src="assets/js/main.js?v=<?= @filemtime(__DIR__ . '/assets/js/main.js') ?>"></script>
 <script>
+const ROLE_LABELS = <?= json_encode(VSRP_ROLE_LABELS, JSON_UNESCAPED_UNICODE) ?>;
+const ROLE_COLORS = <?= json_encode(VSRP_ROLE_COLORS, JSON_UNESCAPED_UNICODE) ?>;
+const CAN_CHANGE_ROLE = <?= $canChangeRole ? 'true' : 'false' ?>;
+const CAN_BAN         = <?= $canBan ? 'true' : 'false' ?>;
+const CAN_RESET_PW    = <?= $canResetPw ? 'true' : 'false' ?>;
+const CAN_VERIFY      = <?= $canVerify ? 'true' : 'false' ?>;
+
 let uPage = 1;
 let uTotal = 0;
 const U_PER_PAGE = 50;
@@ -198,9 +204,9 @@ function escHtml(str) {
 }
 
 function roleBadge(role) {
-  const map = { admin: ['Admin','role-admin'], moderator: ['Moderator','role-mod'], supporter: ['Supporter','role-supporter'], player: ['Spieler','role-player'] };
-  const [label, cls] = map[role] || [role, 'role-player'];
-  return `<span class="role-badge ${cls}">${escHtml(label)}</span>`;
+  const label = ROLE_LABELS[role] || role;
+  const color = ROLE_COLORS[role] || '#94a3b8';
+  return `<span class="role-badge" style="background:${color}1f;color:${color};border:1px solid ${color}4d">${escHtml(label)}</span>`;
 }
 
 function fmtDate(mysqlStr) {
@@ -264,9 +270,11 @@ function renderUsers(users) {
         </div>
       </td>
       <td>
-        <select class="role-select" onchange="changeRole(${u.id}, this.value)">
-          ${['player','supporter','moderator','admin'].map(r => `<option value="${r}" ${r === u.role ? 'selected' : ''}>${r}</option>`).join('')}
-        </select>
+        ${CAN_CHANGE_ROLE
+          ? `<select class="role-select" onchange="changeRole(${u.id}, this.value)">
+               ${Object.keys(ROLE_LABELS).map(r => `<option value="${r}" ${r === u.role ? 'selected' : ''}>${escHtml(ROLE_LABELS[r])}</option>`).join('')}
+             </select>`
+          : roleBadge(u.role)}
       </td>
       <td>
         ${u.is_verified == 1 ? '<span class="status-pill status-ok">Verifiziert</span>' : '<span class="status-pill status-warn">Unverifiziert</span>'}
@@ -275,11 +283,11 @@ function renderUsers(users) {
       <td class="u-sub">${fmtDate(u.created_at)}</td>
       <td>
         <div class="u-actions">
-          ${u.is_banned == 1
+          ${CAN_BAN ? (u.is_banned == 1
             ? `<button class="u-btn ok" onclick="unban(${u.id})">Entsperren</button>`
-            : `<button class="u-btn danger" onclick="openBanModal(${u.id})">Sperren</button>`}
-          <button class="u-btn" onclick="toggleVerify(${u.id}, ${u.is_verified == 1 ? 'false' : 'true'})">${u.is_verified == 1 ? 'Verifizierung entfernen' : 'Verifizieren'}</button>
-          <button class="u-btn" onclick="openPwModal(${u.id})">Passwort</button>
+            : `<button class="u-btn danger" onclick="openBanModal(${u.id})">Sperren</button>`) : ''}
+          ${CAN_VERIFY ? `<button class="u-btn" onclick="toggleVerify(${u.id}, ${u.is_verified == 1 ? 'false' : 'true'})">${u.is_verified == 1 ? 'Verifizierung entfernen' : 'Verifizieren'}</button>` : ''}
+          ${CAN_RESET_PW ? `<button class="u-btn" onclick="openPwModal(${u.id})">Passwort</button>` : ''}
         </div>
       </td>
     </tr>

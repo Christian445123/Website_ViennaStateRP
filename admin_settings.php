@@ -9,10 +9,12 @@ require_once __DIR__ . '/includes/site_settings.php';
 require_once __DIR__ . '/includes/db_config.php';
 
 require_login();
-if (!has_permission('admin')) {
+if (!has_capability('settings.view')) {
     header('Location: dashboard.php?error=' . urlencode('Kein Zugriff'));
     exit;
 }
+$canEditSettings = has_capability('settings.edit');
+$canEditDbConfig = has_capability('settings.db_config');
 
 $user     = current_user();
 $settings = settings_load();
@@ -324,12 +326,16 @@ if (!function_exists('avatarUrl')) {
           </div>
 
           <div style="display:flex;gap:10px;align-items:center">
+            <?php if ($canEditDbConfig): ?>
             <button type="button" onclick="testDbConnection()" class="btn btn-outline" style="padding:9px 20px">
               🔌 Verbindung testen
             </button>
             <button type="submit" class="btn btn-primary" style="padding:9px 20px">
               💾 Verschlüsselt speichern
             </button>
+            <?php else: ?>
+            <span style="font-size:.82rem;color:var(--text-3)">🔒 Keine Berechtigung zum Bearbeiten der Datenbank-Zugangsdaten</span>
+            <?php endif; ?>
             <span id="dbMsg" style="font-size:.82rem;display:none"></span>
           </div>
         </form>
@@ -349,10 +355,16 @@ if (!function_exists('avatarUrl')) {
 </main>
 
 <!-- Save Bar -->
+<?php if ($canEditSettings): ?>
 <div class="save-bar" id="saveBar">
   <span id="saveMsg"></span>
   <button onclick="saveSettings()" class="btn btn-primary">💾 Einstellungen speichern</button>
 </div>
+<?php else: ?>
+<div class="save-bar" id="saveBar">
+  <span style="font-size:.82rem;color:var(--text-3)">🔒 Nur Ansicht &ndash; keine Berechtigung zum Bearbeiten der Server-Einstellungen</span>
+</div>
+<?php endif; ?>
 
 <script src="assets/js/main.js?v=<?= @filemtime(__DIR__ . '/assets/js/main.js') ?>"></script>
 <script>

@@ -5,10 +5,11 @@ require_once __DIR__ . '/includes/session_config.php';
 require_once __DIR__ . '/includes/permissions.php';
 
 require_login();
-if (!has_permission('admin')) {
+if (!has_capability('fraktionen.view')) {
     header('Location: dashboard.php?error=' . urlencode('Kein Zugriff'));
     exit;
 }
+$canEditFraktionen = has_capability('fraktionen.edit');
 
 $user = current_user();
 
@@ -73,9 +74,11 @@ if (!function_exists('avatarUrl')) {
       <a href="admin.php" class="btn btn-outline">← Admin</a>
     </div>
 
+    <?php if ($canEditFraktionen): ?>
     <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:20px">
       <button onclick="openFrakModal()" class="btn btn-primary" style="font-size:.85rem">+ Fraktion hinzufügen</button>
     </div>
+    <?php endif; ?>
 
     <div id="frakList" style="display:flex;flex-direction:column;gap:8px">
       <div style="color:var(--text-2);font-size:.9rem">Lade Fraktionen...</div>
@@ -141,6 +144,8 @@ if (!function_exists('avatarUrl')) {
 
 <script src="assets/js/main.js?v=<?= @filemtime(__DIR__ . '/assets/js/main.js') ?>"></script>
 <script>
+const CAN_EDIT_FRAKTIONEN = <?= $canEditFraktionen ? 'true' : 'false' ?>;
+
 // ── Fraktionen-Verwaltung ──────────────────────────────────────────────────────
 let frakData = [];
 
@@ -176,8 +181,10 @@ function renderFrakList() {
         <div style="font-size:.72rem;padding:2px 8px;border-radius:999px;display:inline-block;${f.aktiv == 1 ? 'background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.3)' : 'background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3)'}">${f.aktiv == 1 ? 'Sichtbar' : 'Versteckt'}</div>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0">
+        ${CAN_EDIT_FRAKTIONEN ? `
         <button onclick="openFrakModal(${f.id})" class="btn btn-outline" style="padding:5px 12px;font-size:.8rem">✏️</button>
         <button onclick="deleteFraktion(${f.id})" style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#f87171;border-radius:8px;padding:5px 10px;font-size:.8rem;cursor:pointer">🗑</button>
+        ` : ''}
       </div>
     </div>
   `).join('');

@@ -6,10 +6,11 @@ require_once __DIR__ . '/includes/permissions.php';
 require_once __DIR__ . '/includes/changelog.php';
 
 require_login();
-if (!has_permission('admin')) {
+if (!has_capability('changelog.view')) {
     header('Location: dashboard.php?error=' . urlencode('Kein Zugriff'));
     exit;
 }
+$canEditChangelog = has_capability('changelog.edit');
 
 $user = current_user();
 
@@ -74,10 +75,12 @@ if (!function_exists('avatarUrl')) {
       <a href="admin.php" class="btn btn-outline">← Admin</a>
     </div>
 
+    <?php if ($canEditChangelog): ?>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-bottom:20px">
       <button onclick="processDueChangelogs()" class="btn btn-outline" style="font-size:.85rem" id="clProcessDueBtn">🔔 Fällige jetzt senden</button>
       <button onclick="openClModal()" class="btn btn-primary" style="font-size:.85rem">+ Eintrag hinzufügen</button>
     </div>
+    <?php endif; ?>
 
     <div id="clList" style="display:flex;flex-direction:column;gap:8px">
       <div style="color:var(--text-2);font-size:.9rem">Lade Changelog...</div>
@@ -148,6 +151,7 @@ if (!function_exists('avatarUrl')) {
 <script src="assets/js/main.js?v=<?= @filemtime(__DIR__ . '/assets/js/main.js') ?>"></script>
 <script>
 // ── Changelog-Verwaltung ─────────────────────────────────────────────────────
+const CAN_EDIT_CHANGELOG = <?= $canEditChangelog ? 'true' : 'false' ?>;
 let clData = [];
 const CL_TAG_META = <?= json_encode(CHANGELOG_TAGS, JSON_UNESCAPED_UNICODE) ?>;
 
@@ -210,8 +214,10 @@ function renderClList() {
         ${clStatusBadge(c)}
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0">
+        ${CAN_EDIT_CHANGELOG ? `
         <button onclick="openClModal(${c.id})" class="btn btn-outline" style="padding:5px 12px;font-size:.8rem">✏️</button>
         <button onclick="deleteChangelog(${c.id})" style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#f87171;border-radius:8px;padding:5px 10px;font-size:.8rem;cursor:pointer">🗑</button>
+        ` : ''}
       </div>
     </div>
   `; }).join('');

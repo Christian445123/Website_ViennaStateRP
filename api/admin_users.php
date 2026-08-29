@@ -20,7 +20,7 @@ require_once __DIR__ . '/../includes/logger.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
-if (!is_logged_in() || !has_permission('admin')) {
+if (!is_logged_in() || !has_capability('users.view')) {
     http_response_code(403);
     echo json_encode(['ok' => false, 'error' => 'Forbidden']);
     exit;
@@ -127,15 +127,23 @@ if ($method === 'POST') {
     }
 
     if ($action === 'role') {
+        if (!has_capability('users.change_role')) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'Keine Berechtigung, Rollen zu ändern']);
+            exit;
+        }
         $role = (string)($body['role'] ?? '');
         if (!array_key_exists($role, VSRP_ROLES)) {
             http_response_code(400);
             echo json_encode(['ok' => false, 'error' => 'Ungültige Rolle']);
             exit;
         }
-        if ($id === $myId && $target['role'] === 'admin' && $role !== 'admin') {
+        $adminLevel = VSRP_ROLES['admin'] ?? 0;
+        $wasAdminUp = (VSRP_ROLES[$target['role']] ?? 0) >= $adminLevel;
+        $staysAdminUp = (VSRP_ROLES[$role] ?? 0) >= $adminLevel;
+        if ($id === $myId && $wasAdminUp && !$staysAdminUp) {
             http_response_code(400);
-            echo json_encode(['ok' => false, 'error' => 'Du kannst dich nicht selbst degradieren.']);
+            echo json_encode(['ok' => false, 'error' => 'Du kannst dich nicht selbst unter Administrator-Rechte degradieren.']);
             exit;
         }
         $pdo->prepare("UPDATE users SET role = ? WHERE id = ?")->execute([$role, $id]);
@@ -145,6 +153,11 @@ if ($method === 'POST') {
     }
 
     if ($action === 'ban') {
+        if (!has_capability('users.ban')) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'Keine Berechtigung zum Sperren']);
+            exit;
+        }
         if ($id === $myId) {
             http_response_code(400);
             echo json_encode(['ok' => false, 'error' => 'Du kannst dich nicht selbst sperren.']);
@@ -159,6 +172,11 @@ if ($method === 'POST') {
     }
 
     if ($action === 'unban') {
+        if (!has_capability('users.ban')) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'Keine Berechtigung zum Entsperren']);
+            exit;
+        }
         $pdo->prepare("UPDATE users SET is_banned = 0, ban_reason = NULL, banned_by = NULL, banned_at = NULL WHERE id = ?")
             ->execute([$id]);
         log_event('admin_unban', "{$target['username']} entsperrt", $myId, ['target_id' => $id]);
@@ -167,6 +185,11 @@ if ($method === 'POST') {
     }
 
     if ($action === 'verify') {
+        if (!has_capability('users.verify')) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'Keine Berechtigung, die Verifizierung zu ändern']);
+            exit;
+        }
         $verified = !empty($body['verified']) ? 1 : 0;
         $pdo->prepare("UPDATE users SET is_verified = ? WHERE id = ?")->execute([$verified, $id]);
         log_event('admin_action', ($verified ? "{$target['username']} verifiziert" : "Verifizierung von {$target['username']} entfernt"), $myId, ['target_id' => $id]);
@@ -175,6 +198,11 @@ if ($method === 'POST') {
     }
 
     if ($action === 'reset_password') {
+        if (!has_capability('users.reset_password')) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'Keine Berechtigung, Passwörter zurückzusetzen']);
+            exit;
+        }
         $password = (string)($body['password'] ?? '');
         if (mb_strlen($password) < 8) {
             http_response_code(400);

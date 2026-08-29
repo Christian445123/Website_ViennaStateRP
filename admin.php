@@ -6,7 +6,7 @@ require_once __DIR__ . '/includes/permissions.php';
 require_once __DIR__ . '/includes/site_settings.php';
 
 require_login();
-if (!has_permission('admin')) {
+if (!has_capability('admin_hub.view')) {
     header('Location: dashboard.php?error=' . urlencode('Kein Zugriff'));
     exit;
 }
@@ -219,6 +219,23 @@ if (!function_exists('avatarUrl')) {
           <div class="nav-card-title">FiveM Diagnose</div>
           <div class="nav-card-sub">Verbindungstest &amp; Diagnose-Export</div>
         </a>
+        <a href="strafen.php" class="nav-card">
+          <div class="nav-card-icon">🔒</div>
+          <div class="nav-card-title">Strafenkatalog</div>
+          <div class="nav-card-sub">Sanktionen pro Regelverstoß verwalten</div>
+        </a>
+        <a href="teamregelwerk.php" class="nav-card">
+          <div class="nav-card-icon">📘</div>
+          <div class="nav-card-title">Teamregelwerk</div>
+          <div class="nav-card-sub">Rangsystem &amp; Aufgabenerklärung (Team)</div>
+        </a>
+        <?php if (has_permission('owner')): ?>
+        <a href="admin_rollen.php" class="nav-card">
+          <div class="nav-card-icon">🛡️</div>
+          <div class="nav-card-title">Rollenverwaltung</div>
+          <div class="nav-card-sub">Team-/Admin-Zugriff je Rolle festlegen</div>
+        </a>
+        <?php endif; ?>
         <a href="db_admin.php" class="nav-card" style="grid-column:1 / -1">
           <div class="nav-card-icon">🗄</div>
           <div class="nav-card-title">Datenbank-Browser</div>

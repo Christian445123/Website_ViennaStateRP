@@ -10,7 +10,7 @@ require_once __DIR__ . '/includes/fivem_api.php';
 
 // Nur Admins oder mit Secret-Key
 $secret = env('DIAG_SECRET', '');
-$ok = has_permission('admin')
+$ok = has_capability('fivem_diag.view')
    || ($secret !== '' && hash_equals($secret, ($_GET['key'] ?? '')));
 
 if (!$ok) {

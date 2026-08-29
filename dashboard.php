@@ -41,11 +41,13 @@ function avatarUrl(array $user): string {
       <li><a href="index.php">Startseite</a></li>
       <li><a href="changelog.php">Changelog</a></li>
       <li><a href="players.php">Server Status</a></li>
-      <?php if (has_permission('supporter')): ?>
+      <?php if (has_capability('strafenkatalog.view')): ?>
       <li><a href="strafen.php">🔒 Strafen</a></li>
+      <?php endif; ?>
+      <?php if (has_capability('teamregelwerk.view')): ?>
       <li><a href="teamregelwerk.php">📘 Teamregelwerk</a></li>
       <?php endif; ?>
-      <?php if (has_permission('admin')): ?>
+      <?php if (has_capability('admin_hub.view')): ?>
       <li><a href="admin.php">⚙️ Admin</a></li>
       <?php endif; ?>
     </ul>

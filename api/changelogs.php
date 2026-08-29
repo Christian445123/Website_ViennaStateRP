@@ -46,7 +46,7 @@ $action = $_GET['action'] ?? '';
 // ── GET: Einträge laden ──────────────────────────────────────────────────────
 if ($method === 'GET') {
     $wantAll = isset($_GET['all']);
-    if ($wantAll && (!is_logged_in() || !has_permission('admin'))) {
+    if ($wantAll && (!is_logged_in() || !has_capability('changelog.view'))) {
         http_response_code(403);
         echo json_encode(['ok' => false, 'error' => 'Forbidden']);
         exit;
@@ -55,8 +55,8 @@ if ($method === 'GET') {
     exit;
 }
 
-// Ab hier: nur Admins dürfen schreiben
-if (!is_logged_in() || !has_permission('admin')) {
+// Ab hier: nur mit Bearbeitungsrecht
+if (!is_logged_in() || !has_capability('changelog.edit')) {
     http_response_code(403);
     echo json_encode(['ok' => false, 'error' => 'Forbidden']);
     exit;

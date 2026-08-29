@@ -5,10 +5,11 @@ require_once __DIR__ . '/includes/session_config.php';
 require_once __DIR__ . '/includes/permissions.php';
 
 require_login();
-if (!has_permission('admin')) {
+if (!has_capability('db.view')) {
     header('Location: dashboard.php?error=' . urlencode('Kein Zugriff – Admin-Rolle erforderlich'));
     exit;
 }
+$canRunQuery = has_capability('db.query');
 
 if (!isset($pdo)) {
     die('<h2 style="color:#ef4444;font-family:sans-serif;padding:40px">Keine Datenbankverbindung verfügbar.</h2>');
@@ -32,7 +33,9 @@ $queryError  = null;
 $querySql    = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sql'])) {
-    if (!verify_csrf($_POST['csrf_token'] ?? '')) {
+    if (!$canRunQuery) {
+        $queryError = 'Keine Berechtigung, eigene SQL-Abfragen auszuführen.';
+    } elseif (!verify_csrf($_POST['csrf_token'] ?? '')) {
         $queryError = 'Ungültige Anfrage (CSRF).';
     } else {
         $querySql = trim($_POST['sql'] ?? '');
@@ -383,9 +386,13 @@ function htmle(mixed $v): string {
       <div style="padding:20px">
         <form method="POST">
           <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>" />
-          <textarea name="sql" class="sql-editor" placeholder="SELECT * FROM users LIMIT 10;"><?= htmlspecialchars($querySql) ?></textarea>
+          <textarea name="sql" class="sql-editor" placeholder="SELECT * FROM users LIMIT 10;" <?= $canRunQuery ? '' : 'readonly' ?>><?= htmlspecialchars($querySql) ?></textarea>
           <div style="display:flex;gap:10px;margin-top:12px;align-items:center">
+            <?php if ($canRunQuery): ?>
             <button type="submit" class="btn btn-primary">▶ Ausführen</button>
+            <?php else: ?>
+            <span style="font-size:.82rem;color:var(--text-3)">🔒 Keine Berechtigung, eigene SQL-Abfragen auszuführen</span>
+            <?php endif; ?>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <?php foreach ($tables as $t): ?>
               <button type="button" onclick="insertTable('<?= addslashes($t) ?>')"

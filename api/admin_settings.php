@@ -14,7 +14,7 @@ require_once __DIR__ . '/../includes/site_settings.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
-if (!is_logged_in() || !has_permission('admin')) {
+if (!is_logged_in() || !has_capability('settings.view')) {
     http_response_code(403);
     echo json_encode(['ok' => false, 'error' => 'Forbidden']);
     exit;
@@ -26,6 +26,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!has_capability('settings.edit')) {
+        http_response_code(403);
+        echo json_encode(['ok' => false, 'error' => 'Keine Berechtigung zum Bearbeiten der Server-Einstellungen']);
+        exit;
+    }
     $body = json_decode(file_get_contents('php://input'), true);
     if (!is_array($body)) {
         http_response_code(400);

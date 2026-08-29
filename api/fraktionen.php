@@ -17,9 +17,14 @@ require_once __DIR__ . '/../includes/permissions.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
-if (!is_logged_in() || !has_permission('admin')) {
+if (!is_logged_in() || !has_capability('fraktionen.view')) {
     http_response_code(403);
     echo json_encode(['ok' => false, 'error' => 'Forbidden']);
+    exit;
+}
+if ($_SERVER['REQUEST_METHOD'] !== 'GET' && !has_capability('fraktionen.edit')) {
+    http_response_code(403);
+    echo json_encode(['ok' => false, 'error' => 'Keine Berechtigung zum Bearbeiten der Fraktionen']);
     exit;
 }
 

@@ -6,13 +6,14 @@ require_once __DIR__ . '/includes/discord_config.php';
 require_once __DIR__ . '/includes/permissions.php';
 
 require_login();
-if (!has_permission('supporter')) {
+if (!has_capability('strafenkatalog.view')) {
     header('Location: dashboard.php?error=' . urlencode('Kein Zugriff'));
     exit;
 }
 
 $user    = current_user();
-$isAdmin = has_permission('admin');
+$isAdmin = has_capability('strafenkatalog.edit');
+$showAdminNav = has_capability('admin_hub.view');
 
 if (!function_exists('avatarUrl')) {
     function avatarUrl(?array $u): string {
@@ -90,7 +91,7 @@ if (!function_exists('avatarUrl')) {
       <li><a href="dashboard.php">Dashboard</a></li>
       <li><a href="regelwerk.php">Regeln</a></li>
       <li><a href="players.php">Server Status</a></li>
-      <?php if ($isAdmin): ?>
+      <?php if ($showAdminNav): ?>
       <li><a href="admin.php">⚙️ Admin</a></li>
       <?php endif; ?>
       <li><a href="strafen.php" class="active">🔒 Strafen</a></li>

@@ -192,6 +192,54 @@ if ($pdo !== null) {
     }
 }
 
+// ── Auto-Migration: erweitertes Rollensystem + Rollenverwaltung ─────────────
+if ($pdo !== null) {
+    try {
+        $rolesFlag = sys_get_temp_dir() . '/vsrp_migrated_roles_v3.flag';
+        if (!file_exists($rolesFlag)) {
+            // ENUM der `role`-Spalte um alle Team-Ränge erweitern (bestehende Werte bleiben gültig)
+            $pdo->exec("
+                ALTER TABLE `users`
+                MODIFY COLUMN `role` ENUM(
+                    'player','test_supporter','supporter','moderator','test_admin','admin',
+                    'test_developer','developer','stv_teamleitung','teamleitung',
+                    'stv_projektleitung','projektleitung','owner','websitenmanager'
+                ) NOT NULL DEFAULT 'player'
+            ");
+
+            // Tabelle für die über die Website konfigurierbaren Rollen-Berechtigungen
+            $pdo->exec("
+                CREATE TABLE IF NOT EXISTS `role_permissions` (
+                  `role`    VARCHAR(32) NOT NULL,
+                  `gate`    VARCHAR(32) NOT NULL,
+                  `enabled` TINYINT(1)  NOT NULL DEFAULT 0,
+                  PRIMARY KEY (`role`, `gate`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
+
+            // Kein Seeding nötig: solange für eine Rolle+Funktion nichts explizit in
+            // `role_permissions` steht, berechnet has_capability() den Ist-Zustand live
+            // aus der bisherigen Rang-Hierarchie (siehe includes/permissions.php).
+
+            @file_put_contents($rolesFlag, date('Y-m-d H:i:s'));
+        }
+    } catch (\Throwable $e) {
+        error_log('[VSRP Migration] Rollensystem: ' . $e->getMessage());
+    }
+
+    // Einmalig: bisherige Admins auf Websitenmanager (Vollzugriff) hochstufen
+    try {
+        $promoteFlag = sys_get_temp_dir() . '/vsrp_promoted_admins_v1.flag';
+        if (!file_exists($promoteFlag)) {
+            $affected = $pdo->exec("UPDATE `users` SET `role` = 'websitenmanager' WHERE `role` = 'admin'");
+            error_log("[VSRP Migration] {$affected} Admin(s) zu Websitenmanager hochgestuft.");
+            @file_put_contents($promoteFlag, date('Y-m-d H:i:s'));
+        }
+    } catch (\Throwable $e) {
+        error_log('[VSRP Migration] Admin-Hochstufung: ' . $e->getMessage());
+    }
+}
+
 // ── Konstanten aus .env ───────────────────────────────────────────────────────
 defined('SITE_NAME')         || define('SITE_NAME',    env('SITE_NAME',   'ViennaStateRP'));
 defined('SITE_URL')          || define('SITE_URL',     env('SITE_URL',    'https://viennastaterp.at'));
