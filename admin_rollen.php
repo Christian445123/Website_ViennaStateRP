@@ -148,6 +148,13 @@ if (!function_exists('avatarUrl')) {
           aktuellen Discord-Rollen hoch (nie automatisch runter). Je nach Mitgliederzahl kann das ein paar Minuten dauern.
         </p>
         <div id="syncLog" style="margin-top:10px;font-size:.82rem;display:flex;flex-direction:column;gap:3px;max-height:220px;overflow-y:auto"></div>
+
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);font-size:.78rem;color:var(--text-3)">
+          ⏱️ <strong>Automatischer Sync alle 5 Stunden:</strong> per Server-Cronjob auf
+          <code>api/discord_role_sync_cron.php?secret=CRON_SECRET</code> (Secret siehe <code>.env</code>).
+          Nach jedem Lauf wird ein Sammelbericht in den unter <code>DISCORD_ROLE_SYNC_WEBHOOK_URL</code> hinterlegten
+          Discord-Kanal gepostet.
+        </div>
       </div>
     </div>
 

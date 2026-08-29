@@ -75,9 +75,10 @@ try {
                 $pdo->prepare("UPDATE users SET role = ? WHERE id = ?")->execute([$resolved, $u['id']]);
                 $upgraded[] = ['username' => $u['username'], 'from' => $u['role'], 'to' => $resolved];
                 if (function_exists('log_event')) {
-                    log_event('discord_role_sync', "Rolle via Massen-Sync auf {$resolved} gesetzt", (int)$u['id'], [
+                    // discord=false: Ergebnis wird bereits live im Admin-Panel angezeigt
+                    log_event('discord_role_sync', "Rolle via manuellem Massen-Sync auf {$resolved} gesetzt", (int)$u['id'], [
                         'from' => $u['role'], 'to' => $resolved,
-                    ]);
+                    ], false);
                 }
             }
         }

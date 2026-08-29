@@ -21,6 +21,9 @@ define('DISCORD_CHANGELOG_WEBHOOK_URL', env('DISCORD_CHANGELOG_WEBHOOK_URL', DIS
 define('DISCORD_BOT_TOKEN', env('DISCORD_BOT_TOKEN', ''));
 define('DISCORD_GUILD_ID',  env('DISCORD_GUILD_ID', ''));
 
+// Eigener Kanal für die Sammelberichte des automatischen Discord-Rollen-Syncs
+define('DISCORD_ROLE_SYNC_WEBHOOK_URL', env('DISCORD_ROLE_SYNC_WEBHOOK_URL', ''));
+
 // ── OAuth2 Helfer ─────────────────────────────────────────────────────────────
 
 /** Gibt die Discord OAuth2-URL zurück und setzt einen State in der Session */
@@ -106,6 +109,61 @@ function discord_resolve_website_role(array $discordRoleIds): ?string
 
     usort($matches, fn($a, $b) => (VSRP_ROLES[$b] ?? 0) <=> (VSRP_ROLES[$a] ?? 0));
     return $matches[0];
+}
+
+/**
+ * Schickt einen Sammelbericht eines Discord-Rollen-Sync-Laufs in den dafür konfigurierten
+ * Kanal (DISCORD_ROLE_SYNC_WEBHOOK_URL). Ohne konfigurierten Webhook passiert nichts.
+ *
+ * @param int   $checked  Anzahl geprüfter Mitglieder (mit verknüpftem Discord-Account)
+ * @param array $upgraded Liste von ['username' => ..., 'from' => Rollen-Slug, 'to' => Rollen-Slug]
+ */
+function discord_send_role_sync_report(int $checked, array $upgraded): void
+{
+    if (DISCORD_ROLE_SYNC_WEBHOOK_URL === '') return;
+
+    $labelOf = fn(string $role): string => defined('VSRP_ROLE_LABELS') && isset(VSRP_ROLE_LABELS[$role])
+        ? VSRP_ROLE_LABELS[$role] : $role;
+
+    if ($upgraded) {
+        $lines = array_map(
+            fn($u) => "• **{$u['username']}**: " . $labelOf($u['from']) . ' → ' . $labelOf($u['to']),
+            $upgraded
+        );
+        $description = implode("\n", $lines);
+        if (mb_strlen($description) > 3800) {
+            $description = mb_substr($description, 0, 3800) . "\n… und weitere";
+        }
+    } else {
+        $description = 'Keine Hochstufungen nötig – alle Rollen sind bereits aktuell.';
+    }
+
+    $payload = json_encode([
+        'username' => DISCORD_BOT_NAME,
+        'embeds'   => [[
+            'title'       => '🔄 Discord-Rollen-Sync',
+            'description' => $description,
+            'color'       => $upgraded ? 0x22c55e : 0x64748b,
+            'fields'      => [
+                ['name' => 'Überprüft',   'value' => (string) $checked,        'inline' => true],
+                ['name' => 'Hochgestuft', 'value' => (string) count($upgraded), 'inline' => true],
+            ],
+            'footer'    => ['text' => 'ViennaStateRP • ' . date('d.m.Y H:i:s')],
+            'timestamp' => date('c'),
+        ]],
+    ], JSON_UNESCAPED_UNICODE);
+
+    $ch = curl_init(DISCORD_ROLE_SYNC_WEBHOOK_URL);
+    curl_setopt_array($ch, [
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $payload,
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 8,
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+    curl_exec($ch);
+    curl_close($ch);
 }
 
 /** Avatar-URL für einen Discord-User */
