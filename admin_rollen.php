@@ -137,6 +137,18 @@ if (!function_exists('avatarUrl')) {
         <button onclick="addDiscordMapping()" class="btn btn-primary" style="white-space:nowrap">+ Hinzufügen</button>
       </div>
       <div id="dmMsg" style="font-size:.82rem;margin-top:10px"></div>
+
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <button onclick="runFullSync()" class="btn btn-outline" id="syncAllBtn">🔄 Alle Mitglieder jetzt synchronisieren</button>
+          <span id="syncProgress" style="font-size:.85rem;color:var(--text-2)"></span>
+        </div>
+        <p style="color:var(--text-3);font-size:.78rem;margin-top:8px">
+          Geht einmalig alle Mitglieder mit verkn&uuml;pftem Discord-Account durch und stuft sie gem&auml;&szlig; ihrer
+          aktuellen Discord-Rollen hoch (nie automatisch runter). Je nach Mitgliederzahl kann das ein paar Minuten dauern.
+        </p>
+        <div id="syncLog" style="margin-top:10px;font-size:.82rem;display:flex;flex-direction:column;gap:3px;max-height:220px;overflow-y:auto"></div>
+      </div>
     </div>
 
     <div id="rolesGroups">
@@ -322,6 +334,58 @@ async function deleteDiscordMapping(id) {
 }
 
 loadDiscordMap();
+
+// ── Massen-Sync: alle Mitglieder mit Discord-Account durchgehen ──────────────
+async function runFullSync() {
+  if (discordMapData && !discordMapData.bot_configured) {
+    alert('Bitte zuerst DISCORD_BOT_TOKEN und DISCORD_GUILD_ID in der .env setzen.');
+    return;
+  }
+  if (!confirm('Alle Mitglieder mit verknüpftem Discord-Account werden jetzt gegen Discord abgeglichen. Das kann je nach Mitgliederzahl einige Minuten dauern. Fortfahren?')) {
+    return;
+  }
+
+  const btn = document.getElementById('syncAllBtn');
+  const progress = document.getElementById('syncProgress');
+  const log = document.getElementById('syncLog');
+  btn.disabled = true;
+  log.innerHTML = '';
+
+  let offset = 0;
+  let checked = 0;
+  let allUpgraded = [];
+  let total = '?';
+
+  try {
+    while (true) {
+      const r = await fetch(`api/discord_role_sync.php?offset=${offset}&limit=15`, { method: 'POST' });
+      const d = await r.json();
+      if (!d.ok) throw new Error(d.error || 'Unbekannter Fehler');
+
+      total = d.total;
+      checked += d.checked;
+      if (d.upgraded.length) {
+        allUpgraded = allUpgraded.concat(d.upgraded);
+        log.innerHTML += d.upgraded.map(u =>
+          `<div>✓ <strong>${escHtml(u.username)}</strong>: ${escHtml(discordMapData.labels[u.from] || u.from)} → ${escHtml(discordMapData.labels[u.to] || u.to)}</div>`
+        ).join('');
+        log.scrollTop = log.scrollHeight;
+      }
+      progress.textContent = `${checked} / ${total} überprüft, ${allUpgraded.length} hochgestuft...`;
+
+      offset = d.next_offset;
+      if (d.done) break;
+    }
+    progress.textContent = `Fertig: ${checked} / ${total} überprüft, ${allUpgraded.length} hochgestuft.`;
+    if (!allUpgraded.length) {
+      log.innerHTML = '<span style="color:var(--text-2)">Keine Hochstufungen nötig – alle Rollen sind bereits aktuell.</span>';
+    }
+  } catch (e) {
+    progress.textContent = 'Fehler: ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
 </script>
 </body>
 </html>
