@@ -195,7 +195,7 @@ if ($pdo !== null) {
 // ── Auto-Migration: erweitertes Rollensystem + Rollenverwaltung ─────────────
 if ($pdo !== null) {
     try {
-        $rolesFlag = sys_get_temp_dir() . '/vsrp_migrated_roles_v3.flag';
+        $rolesFlag = sys_get_temp_dir() . '/vsrp_migrated_roles_v4.flag';
         if (!file_exists($rolesFlag)) {
             // ENUM der `role`-Spalte um alle Team-Ränge erweitern (bestehende Werte bleiben gültig)
             $pdo->exec("
@@ -220,6 +220,19 @@ if ($pdo !== null) {
             // Kein Seeding nötig: solange für eine Rolle+Funktion nichts explizit in
             // `role_permissions` steht, berechnet has_capability() den Ist-Zustand live
             // aus der bisherigen Rang-Hierarchie (siehe includes/permissions.php).
+
+            // Zuordnung Discord-Rolle → Website-Rolle für den automatischen Rollen-Sync beim Login
+            $pdo->exec("
+                CREATE TABLE IF NOT EXISTS `discord_role_map` (
+                  `id`              INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                  `discord_role_id` VARCHAR(32)  NOT NULL,
+                  `website_role`    VARCHAR(32)  NOT NULL,
+                  `label`           VARCHAR(100) NOT NULL DEFAULT '',
+                  `created_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  PRIMARY KEY (`id`),
+                  UNIQUE KEY `uniq_discord_role` (`discord_role_id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
 
             @file_put_contents($rolesFlag, date('Y-m-d H:i:s'));
         }

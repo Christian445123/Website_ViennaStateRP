@@ -21,6 +21,7 @@ set_exception_handler(function (\Throwable $e): void {
 require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/session_config.php';
 require_once __DIR__ . '/includes/discord_config.php';
+require_once __DIR__ . '/includes/permissions.php';
 
 if (isset($pdo)) {
     require_once __DIR__ . '/includes/rate_limit.php';
@@ -217,6 +218,30 @@ try {
     _save_tokens($pdo, $userId, $accessToken, $refreshToken, $expiresIn, $scope);
     _save_guilds($pdo, $userId, $guilds);
 
+    // ── Discord-Rollen-Sync (optional) ───────────────────────────────────────
+    // Nur aktiv wenn Bot-Token + Guild-ID konfiguriert sind (siehe .env). Stuft eine
+    // Rolle nur HOCH, wenn eine zugeordnete Discord-Rolle eine höhere Website-Rolle
+    // ergibt – manuell vergebene/höhere Rollen werden dadurch nie automatisch entzogen.
+    $currentRole = $dbRow['role'] ?? 'player';
+    $sessionRole = $currentRole;
+    try {
+        $discordRoleIds = discord_get_member_role_ids($du['id']);
+        if ($discordRoleIds !== null) {
+            $resolvedRole = discord_resolve_website_role($discordRoleIds);
+            if ($resolvedRole !== null && (VSRP_ROLES[$resolvedRole] ?? 0) > (VSRP_ROLES[$currentRole] ?? 0)) {
+                $pdo->prepare('UPDATE users SET role = ? WHERE id = ?')->execute([$resolvedRole, $userId]);
+                $sessionRole = $resolvedRole;
+                if (function_exists('log_event')) {
+                    log_event('discord_role_sync', "Rolle via Discord-Rollen-Sync auf {$resolvedRole} gesetzt", $userId, [
+                        'from' => $currentRole, 'to' => $resolvedRole,
+                    ]);
+                }
+            }
+        }
+    } catch (\Throwable $e) {
+        error_log('[Callback] Discord-Rollen-Sync fehlgeschlagen: ' . $e->getMessage());
+    }
+
     // Login-Log (method-Spalte optional)
     try {
         if ($hasCol('method') || in_array('method', array_column($pdo->query("SHOW COLUMNS FROM login_log")->fetchAll(), 'Field'), true)) {
@@ -262,7 +287,7 @@ $_SESSION['discord_user'] = [
     'premium_type'  => (int) ($du['premium_type'] ?? 0),
     'public_flags'  => (int) ($du['public_flags']  ?? 0),
     'db_id'         => (int) ($dbRow['id']          ?? 0),
-    'role'          => $dbRow['role']          ?? 'player',
+    'role'          => $sessionRole,
     'is_whitelisted'=> (bool) ($dbRow['is_whitelisted'] ?? false),
 ];
 $_SESSION['last_activity'] = time();

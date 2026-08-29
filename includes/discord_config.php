@@ -16,6 +16,11 @@ define('DISCORD_BOT_AVATAR',      env('DISCORD_BOT_AVATAR', ''));
 // Fällt auf den allgemeinen Webhook zurück, falls keiner separat gesetzt ist.
 define('DISCORD_CHANGELOG_WEBHOOK_URL', env('DISCORD_CHANGELOG_WEBHOOK_URL', DISCORD_WEBHOOK_URL));
 
+// Bot-Token + Server-ID für den automatischen Rollen-Sync (Discord-Rolle → Website-Rolle).
+// Optional: Ist eines von beiden leer, bleibt der Sync einfach inaktiv (kein Fehler).
+define('DISCORD_BOT_TOKEN', env('DISCORD_BOT_TOKEN', ''));
+define('DISCORD_GUILD_ID',  env('DISCORD_GUILD_ID', ''));
+
 // ── OAuth2 Helfer ─────────────────────────────────────────────────────────────
 
 /** Gibt die Discord OAuth2-URL zurück und setzt einen State in der Session */
@@ -49,6 +54,58 @@ function discord_exchange_code(string $code): array
 function discord_get_user(string $accessToken): array
 {
     return _discord_get('https://discord.com/api/users/@me', $accessToken);
+}
+
+/**
+ * Holt die Rollen-IDs eines Mitglieds im konfigurierten Discord-Server (via Bot-Token).
+ * Gibt null zurück wenn kein Bot-Token/Guild konfiguriert ist oder die Anfrage fehlschlägt
+ * (z. B. der Nutzer ist nicht mehr auf dem Server) – niemals ein Fehler, nur "kein Sync möglich".
+ */
+function discord_get_member_role_ids(string $discordUserId): ?array
+{
+    if (DISCORD_BOT_TOKEN === '' || DISCORD_GUILD_ID === '') return null;
+
+    $ch = curl_init('https://discord.com/api/guilds/' . DISCORD_GUILD_ID . '/members/' . $discordUserId);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER     => ['Authorization: Bot ' . DISCORD_BOT_TOKEN],
+        CURLOPT_TIMEOUT        => 8,
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+    $result = curl_exec($ch);
+    $code   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($code !== 200) {
+        error_log("[Discord] Rollenabruf fehlgeschlagen (HTTP {$code}) für User {$discordUserId}");
+        return null;
+    }
+    $data = json_decode((string) $result, true);
+    return is_array($data['roles'] ?? null) ? $data['roles'] : null;
+}
+
+/**
+ * Ermittelt anhand einer Liste von Discord-Rollen-IDs die höchste zugeordnete Website-Rolle
+ * (siehe Tabelle `discord_role_map`, verwaltet über die Rollenverwaltung). Hat ein Nutzer
+ * mehrere zugeordnete Discord-Rollen, gewinnt die mit der höchsten Website-Rangstufe.
+ */
+function discord_resolve_website_role(array $discordRoleIds): ?string
+{
+    global $pdo;
+    if (!isset($pdo) || empty($discordRoleIds)) return null;
+
+    try {
+        $placeholders = implode(',', array_fill(0, count($discordRoleIds), '?'));
+        $stmt = $pdo->prepare("SELECT DISTINCT website_role FROM discord_role_map WHERE discord_role_id IN ({$placeholders})");
+        $stmt->execute(array_values($discordRoleIds));
+        $matches = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    } catch (\Throwable $e) {
+        return null;
+    }
+    if (!$matches) return null;
+
+    usort($matches, fn($a, $b) => (VSRP_ROLES[$b] ?? 0) <=> (VSRP_ROLES[$a] ?? 0));
+    return $matches[0];
 }
 
 /** Avatar-URL für einen Discord-User */

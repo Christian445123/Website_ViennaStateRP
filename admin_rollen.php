@@ -102,6 +102,43 @@ if (!function_exists('avatarUrl')) {
       </div>
     </div>
 
+    <div class="admin-card">
+      <div class="group-title">🔗 Discord-Rollen-Zuordnung</div>
+      <p style="color:var(--text-2);font-size:.86rem;margin-bottom:14px">
+        Ordnet Discord-Rollen automatisch einer Website-Rolle zu &ndash; z.&nbsp;B. bekommt jemand mit der Discord-Rolle
+        „Test-Supporter&ldquo; beim n&auml;chsten Login automatisch auch „Test-Supporter&ldquo; auf der Website.
+        Es wird dabei <strong>nur hochgestuft, nie automatisch degradiert</strong> &ndash; eine manuell vergebene h&ouml;here
+        Rolle bleibt erhalten. Hat jemand mehrere zugeordnete Discord-Rollen, gewinnt die h&ouml;chste.
+        <strong>Websitenmanager</strong> kann aus Sicherheitsgr&uuml;nden nicht per Discord-Rolle vergeben werden &ndash;
+        nur manuell &uuml;ber die Benutzerverwaltung.
+      </p>
+      <div id="discordBotWarning" style="display:none;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-left:3px solid var(--red);border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:14px;font-size:.82rem;color:var(--text-2)">
+        ⚠️ Kein Discord-Bot konfiguriert (<code>DISCORD_BOT_TOKEN</code> / <code>DISCORD_GUILD_ID</code> in der <code>.env</code>) &ndash;
+        die Zuordnungen unten werden erst wirksam, sobald beides gesetzt ist.
+      </div>
+
+      <div id="discordMapList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+        <span style="color:var(--text-2);font-size:.86rem">Lade Zuordnungen...</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 180px 1fr auto;gap:10px;align-items:end">
+        <div>
+          <label style="font-size:.7rem;color:#94a3b8;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Discord-Rollen-ID</label>
+          <input type="text" id="dmRoleId" placeholder="z. B. 123456789012345678" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:#e2e8f0;font-family:inherit;font-size:.88rem" />
+        </div>
+        <div>
+          <label style="font-size:.7rem;color:#94a3b8;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Website-Rolle</label>
+          <select id="dmWebsiteRole" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:#e2e8f0;font-family:inherit;font-size:.88rem"></select>
+        </div>
+        <div>
+          <label style="font-size:.7rem;color:#94a3b8;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Bezeichnung (optional)</label>
+          <input type="text" id="dmLabel" placeholder="z. B. @Test-Supporter" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:#e2e8f0;font-family:inherit;font-size:.88rem" />
+        </div>
+        <button onclick="addDiscordMapping()" class="btn btn-primary" style="white-space:nowrap">+ Hinzufügen</button>
+      </div>
+      <div id="dmMsg" style="font-size:.82rem;margin-top:10px"></div>
+    </div>
+
     <div id="rolesGroups">
       <div class="admin-card"><span style="color:var(--text-2)">Lade Rollenrechte...</span></div>
     </div>
@@ -210,6 +247,81 @@ async function saveRoles() {
 }
 
 loadRoles();
+
+// ── Discord-Rollen-Zuordnung ─────────────────────────────────────────────────
+let discordMapData = null;
+
+async function loadDiscordMap() {
+  const el = document.getElementById('discordMapList');
+  try {
+    const r = await fetch('api/discord_role_map.php');
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'Unbekannter Fehler');
+    discordMapData = d;
+    document.getElementById('discordBotWarning').style.display = d.bot_configured ? 'none' : 'block';
+
+    const roleSelect = document.getElementById('dmWebsiteRole');
+    roleSelect.innerHTML = d.assignable_roles.map(r => `<option value="${r}">${escHtml(d.labels[r] || r)}</option>`).join('');
+
+    renderDiscordMap();
+  } catch (e) {
+    el.innerHTML = `<span style="color:var(--red)">Fehler beim Laden: ${escHtml(e.message)}</span>`;
+  }
+}
+
+function renderDiscordMap() {
+  const el = document.getElementById('discordMapList');
+  if (!discordMapData.mappings.length) {
+    el.innerHTML = '<span style="color:var(--text-2);font-size:.86rem">Noch keine Zuordnungen &ndash; f&uuml;ge unten die erste hinzu.</span>';
+    return;
+  }
+  el.innerHTML = discordMapData.mappings.map(m => `
+    <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;padding:9px 14px">
+      <code style="font-size:.8rem;color:var(--text-2)">${escHtml(m.discord_role_id)}</code>
+      <span style="color:var(--text-3)">→</span>
+      <span class="role-badge" style="background:rgba(232,184,109,.15);color:var(--gold);border:1px solid rgba(232,184,109,.35);padding:3px 10px;border-radius:999px;font-size:.76rem;font-weight:700">${escHtml(discordMapData.labels[m.website_role] || m.website_role)}</span>
+      ${m.label ? `<span style="color:var(--text-3);font-size:.8rem">${escHtml(m.label)}</span>` : ''}
+      <button onclick="deleteDiscordMapping(${m.id})" style="margin-left:auto;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:var(--red);border-radius:6px;padding:4px 10px;font-size:.78rem;cursor:pointer">🗑</button>
+    </div>
+  `).join('');
+}
+
+async function addDiscordMapping() {
+  const discordRoleId = document.getElementById('dmRoleId').value.trim();
+  const websiteRole   = document.getElementById('dmWebsiteRole').value;
+  const label          = document.getElementById('dmLabel').value.trim();
+  const msg = document.getElementById('dmMsg');
+  msg.textContent = '';
+
+  try {
+    const r = await fetch('api/discord_role_map.php', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ discord_role_id: discordRoleId, website_role: websiteRole, label }),
+    });
+    const d = await r.json();
+    if (d.ok) {
+      document.getElementById('dmRoleId').value = '';
+      document.getElementById('dmLabel').value = '';
+      await loadDiscordMap();
+    } else {
+      msg.style.color = 'var(--red)';
+      msg.textContent = 'Fehler: ' + (d.error || 'Unbekannt');
+    }
+  } catch (e) {
+    msg.style.color = 'var(--red)';
+    msg.textContent = 'Netzwerkfehler: ' + e.message;
+  }
+}
+
+async function deleteDiscordMapping(id) {
+  if (!confirm('Zuordnung wirklich löschen?')) return;
+  const r = await fetch('api/discord_role_map.php?id=' + id, { method: 'DELETE' });
+  const d = await r.json();
+  if (d.ok) await loadDiscordMap();
+  else alert('Fehler: ' + (d.error || 'Unbekannt'));
+}
+
+loadDiscordMap();
 </script>
 </body>
 </html>
