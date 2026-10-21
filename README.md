@@ -44,3 +44,11 @@ Lege ein Bild unter `assets/img/hero-bg.jpg` ab (empfohlen: 1920×1080px, GTA V 
     ├── js/main.js
     └── img/hero-bg.jpg  ← selbst hinzufügen
 ```
+
+## Deployment (neuester Stand per Git Pull)
+Einmalig auf dem Server: `git clone <repo-url>` im Webroot, `.env` eine Ebene darüber ablegen.
+
+- **Automatisch:** GitHub-Webhook auf `https://<domain>/api/deploy_webhook.php`
+  (Content type `application/json`, Event „push“, Secret = `DEPLOY_WEBHOOK_SECRET` aus der `.env`).
+  Jeder Push auf `main` löst auf dem Server `git pull --ff-only` aus.
+- **Manuell:** per SSH `./deploy.sh` im Projektordner.
