@@ -52,12 +52,13 @@ if ($event === 'ping') {
     deploy_out(200, ['ok' => true, 'pong' => true]);
 }
 $payload = json_decode($body, true);
-$branch  = env('DEPLOY_BRANCH', 'main');
+require_once __DIR__ . '/../includes/deploy.php';
+$branch  = deploy_branch();
 if ($event !== 'push' || !is_array($payload) || ($payload['ref'] ?? '') !== 'refs/heads/' . $branch) {
     deploy_out(200, ['ok' => true, 'skipped' => 'kein Push auf ' . $branch]);
 }
 
-if (!function_exists('exec') || in_array('exec', array_map('trim', explode(',', (string) ini_get('disable_functions'))), true)) {
+if (!deploy_exec_available()) {
     error_log('[Deploy] exec() ist auf diesem Server deaktiviert – Webhook-Deployment nicht möglich.');
     deploy_out(500, ['ok' => false, 'error' => 'exec deaktiviert']);
 }
@@ -68,13 +69,8 @@ if (!$lock || !flock($lock, LOCK_EX | LOCK_NB)) {
     deploy_out(409, ['ok' => false, 'error' => 'Deployment läuft bereits']);
 }
 
-$root = dirname(__DIR__);
-$cmd  = 'cd ' . escapeshellarg($root) . ' && git pull --ff-only origin ' . escapeshellarg($branch) . ' 2>&1';
-exec($cmd, $output, $code);
-
+[$code, $output] = deploy_pull();
 error_log('[Deploy] git pull (' . $branch . ') Exit ' . $code . ': ' . implode(' | ', array_slice($output, -5)));
-if (function_exists('opcache_reset')) @opcache_reset();
-foreach (glob(sys_get_temp_dir() . '/vsrp_*.json') ?: [] as $f) @unlink($f); // Caches leeren
 
 flock($lock, LOCK_UN);
 deploy_out($code === 0 ? 200 : 500, ['ok' => $code === 0, 'commit' => substr((string) ($payload['after'] ?? ''), 0, 7)]);

@@ -91,6 +91,8 @@ const VSRP_CAPABILITIES = [
     'changelog.view'        => ['Entwürfe & geplante Einträge einsehen',  'Changelog',              'admin'],
     'changelog.edit'        => ['Changelog-Einträge verwalten',           'Changelog',              'admin'],
 
+    'deploy.run'            => ['Website-Deployment ausführen (git pull)', 'Server & Sichtbarkeit',  'owner'],
+
     'fivem_diag.view'       => ['FiveM-Diagnose ausführen',               'FiveM-Diagnose',         'admin'],
 
     'db.view'               => ['Datenbank-Tabellen einsehen',            'Datenbank-Browser',      'admin'],

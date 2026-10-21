@@ -52,3 +52,4 @@ Einmalig auf dem Server: `git clone <repo-url>` im Webroot, `.env` eine Ebene da
   (Content type `application/json`, Event „push“, Secret = `DEPLOY_WEBHOOK_SECRET` aus der `.env`).
   Jeder Push auf `main` löst auf dem Server `git pull --ff-only` aus.
 - **Manuell:** per SSH `./deploy.sh` im Projektordner.
+- **Per Klick:** Admin-Panel → Kachel „Deployment“ (`admin_deploy.php`), Berechtigung `deploy.run` (Standard: ab Owner, in der Rollenverwaltung änderbar).

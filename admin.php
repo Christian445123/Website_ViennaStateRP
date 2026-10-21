@@ -236,6 +236,13 @@ if (!function_exists('avatarUrl')) {
           <div class="nav-card-sub">Team-/Admin-Zugriff je Rolle festlegen</div>
         </a>
         <?php endif; ?>
+        <?php if (has_capability('deploy.run')): ?>
+        <a href="admin_deploy.php" class="nav-card">
+          <div class="nav-card-icon">🚀</div>
+          <div class="nav-card-title">Deployment</div>
+          <div class="nav-card-sub">Neuesten Stand von GitHub auf die Website einspielen</div>
+        </a>
+        <?php endif; ?>
         <a href="db_admin.php" class="nav-card" style="grid-column:1 / -1">
           <div class="nav-card-icon">🗄</div>
           <div class="nav-card-title">Datenbank-Browser</div>
