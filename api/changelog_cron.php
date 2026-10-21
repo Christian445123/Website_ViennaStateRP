@@ -14,13 +14,13 @@ require_once __DIR__ . '/../includes/changelog.php';
 header('Content-Type: application/json; charset=utf-8');
 
 $cronSecret = env('CRON_SECRET', '');
-if ($cronSecret !== '') {
-    $provided = $_SERVER['HTTP_X_CRON_SECRET'] ?? ($_GET['secret'] ?? '');
-    if (!hash_equals($cronSecret, $provided)) {
-        http_response_code(403);
-        echo json_encode(['ok' => false, 'error' => 'Forbidden']);
-        exit;
-    }
+// Ohne gesetztes CRON_SECRET bleibt der Endpunkt geschlossen (sonst könnte jeder Besucher
+// Discord-Posts bzw. DB-Schreibvorgänge auslösen).
+$provided = (string) ($_SERVER['HTTP_X_CRON_SECRET'] ?? ($_GET['secret'] ?? ''));
+if ($cronSecret === '' || !hash_equals($cronSecret, $provided)) {
+    http_response_code(403);
+    echo json_encode(['ok' => false, 'error' => 'Forbidden']);
+    exit;
 }
 
 if (!isset($pdo)) {

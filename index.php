@@ -225,7 +225,11 @@ if (!function_exists('avatarUrl')) {
           ['🧑‍💼', 'Unabhängige / Zivilisten', 'FREELANCE · NEUTRAL', '#22c55e', 'Als Zivilist betreibst du ein eigenes Unternehmen, arbeitest als Journalist, Anwalt oder Unternehmer.',                      'OFFEN'],
         ];
       }
-      foreach ($fraktionen as [$ico, $name, $type, $color, $desc, $slots]): ?>
+      foreach ($fraktionen as [$ico, $name, $type, $color, $desc, $slots]):
+        // Fraktionsdaten kommen aus der DB (Admin-Eingabe) → escapen, sonst Stored-XSS auf der Startseite
+        [$ico, $name, $type, $desc, $slots] = array_map(fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'), [$ico, $name, $type, $desc, $slots]);
+        $color = preg_match('/^#[0-9a-fA-F]{3,8}$/', (string) $color) ? $color : '#64748b';
+      ?>
       <div style="background:var(--bg-card);border:1px solid rgba(255,255,255,.08);border-top:3px solid <?= $color ?>;border-radius:14px;padding:22px 20px;position:relative;transition:.2s">
         <div style="font-size:1.8rem;margin-bottom:10px"><?= $ico ?></div>
         <div style="font-size:.65rem;font-weight:700;letter-spacing:2px;color:<?= $color ?>;margin-bottom:6px"><?= $type ?></div>

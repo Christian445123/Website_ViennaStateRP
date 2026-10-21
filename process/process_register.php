@@ -11,6 +11,7 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/session_config.php';
 require_once __DIR__ . '/../includes/rate_limit.php';
 require_once __DIR__ . '/../includes/logger.php';
+require_once __DIR__ . '/../includes/email_verification.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -54,6 +55,13 @@ if (!preg_match('/[A-Z]/', $password) || !preg_match('/[0-9]/', $password)) {
     json_out('error', 'Passwort braucht mind. 1 Großbuchstaben und 1 Zahl.');
 }
 
+// Nie bestätigte Passwort-Registrierungen nach 48 h freigeben, damit niemand fremde
+// E-Mail-Adressen/Benutzernamen dauerhaft durch Registrierung blockieren kann.
+try {
+    $pdo->exec("DELETE FROM users WHERE email_verified_at IS NULL AND password_hash IS NOT NULL
+                AND discord_id IS NULL AND created_at < (NOW() - INTERVAL 2 DAY)");
+} catch (\Throwable $e) { /* Spalte existiert (noch) nicht */ }
+
 // Duplikat prüfen
 $check = $pdo->prepare('SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1');
 $check->execute([$username, $email]);
@@ -83,11 +91,26 @@ $insertPlch = ['?', '?', '?', '?', '?', '?']; // NULL via bound parameter (PDO h
 
 if ($hasCol('is_verified')) { $insertCols[] = 'is_verified'; $insertVals[] = 1; $insertPlch[] = '?'; }
 
+// E-Mail-Bestätigung: Account bleibt gesperrt, bis der Link aus der Mail geöffnet wurde.
+// (Fehlt die Spalte noch, wurde die Migration nicht ausgeführt → altes Verhalten.)
+$needsVerify = email_verification_required() && $hasCol('email_verified_at');
+if (!$needsVerify && $hasCol('email_verified_at')) {
+    $insertCols[] = 'email_verified_at'; $insertVals[] = date('Y-m-d H:i:s'); $insertPlch[] = '?';
+}
+
 $sql = 'INSERT INTO users (' . implode(', ', $insertCols) . ') VALUES (' . implode(', ', $insertPlch) . ')';
 $pdo->prepare($sql)->execute($insertVals);
 
 $newId = (int) $pdo->lastInsertId();
 
 log_event('discord_login', "Neuer Account registriert: {$username}", $newId, ['email' => $email]);
+
+if ($needsVerify) {
+    $sent = email_verification_send($pdo, $newId, $email);
+    json_out('success', $sent
+        ? 'Account erstellt! Wir haben dir eine E-Mail mit einem Bestätigungslink geschickt (24 Stunden gültig). Erst danach kannst du dich anmelden.'
+        : 'Account erstellt, aber die Bestätigungs-E-Mail konnte nicht gesendet werden. Fordere sie auf der Seite „E-Mail bestätigen“ erneut an oder kontaktiere das Team.',
+        SITE_URL . '/verify_email.php');
+}
 
 json_out('success', 'Account erfolgreich erstellt! Du kannst dich jetzt anmelden.', SITE_URL . '/login.php');

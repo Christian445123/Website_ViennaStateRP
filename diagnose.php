@@ -4,36 +4,27 @@
 //  Aufruf: https://deine-domain.at/diagnose.php?token=DEIN_TOKEN
 //  Token setzen: DIAG_TOKEN=... in .env eintragen
 // ============================================================
-ini_set('display_errors', '1');
+ini_set('display_errors', '0');
 error_reporting(E_ALL);
 
 // ── Zugangsschutz ────────────────────────────────────────────
-$envPath = __DIR__ . '/.env';
-$diagToken = '';
-if (is_readable($envPath)) {
-    foreach (file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
-        $line = trim($line);
-        if (str_starts_with($line, 'DIAG_TOKEN=')) {
-            $diagToken = trim(substr($line, 11));
-            break;
-        }
-    }
+require_once __DIR__ . '/includes/db.php';
+$envPath   = vsrp_env_file() ?? (__DIR__ . '/.env');
+$diagToken = env('DIAG_TOKEN', '');
+$envInWebroot = is_readable(__DIR__ . '/.env');
+// Ohne DIAG_TOKEN bleibt die Seite gesperrt. Ein IP-Fallback (localhost) ist hinter einem
+// Reverse-Proxy wirkungslos, weil dort jede Anfrage von 127.0.0.1 zu kommen scheint.
+// Kurzer Token (mind. 16 Zeichen) → Brute-Force praktisch ausgeschlossen.
+if ($diagToken === '' || strlen($diagToken) < 16) {
+    http_response_code(403);
+    die('Gesperrt. In .env einen DIAG_TOKEN (mind. 16 Zeichen) setzen und nach der Diagnose wieder entfernen.');
 }
-// Fallback: IP-Schutz wenn kein Token konfiguriert
-if ($diagToken === '') {
-    $allowedIps = ['127.0.0.1', '::1'];
-    $remoteIp = $_SERVER['REMOTE_ADDR'] ?? '';
-    if (!in_array($remoteIp, $allowedIps, true)) {
-        http_response_code(403);
-        die('Kein DIAG_TOKEN in .env – Zugriff nur von localhost erlaubt. Token in .env setzen: DIAG_TOKEN=geheimes_passwort');
-    }
-} else {
-    $provided = $_GET['token'] ?? '';
-    if (!hash_equals($diagToken, $provided)) {
-        http_response_code(403);
-        die('Ungültiger Token. Aufruf: ?token=DEIN_DIAG_TOKEN');
-    }
+if (!hash_equals($diagToken, (string) ($_GET['token'] ?? ''))) {
+    http_response_code(403);
+    die('Ungültiger Token.');
 }
+header('Cache-Control: no-store');
+header('Referrer-Policy: no-referrer');
 
 echo '<style>body{font-family:monospace;background:#111;color:#0f0;padding:20px}
 .ok{color:#0f0}.err{color:#f44}.warn{color:#fa0}
@@ -54,8 +45,8 @@ foreach ($exts as $ext) {
 
 // ── .env ──────────────────────────────────────────────────────
 echo '<h2>.env Datei</h2>';
-echo '.env Pfad: ' . $envPath . '<br>';
 echo '.env existiert: ' . (file_exists($envPath) ? '<span class="ok">✓</span>' : '<span class="err">✗ FEHLT – DB-Zugangsdaten nicht konfiguriert!</span>') . '<br>';
+if ($envInWebroot) { echo '<span class="err">✗ ACHTUNG: .env liegt im Webroot – in den übergeordneten Ordner verschieben!</span><br>'; } else { echo 'Speicherort: <span class="ok">✓ außerhalb des Webroots</span><br>'; }
 
 $env = [];
 if (is_readable($envPath)) {
@@ -178,7 +169,6 @@ foreach (['SITE_URL','DISCORD_CLIENT_ID','DISCORD_REDIRECT_URI','DISCORD_GUILD_I
 // ── Session ───────────────────────────────────────────────────
 echo '<h2>Session</h2>';
 echo 'session_status: ' . session_status() . ' (' . (session_status() === PHP_SESSION_ACTIVE ? '<span class="ok">aktiv</span>' : '<span class="warn">inaktiv</span>') . ')<br>';
-echo 'Session ID: ' . (session_id() ?: '<span class="warn">keine</span>') . '<br>';
 echo 'discord_user in Session: ' . (isset($_SESSION['discord_user']) ? '<span class="ok">✓ eingeloggt als ' . htmlspecialchars($_SESSION['discord_user']['username'] ?? '?') . '</span>' : '<span class="warn">nicht eingeloggt</span>') . '<br>';
 
 echo '<br><p style="color:#f44;font-size:14px">⚠ Diese Seite enthält sensible Systeminformationen. Nach dem Lesen DIAG_TOKEN aus .env entfernen oder diese Datei löschen!</p>';

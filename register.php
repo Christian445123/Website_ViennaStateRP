@@ -119,7 +119,7 @@ document.getElementById('regForm').addEventListener('submit', async function(e) 
   msg.style.display = 'block';
 
   if (data.status === 'success') {
-    setTimeout(() => window.location.href = data.redirect || 'login.php?success=' + encodeURIComponent(data.message), 1200);
+    setTimeout(() => window.location.href = data.redirect || 'login.php?success=' + encodeURIComponent(data.message), (data.redirect || '').includes('verify_email') ? 5000 : 1200);
   } else {
     btn.disabled = false;
     btn.textContent = 'Account erstellen';

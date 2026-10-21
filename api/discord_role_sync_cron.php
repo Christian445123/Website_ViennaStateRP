@@ -71,7 +71,8 @@ try {
     }
 } catch (\Throwable $e) {
     error_log('[DiscordRoleSyncCron] ' . $e->getMessage());
-    echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
+    error_log('[API] ' . $e->getMessage());
+    echo json_encode(['ok' => false, 'error' => 'Interner Fehler']);
     exit;
 }
 

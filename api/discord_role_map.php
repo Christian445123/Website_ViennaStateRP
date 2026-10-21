@@ -49,7 +49,8 @@ if ($method === 'GET') {
         ]);
     } catch (\Throwable $e) {
         http_response_code(500);
-        echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
+        error_log('[API] ' . $e->getMessage());
+        echo json_encode(['ok' => false, 'error' => 'Interner Fehler']);
     }
     exit;
 }
@@ -85,7 +86,8 @@ if ($method === 'POST') {
         echo json_encode(['ok' => true, 'id' => (int)$pdo->lastInsertId()]);
     } catch (\Throwable $e) {
         http_response_code(500);
-        echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
+        error_log('[API] ' . $e->getMessage());
+        echo json_encode(['ok' => false, 'error' => 'Interner Fehler']);
     }
     exit;
 }

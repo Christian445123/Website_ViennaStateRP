@@ -42,6 +42,31 @@ function settings_load(): array
     return array_merge(SETTINGS_DEFAULTS, $data);
 }
 
+/**
+ * Validiert Text-Einstellungen. Werte landen in Seiten, Skripten und Webhook-Aufrufen –
+ * ohne Prüfung wäre darüber Skript-Injection (z. B. über die GA-ID) oder SSRF möglich.
+ * Ungültige Eingaben fallen auf den bisherigen/Standardwert zurück.
+ */
+function _settings_sanitize(string $key, string $val, string $default): string
+{
+    $val = trim($val);
+    switch ($key) {
+        case 'restart_times':
+            $ok = $val === '' || preg_match('/^([01]\d|2[0-3]):[0-5]\d(\s*,\s*([01]\d|2[0-3]):[0-5]\d)*$/', $val);
+            return $ok ? $val : $default;
+        case 'manual_restart_at':
+            return ($val === '' || preg_match('/^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d$/', $val)) ? $val : '';
+        case 'ga_measurement_id':
+            return ($val === '' || preg_match('/^G-[A-Z0-9]{4,20}$/', $val)) ? $val : $default;
+        case 'discord_changelog_webhook':
+            return ($val === '' || preg_match('#^https://(?:ptb\.|canary\.)?discord(?:app)?\.com/api/webhooks/\d+/[\w-]+$#', $val)) ? $val : '';
+        case 'maintenance_message':
+            return mb_substr($val, 0, 500);
+        default:
+            return mb_substr($val, 0, 500);
+    }
+}
+
 function settings_save(array $data): bool
 {
     // Nur bekannte Keys zulassen
@@ -51,11 +76,11 @@ function settings_save(array $data): bool
             $val = $data[$key];
             $filtered[$key] = is_bool($default)
                 ? (bool) $val
-                : (string) $val;
+                : _settings_sanitize($key, (string) $val, (string) $default);
         }
     }
     $merged = array_merge(settings_load(), $filtered);
-    return file_put_contents(SETTINGS_FILE, json_encode($merged, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) !== false;
+    return file_put_contents(SETTINGS_FILE, json_encode($merged, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX) !== false;
 }
 
 function setting(string $key): mixed

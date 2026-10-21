@@ -10,9 +10,36 @@ if (defined('_VSRP_DB_LOADED')) return;
 define('_VSRP_DB_LOADED', true);
 
 // ── .env laden ───────────────────────────────────────────────────────────────
+/**
+ * Sucht die .env bevorzugt AUSSERHALB des Webroots (nicht per HTTP abrufbar).
+ * Reihenfolge: VSRP_ENV_FILE (Umgebungsvariable / PHP-FPM-Pool) → Elternordner des Webroots
+ * → Elternordner des Projektordners → (veraltet) im Webroot selbst.
+ * Eine .env im Webroot wird nur noch als Notlösung geladen und im Log angemahnt.
+ */
+function vsrp_env_file(): ?string
+{
+    $docRoot = isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== ''
+        ? rtrim((string) $_SERVER['DOCUMENT_ROOT'], '/\\') : null;
+
+    $candidates = array_filter([
+        getenv('VSRP_ENV_FILE') ?: null,
+        $docRoot ? dirname($docRoot) . '/.env' : null,
+        dirname(__DIR__, 2) . '/.env',
+    ]);
+    foreach ($candidates as $c) {
+        if (is_readable($c)) return $c;
+    }
+    $legacy = dirname(__DIR__) . '/.env';
+    if (is_readable($legacy)) {
+        error_log('[VSRP] WARNUNG: .env liegt im Webroot. Bitte in den übergeordneten Ordner verschieben.');
+        return $legacy;
+    }
+    return null;
+}
+
 (function (): void {
-    $envFile = dirname(__DIR__) . '/.env';
-    if (!is_readable($envFile)) return;
+    $envFile = vsrp_env_file();
+    if ($envFile === null) return;
 
     foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
         $line = trim($line);
@@ -91,6 +118,65 @@ function env(string $key, string $default = ''): string
 {
     $val = $_ENV[$key] ?? getenv($key);
     return ($val !== false && $val !== null && $val !== '') ? (string) $val : $default;
+}
+
+// ── Client-IP ─────────────────────────────────────────────────────────────────
+/** Prüft ob $ip in einem der Einträge (IP oder CIDR) liegt */
+function _vsrp_ip_in_list(string $ip, array $list): bool
+{
+    $ipBin = @inet_pton($ip);
+    if ($ipBin === false) return false;
+    foreach ($list as $entry) {
+        $entry = trim($entry);
+        if ($entry === '') continue;
+        [$net, $bits] = array_pad(explode('/', $entry, 2), 2, null);
+        $netBin = @inet_pton($net);
+        if ($netBin === false || strlen($netBin) !== strlen($ipBin)) continue;
+        $bits = $bits === null ? strlen($netBin) * 8 : max(0, min(strlen($netBin) * 8, (int) $bits));
+        $bytes = intdiv($bits, 8);
+        $rest  = $bits % 8;
+        if ($bytes > 0 && substr($ipBin, 0, $bytes) !== substr($netBin, 0, $bytes)) continue;
+        if ($rest > 0) {
+            $mask = (0xFF << (8 - $rest)) & 0xFF;
+            if ((ord($ipBin[$bytes]) & $mask) !== (ord($netBin[$bytes]) & $mask)) continue;
+        }
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Ermittelt die echte Client-IP.
+ * X-Forwarded-For / CF-Connecting-IP werden NUR ausgewertet, wenn die Anfrage von einem
+ * vertrauenswürdigen Proxy kommt (Loopback oder TRUSTED_PROXIES in .env, kommagetrennt, IP/CIDR).
+ * Sonst könnte jeder Angreifer per Header Rate-Limits umgehen und Logs fälschen.
+ */
+function client_ip(): string
+{
+    static $cached = null;
+    if ($cached !== null) return $cached;
+
+    $remote = (string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+    $trusted = array_merge(['127.0.0.1/8', '::1'], explode(',', env('TRUSTED_PROXIES', '')));
+
+    if (_vsrp_ip_in_list($remote, $trusted)) {
+        $candidates = [];
+        if (!empty($_SERVER['HTTP_CF_CONNECTING_IP'])) {
+            $candidates[] = $_SERVER['HTTP_CF_CONNECTING_IP'];
+        }
+        if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            // Rechtester Eintrag, der nicht selbst ein vertrauenswürdiger Proxy ist
+            foreach (array_reverse(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])) as $hop) {
+                $hop = trim($hop);
+                if (!_vsrp_ip_in_list($hop, $trusted)) { $candidates[] = $hop; break; }
+            }
+        }
+        foreach ($candidates as $c) {
+            $c = trim((string) $c);
+            if (filter_var($c, FILTER_VALIDATE_IP)) return $cached = $c;
+        }
+    }
+    return $cached = (filter_var($remote, FILTER_VALIDATE_IP) ? $remote : '0.0.0.0');
 }
 
 // ── PDO-Verbindung ────────────────────────────────────────────────────────────
@@ -238,6 +324,33 @@ if ($pdo !== null) {
         }
     } catch (\Throwable $e) {
         error_log('[VSRP Migration] Rollensystem: ' . $e->getMessage());
+    }
+
+    // E-Mail-Bestätigung für Passwort-Accounts (Spalte + Token-Tabelle)
+    try {
+        $mailFlag = sys_get_temp_dir() . '/vsrp_migrated_emailverify_v1.flag';
+        if (!file_exists($mailFlag)) {
+            $hasMailCol = $pdo->query("SHOW COLUMNS FROM `users` LIKE 'email_verified_at'")->fetch();
+            if (!$hasMailCol) {
+                $pdo->exec("ALTER TABLE `users` ADD COLUMN `email_verified_at` DATETIME NULL");
+                // Bestehende Passwort-Accounts gelten als bestätigt (sonst wären sie ausgesperrt)
+                $pdo->exec("UPDATE `users` SET `email_verified_at` = NOW() WHERE `password_hash` IS NOT NULL");
+            }
+            $pdo->exec("
+                CREATE TABLE IF NOT EXISTS `email_verifications` (
+                  `token_hash` CHAR(64)        NOT NULL,
+                  `user_id`    BIGINT UNSIGNED NOT NULL,
+                  `expires_at` DATETIME        NOT NULL,
+                  `created_at` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  PRIMARY KEY (`token_hash`),
+                  KEY `idx_user` (`user_id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
+            @unlink(sys_get_temp_dir() . '/vsrp_cols_users.json');
+            @file_put_contents($mailFlag, date('Y-m-d H:i:s'));
+        }
+    } catch (\Throwable $e) {
+        error_log('[VSRP Migration] E-Mail-Bestätigung: ' . $e->getMessage());
     }
 
     // Einmalig: bisherige Admins auf Websitenmanager (Vollzugriff) hochstufen

@@ -146,7 +146,8 @@ if ($method === 'GET') {
         echo json_encode(['ok' => true, 'strafen' => $rows]);
     } catch (\Throwable $e) {
         http_response_code(500);
-        echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
+        error_log('[API] ' . $e->getMessage());
+        echo json_encode(['ok' => false, 'error' => 'Interner Fehler']);
     }
     exit;
 }

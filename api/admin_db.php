@@ -67,16 +67,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pass    = $body['pass']         ?? '';
     $charset = trim($body['charset'] ?? 'utf8mb4');
 
-    // Wenn Passwort leer oder maskiert → altes beibehalten
-    if ($pass === '' || str_contains($pass, '***')) {
-        $existing = db_config_load();
-        $pass = $existing['pass'] ?? env('DB_PASS', '');
-    }
+    if (!is_string($pass)) $pass = '';
 
-    // Validierung
+    // Validierung (verhindert DSN-Injection über ';' / '=' in den Feldern)
     if ($host === '' || $name === '' || $user === '') {
         echo json_encode(['ok' => false, 'error' => 'Host, Datenbankname und Benutzer sind erforderlich.']);
         exit;
+    }
+    if (!preg_match('/^[A-Za-z0-9._:\-]{1,253}$/', $host)
+        || !preg_match('/^[A-Za-z0-9_$\-]{1,64}$/', $name)
+        || !preg_match('/^[A-Za-z0-9_\-]{1,32}$/', $charset)
+        || $port < 1 || $port > 65535) {
+        echo json_encode(['ok' => false, 'error' => 'Host, Port, Datenbankname oder Zeichensatz enthalten ungültige Zeichen.']);
+        exit;
+    }
+
+    // Wenn Passwort leer oder maskiert → altes beibehalten – aber NUR wenn Host/Port/Benutzer
+    // unverändert sind. Sonst könnte man das gespeicherte DB-Passwort per Verbindungstest an
+    // einen fremden Server schicken.
+    if ($pass === '' || str_contains($pass, '***')) {
+        $existing = db_config_load() ?? [
+            'host' => env('DB_HOST', '127.0.0.1'), 'port' => env('DB_PORT', '3306'),
+            'user' => env('DB_USER', ''),          'pass' => env('DB_PASS', ''),
+        ];
+        $sameTarget = ($existing['host'] ?? '') === $host
+                   && (string) ($existing['port'] ?? '3306') === (string) $port
+                   && ($existing['user'] ?? '') === $user;
+        if (!$sameTarget) {
+            echo json_encode(['ok' => false, 'error' => 'Bei geändertem Host, Port oder Benutzer muss das Passwort neu eingegeben werden.']);
+            exit;
+        }
+        $pass = $existing['pass'] ?? '';
     }
 
     // ── Verbindung testen ─────────────────────────────────────────────────────
@@ -91,9 +112,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $testResult = ['connected' => true, 'version' => $version];
         $test = null;
     } catch (\PDOException $e) {
+        error_log('[admin_db] Verbindungstest: ' . $e->getMessage());
         echo json_encode([
             'ok'    => false,
-            'error' => 'Verbindungstest fehlgeschlagen: ' . $e->getMessage(),
+            'error' => 'Verbindungstest fehlgeschlagen (Details im Server-Log).',
         ]);
         exit;
     }
@@ -106,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'user'       => $user,
         'pass'       => $pass,
         'charset'    => $charset,
-        'updated_by' => $user ?? 'admin',
+        'updated_by' => (string) (current_user()['username'] ?? 'admin'),
     ]);
 
     if (!$saved) {

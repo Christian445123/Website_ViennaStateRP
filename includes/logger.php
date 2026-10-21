@@ -52,11 +52,7 @@ function log_event(
 ): void {
     global $pdo;
 
-    $ip = $_SERVER['HTTP_CF_CONNECTING_IP']
-       ?? $_SERVER['HTTP_X_FORWARDED_FOR']
-       ?? $_SERVER['REMOTE_ADDR']
-       ?? null;
-    if ($ip) $ip = trim(explode(',', $ip)[0]);
+    $ip = function_exists('client_ip') ? client_ip() : ($_SERVER['REMOTE_ADDR'] ?? null);
     if ($ip === '::1') $ip = '127.0.0.1';
 
     if (php_sapi_name() !== 'cli') {

@@ -13,6 +13,10 @@ $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
         || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'
         || ($_SERVER['SERVER_PORT'] ?? 80) == 443;
 
+ini_set('session.use_strict_mode', '1');
+ini_set('session.use_only_cookies', '1');
+ini_set('session.use_trans_sid', '0');
+
 session_set_cookie_params([
     'lifetime' => 60 * 60 * 24 * 30,  // 30 Tage
     'path'     => '/',
@@ -34,6 +38,63 @@ if (isset($_SESSION['discord_user'])) {
         exit;
     }
     $_SESSION['last_activity'] = time();
+
+    // Rolle/Sperre bei jedem Request frisch aus der DB lesen: Degradierungen und Sperren
+    // wirken sofort, nicht erst wenn die Session abläuft (Session ist sonst ein Rechte-Cache).
+    global $pdo;
+    $sid = (int) ($_SESSION['discord_user']['db_id'] ?? 0);
+    if ($sid > 0 && isset($pdo) && $pdo instanceof PDO) {
+        try {
+            $st = $pdo->prepare('SELECT role, is_banned FROM users WHERE id = ? LIMIT 1');
+            $st->execute([$sid]);
+            $fresh = $st->fetch();
+            if (!$fresh || !empty($fresh['is_banned'])) {
+                session_unset();
+                session_destroy();
+                if (str_contains($_SERVER['SCRIPT_NAME'] ?? '', '/api/')) {
+                    http_response_code(401);
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode(['ok' => false, 'error' => 'Session beendet']);
+                } else {
+                    header('Location: ' . (defined('SITE_URL') ? SITE_URL : '') . '/index.php');
+                }
+                exit;
+            }
+            $_SESSION['discord_user']['role'] = $fresh['role'];
+        } catch (\Throwable $e) {
+            // Spalte/Tabelle fehlt (alte Installation) → bisherige Session-Rolle behalten
+        }
+    }
+}
+
+// ── Cross-Site-Schutz für alle schreibenden API-Aufrufe ───────────────────────
+// Die JSON-APIs haben kein CSRF-Token. Browser senden bei fetch()/Formularen immer
+// Origin bzw. Sec-Fetch-Site; fremde Seiten werden hier abgewiesen (zusätzlich zu SameSite=Lax).
+function require_same_origin(): void
+{
+    $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+    if (in_array($method, ['GET', 'HEAD', 'OPTIONS'], true)) return;
+
+    $fetchSite = $_SERVER['HTTP_SEC_FETCH_SITE'] ?? '';
+    $ok = false;
+    if ($fetchSite !== '') {
+        $ok = in_array($fetchSite, ['same-origin', 'none'], true);
+    } else {
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? ($_SERVER['HTTP_REFERER'] ?? '');
+        $oHost  = $origin !== '' ? strtolower((string) parse_url($origin, PHP_URL_HOST)) : '';
+        $allowed = [strtolower(preg_replace('/:\d+$/', '', (string) ($_SERVER['HTTP_HOST'] ?? '')))];
+        if (defined('SITE_URL')) $allowed[] = strtolower((string) parse_url(SITE_URL, PHP_URL_HOST));
+        $ok = $oHost !== '' && in_array($oHost, array_filter($allowed), true);
+    }
+    if (!$ok) {
+        http_response_code(403);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => false, 'error' => 'Cross-Site-Anfrage abgelehnt']);
+        exit;
+    }
+}
+if (str_contains($_SERVER['SCRIPT_NAME'] ?? '', '/api/')) {
+    require_same_origin();
 }
 
 // ── CSRF-Helfer ───────────────────────────────────────────────────────────────

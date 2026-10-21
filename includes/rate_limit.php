@@ -14,18 +14,15 @@ require_once __DIR__ . '/logger.php';
  * Prüft ob das IP-Limit überschritten wurde.
  * Gibt TRUE zurück wenn Anfrage erlaubt, FALSE wenn blockiert.
  */
-function checkRateLimit(string $action, int $maxAttempts = 5, int $windowSeconds = 300): bool
+function checkRateLimit(string $action, int $maxAttempts = 5, int $windowSeconds = 300, ?string $subject = null): bool
 {
     global $pdo;
 
     if (!isset($pdo)) return true; // kein DB → offen lassen
 
-    $ip = trim(explode(',', (string)(
-        $_SERVER['HTTP_CF_CONNECTING_IP']
-     ?? $_SERVER['HTTP_X_FORWARDED_FOR']
-     ?? $_SERVER['REMOTE_ADDR']
-     ?? '0.0.0.0'
-    ))[0]);
+    // Echte Client-IP (Proxy-Header nur von vertrauenswürdigen Proxies, siehe client_ip()).
+    // $subject erlaubt zusätzlich ein Limit pro Ziel (z. B. Benutzername) statt pro IP.
+    $ip = $subject !== null ? 'u:' . substr(hash('sha256', strtolower($subject)), 0, 40) : client_ip();
 
     try {
         $stmt = $pdo->prepare("
@@ -62,7 +59,7 @@ function checkRateLimit(string $action, int $maxAttempts = 5, int $windowSeconds
 /** Sendet 429-Antwort und beendet das Skript */
 function rateLimitExceeded(): void
 {
-    $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+    $ip = client_ip();
     if (function_exists('log_event')) {
         log_event('login_bruteforce', "Rate-Limit überschritten von {$ip}", 0, ['ip' => $ip]);
     }

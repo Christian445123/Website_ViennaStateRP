@@ -11,6 +11,7 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/session_config.php';
 require_once __DIR__ . '/../includes/rate_limit.php';
 require_once __DIR__ . '/../includes/logger.php';
+require_once __DIR__ . '/../includes/email_verification.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -38,6 +39,17 @@ $username = trim($_POST['username'] ?? '');
 $password = $_POST['password'] ?? '';
 
 if (!$username || !$password) json_out('error', 'Bitte Benutzername und Passwort eingeben.');
+if (mb_strlen($username) > 254 || strlen($password) > 1024) json_out('error', 'Benutzername oder Passwort falsch.');
+
+// Limit pro Benutzername+IP: ein Angreifer sperrt damit nur sich selbst, nicht das Opfer
+// (ein reines Pro-Benutzername-Limit würde gezieltes Aussperren fremder Accounts erlauben).
+if (!checkRateLimit('login_user_ip', 8, 900, $username . '|' . client_ip())) {
+    rateLimitExceeded();
+}
+// Grobe Obergrenze pro Benutzername für verteilte Angriffe von sehr vielen IPs aus.
+if (!checkRateLimit('login_user_global', 300, 3600, $username)) {
+    rateLimitExceeded();
+}
 
 // User suchen (username ODER email)
 // role-Spalte nur selektieren wenn sie existiert (defensiv gegen fehlende Migration)
@@ -55,10 +67,26 @@ $stmt = $pdo->prepare(
 $stmt->execute([$username, $username]);
 $user = $stmt->fetch();
 
+// Bei unbekanntem Benutzer trotzdem einen bcrypt-Vorgang gleicher Kosten ausführen, damit die
+// Antwortzeit nicht verrät, ob der Benutzername existiert (User-Enumeration per Timing).
+if (!$user) {
+    password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+}
+
 if (!$user || !password_verify($password, $user['password_hash'])) {
-    log_event('login_failed', "Fehlgeschlagener Login für: {$username}");
+    log_event('login_failed', 'Fehlgeschlagener Login für: ' . mb_substr(preg_replace('/[\x00-\x1F`]/u', '', $username), 0, 64));
     json_out('error', 'Benutzername oder Passwort falsch.');
 }
+
+// E-Mail muss bestätigt sein (erst nach korrektem Passwort prüfen, damit nichts über fremde Konten verraten wird)
+try {
+    $ev = $pdo->prepare('SELECT email_verified_at FROM users WHERE id = ? LIMIT 1');
+    $ev->execute([$user['id']]);
+    $evRow = $ev->fetch();
+    if ($evRow && $evRow['email_verified_at'] === null && email_verification_required()) {
+        json_out('error', 'Bitte bestätige zuerst deine E-Mail-Adresse. Den Link findest du in deiner Mail; einen neuen kannst du unter verify_email.php anfordern.');
+    }
+} catch (\PDOException $e) { /* Spalte fehlt → Migration noch nicht gelaufen, nicht blockieren */ }
 
 if ($user['is_banned']) {
     log_event('login_banned', "Gebannter User versuchte Login: {$user['username']}", (int)$user['id']);
@@ -93,7 +121,7 @@ log_event('discord_login', "{$user['username']} (Passwort-Login)", (int)$user['i
 try {
     $pdo->prepare('INSERT INTO login_log (user_id, ip_hash, user_agent) VALUES (?,?,?)')->execute([
         $user['id'],
-        hash('sha256', $_SERVER['REMOTE_ADDR'] ?? ''),
+        hash('sha256', client_ip()),
         substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255),
     ]);
 } catch (\Throwable) {}

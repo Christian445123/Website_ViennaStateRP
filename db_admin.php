@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/session_config.php';
 require_once __DIR__ . '/includes/permissions.php';
+require_once __DIR__ . '/includes/logger.php';
 
 require_login();
 if (!has_capability('db.view')) {
@@ -41,22 +42,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sql'])) {
         $querySql = trim($_POST['sql'] ?? '');
         // Nur SELECT/SHOW/DESCRIBE erlauben
         $firstWord = strtoupper(strtok($querySql, " \t\n\r"));
+        // Ein abschließendes ';' ist ok, mehrere Statements nicht
+        $sqlCheck = rtrim($querySql, "; \t\n\r");
+        // String-Literale entfernen, damit Schlüsselwörter darin keinen Fehlalarm auslösen
+        $sqlStripped = (string) preg_replace('/\'(?:[^\'\\\\]|\\\\.|\'\')*\'|"(?:[^"\\\\]|\\\\.)*"/s', "''", $sqlCheck);
         if (!in_array($firstWord, ['SELECT', 'SHOW', 'DESCRIBE', 'EXPLAIN', 'DESC'], true)) {
             $queryError = 'Nur SELECT, SHOW, DESCRIBE und EXPLAIN sind erlaubt.';
+        } elseif (strlen($querySql) > 5000) {
+            $queryError = 'Abfrage zu lang.';
+        } elseif (str_contains($sqlStripped, ';') || preg_match('~/\*|--|#~', $sqlStripped)) {
+            $queryError = 'Mehrere Statements und Kommentare sind nicht erlaubt.';
+        } elseif (preg_match('/\b(INTO|OUTFILE|DUMPFILE|LOAD_FILE|LOAD\s+DATA|SLEEP|BENCHMARK|GET_LOCK|RELEASE_LOCK|FOR\s+UPDATE|LOCK\s+IN\s+SHARE|HANDLER)\b|@/i', $sqlStripped)) {
+            $queryError = 'Diese SQL-Funktion bzw. Klausel ist nicht erlaubt.';
+        } elseif (preg_match('/\b(discord_tokens|password_hash|access_token|refresh_token)\b/i', $sqlStripped)
+                  || (preg_match('/\*/', preg_replace('/count\s*\(\s*\*\s*\)/i', '', $sqlStripped)) && preg_match('/\busers\b/i', $sqlStripped))) {
+            // "SELECT * FROM users" würde password_hash mitliefern → Spalten explizit benennen
+            $queryError = 'Zugriff auf Token-/Passwort-Daten gesperrt (bei Tabelle users bitte Spalten einzeln angeben, kein *).';
         } else {
             try {
-                $stmt = $pdo->query($querySql);
-                $queryResult = [
-                    'cols' => array_keys($stmt->fetch(PDO::FETCH_ASSOC) ?: []),
-                    'rows' => [],
-                ];
-                // Neu fetchen da wir schon eine Zeile verbraucht haben
-                $stmt = $pdo->query($querySql);
-                $queryResult['rows'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                $queryResult['cols'] = !empty($queryResult['rows']) ? array_keys($queryResult['rows'][0]) : [];
+                // Zusätzliche Absicherung: Sitzung read-only + Zeitlimit (Schutz vor Schreibzugriffen
+                // über Funktionen/Subselects und vor Dauerlast durch teure Abfragen)
+                $pdo->exec('SET SESSION TRANSACTION READ ONLY');
+                try {
+                    $pdo->exec('SET SESSION MAX_EXECUTION_TIME = 5000');      // MySQL
+                } catch (\Throwable $e) {
+                    try { $pdo->exec('SET SESSION max_statement_time = 5'); } catch (\Throwable $e2) {} // MariaDB
+                }
+                $stmt = $pdo->query($sqlCheck);
+                $rows = [];
+                while (count($rows) < 500 && ($row = $stmt->fetch(PDO::FETCH_ASSOC)) !== false) {
+                    $rows[] = $row;
+                }
+                $queryResult = ['cols' => $rows ? array_keys($rows[0]) : [], 'rows' => $rows];
             } catch (\PDOException $e) {
-                $queryError = $e->getMessage();
+                error_log('[db_admin] ' . $e->getMessage());
+                $queryError = 'Abfrage fehlgeschlagen (Syntax-Fehler oder nicht erlaubt).';
             }
+        }
+        if (function_exists('log_event')) {
+            log_event('admin_action', 'DB-Admin SQL-Abfrage: ' . mb_substr($querySql, 0, 300), (int) ($user['db_id'] ?? 0), [], false);
         }
     }
 }
@@ -66,13 +90,26 @@ $tableData  = null;
 $tableInfo  = null;
 $tableCount = 0;
 
-if ($action === 'table' && $table && in_array($table, $tables)) {
+// Geheimnisse (Passwort-Hashes, OAuth-Tokens) werden im Browser nie angezeigt
+const DB_ADMIN_HIDDEN_TABLES  = ['discord_tokens'];
+const DB_ADMIN_HIDDEN_COLUMNS = ['password_hash', 'access_token', 'refresh_token'];
+
+if ($action === 'table' && $table && in_array($table, $tables, true)) {
     // Spalten-Info
     $tableInfo = $pdo->query("DESCRIBE `$table`")->fetchAll(PDO::FETCH_ASSOC);
     // Anzahl
     $tableCount = (int) $pdo->query("SELECT COUNT(*) FROM `$table`")->fetchColumn();
-    // Daten
-    $tableData  = $pdo->query("SELECT * FROM `$table` LIMIT $limit OFFSET $offset")->fetchAll(PDO::FETCH_ASSOC);
+    // Daten (nur nicht-geheime Spalten)
+    if (in_array($table, DB_ADMIN_HIDDEN_TABLES, true)) {
+        $tableData = [];
+    } else {
+        $visibleCols = array_values(array_filter(
+            array_column($tableInfo, 'Field'),
+            fn($c) => !in_array(strtolower($c), DB_ADMIN_HIDDEN_COLUMNS, true)
+        ));
+        $colList = implode(', ', array_map(fn($c) => '`' . str_replace('`', '``', $c) . '`', $visibleCols));
+        $tableData = $colList === '' ? [] : $pdo->query("SELECT $colList FROM `$table` LIMIT $limit OFFSET $offset")->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 
 // ── Tabellen-Statistiken ──────────────────────────────────────────────────────
@@ -395,7 +432,7 @@ function htmle(mixed $v): string {
             <?php endif; ?>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <?php foreach ($tables as $t): ?>
-              <button type="button" onclick="insertTable('<?= addslashes($t) ?>')"
+              <button type="button" onclick='insertTable(<?= json_encode($t, JSON_HEX_APOS | JSON_HEX_TAG | JSON_HEX_AMP) ?>)'
                 style="background:rgba(255,255,255,.05);border:1px solid var(--border);color:#94a3b8;border-radius:6px;padding:4px 10px;font-size:.75rem;cursor:pointer;font-family:inherit"
               ><?= htmle($t) ?></button>
               <?php endforeach; ?>
@@ -451,12 +488,11 @@ function htmle(mixed $v): string {
           'Login-Log' => 'SELECT l.id, u.username, l.method, l.logged_in_at FROM login_log l JOIN users u ON l.user_id = u.id ORDER BY l.id DESC LIMIT 30',
           'Activity Logs' => 'SELECT id, type, message, username, created_at FROM activity_logs ORDER BY id DESC LIMIT 30',
           'Rate Limits' => 'SELECT * FROM rate_limits ORDER BY last_attempt DESC LIMIT 20',
-          'Discord Tokens' => 'SELECT user_id, token_type, scope, expires_at FROM discord_tokens',
           'Server Status Log' => 'SELECT * FROM server_status_log ORDER BY snapshot_at DESC LIMIT 30',
           'Tabellen-Größen' => 'SELECT table_name, table_rows, ROUND((data_length+index_length)/1024,1) AS kb FROM information_schema.tables WHERE table_schema=DATABASE() ORDER BY kb DESC',
         ];
         foreach ($quickQueries as $label => $sql): ?>
-        <button onclick="setQuery(<?= json_encode($sql) ?>)"
+        <button onclick="setQuery(<?= htmlspecialchars(json_encode($sql), ENT_QUOTES) ?>)"
           style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:#94a3b8;border-radius:8px;padding:6px 14px;font-size:.8rem;cursor:pointer;font-family:inherit;transition:.15s"
           onmouseover="this.style.borderColor='#e8b86d';this.style.color='#e8b86d'"
           onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.color='#94a3b8'"

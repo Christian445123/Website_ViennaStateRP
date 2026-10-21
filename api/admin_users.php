@@ -50,7 +50,8 @@ if ($method === 'GET' && isset($_GET['stats'])) {
         echo json_encode(['ok' => true, 'stats' => $stats]);
     } catch (\Throwable $e) {
         http_response_code(500);
-        echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
+        error_log('[API] ' . $e->getMessage());
+        echo json_encode(['ok' => false, 'error' => 'Interner Fehler']);
     }
     exit;
 }
@@ -101,7 +102,8 @@ if ($method === 'GET') {
         echo json_encode(['ok' => true, 'users' => $rows, 'total' => $total, 'page' => $page, 'per_page' => $perPage]);
     } catch (\Throwable $e) {
         http_response_code(500);
-        echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
+        error_log('[API] ' . $e->getMessage());
+        echo json_encode(['ok' => false, 'error' => 'Interner Fehler']);
     }
     exit;
 }
@@ -126,6 +128,19 @@ if ($method === 'POST') {
         exit;
     }
 
+    // ── Hierarchie-Schutz (verhindert Rechteausweitung) ──────────────────────
+    // Ohne diese Prüfung könnte jeder mit "Rollen ändern" sich selbst oder andere zum
+    // Websitenmanager machen bzw. per Passwort-Reset höhere Accounts übernehmen.
+    // Nur der Websitenmanager steht über der Hierarchie.
+    $myLevel     = VSRP_ROLES[current_role()] ?? 0;
+    $targetLevel = VSRP_ROLES[$target['role']] ?? 0;
+    $isSuper     = current_role() === 'websitenmanager';
+    if (!$isSuper && $id !== $myId && $targetLevel >= $myLevel) {
+        http_response_code(403);
+        echo json_encode(['ok' => false, 'error' => 'Du kannst keine Mitglieder mit gleichem oder höherem Rang bearbeiten.']);
+        exit;
+    }
+
     if ($action === 'role') {
         if (!has_capability('users.change_role')) {
             http_response_code(403);
@@ -136,6 +151,11 @@ if ($method === 'POST') {
         if (!array_key_exists($role, VSRP_ROLES)) {
             http_response_code(400);
             echo json_encode(['ok' => false, 'error' => 'Ungültige Rolle']);
+            exit;
+        }
+        if (!$isSuper && (VSRP_ROLES[$role] ?? 0) >= $myLevel) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'error' => 'Du kannst nur Rollen unterhalb deines eigenen Rangs vergeben.']);
             exit;
         }
         $adminLevel = VSRP_ROLES['admin'] ?? 0;
@@ -207,6 +227,11 @@ if ($method === 'POST') {
         if (mb_strlen($password) < 8) {
             http_response_code(400);
             echo json_encode(['ok' => false, 'error' => 'Passwort muss mindestens 8 Zeichen lang sein']);
+            exit;
+        }
+        if (strlen($password) > 72 || !preg_match('/[A-Z]/', $password) || !preg_match('/[0-9]/', $password)) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'error' => 'Passwort braucht 1 Großbuchstaben, 1 Zahl und max. 72 Zeichen']);
             exit;
         }
         $hash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);

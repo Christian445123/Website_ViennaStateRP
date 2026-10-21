@@ -66,7 +66,7 @@ $token = _discord_post('https://discord.com/api/oauth2/token', [
 ]);
 
 if (empty($token['access_token'])) {
-    error_log('[Callback] Token-Austausch fehlgeschlagen: ' . json_encode($token));
+    error_log('[Callback] Token-Austausch fehlgeschlagen: ' . ($token['error'] ?? 'unbekannt'));
     $discordError = '';
     if (!empty($token['error_description'])) {
         $discordError = ' (' . $token['error_description'] . ')';
@@ -130,6 +130,14 @@ try {
     if (is_logged_in()
         && !empty($_SESSION['discord_user']['db_id'])
         && empty($_SESSION['discord_user']['id'])) {
+
+        // Dieser Discord-Account darf nicht schon an einen anderen Account gebunden sein
+        $taken = $pdo->prepare('SELECT id FROM users WHERE discord_id = ? AND id <> ? LIMIT 1');
+        $taken->execute([$du['id'], $_SESSION['discord_user']['db_id']]);
+        if ($taken->fetch()) {
+            header('Location: ' . $siteUrl . '/dashboard.php?error=' . urlencode('Dieser Discord-Account ist bereits mit einem anderen Konto verknüpft.'));
+            exit;
+        }
 
         $sets = ['discord_id=?', 'username=?', 'global_name=?', 'avatar=?', 'last_login=NOW()'];
         $vals = [$du['id'], $du['username'], $du['global_name'] ?? $du['username'], $du['avatar'] ?? null];
@@ -247,13 +255,13 @@ try {
         if ($hasCol('method') || in_array('method', array_column($pdo->query("SHOW COLUMNS FROM login_log")->fetchAll(), 'Field'), true)) {
             $pdo->prepare('INSERT INTO login_log (user_id, method, ip_hash, user_agent) VALUES (?,?,?,?)')->execute([
                 $userId, 'discord',
-                hash('sha256', $_SERVER['REMOTE_ADDR'] ?? ''),
+                hash('sha256', client_ip()),
                 substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255),
             ]);
         } else {
             $pdo->prepare('INSERT INTO login_log (user_id, ip_hash, user_agent) VALUES (?,?,?)')->execute([
                 $userId,
-                hash('sha256', $_SERVER['REMOTE_ADDR'] ?? ''),
+                hash('sha256', client_ip()),
                 substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255),
             ]);
         }
@@ -267,8 +275,8 @@ try {
 
 } catch (\Throwable $e) {
     error_log('[Callback] DB-Fehler: ' . $e->getMessage() . ' | File: ' . $e->getFile() . ':' . $e->getLine());
-    // Temporär: echte Fehlermeldung anzeigen zur Diagnose
-    header('Location: ' . $siteUrl . '/login.php?error=' . urlencode('DB-Fehler: ' . $e->getMessage()));
+    // Keine Exception-Details nach außen (würden SQL-/Schema-Interna verraten)
+    header('Location: ' . $siteUrl . '/login.php?error=' . urlencode('Datenbankfehler – bitte erneut versuchen'));
     exit;
 }
 
